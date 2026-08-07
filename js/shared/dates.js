@@ -88,6 +88,46 @@ if (typeof window !== 'undefined') {
         };
     }
 
+    // Read the tariff time configuration from the dashboard controls once and
+    // expose it to every calculation view (e.g. the period evaluation table).
+    // Keeping this in one helper prevents views from using undeclared or
+    // different tariff-time variables.
+    if (typeof window.getTariffInputConfig === 'undefined') {
+        window.getTariffInputConfig = function(root) {
+            const dom = root || (typeof document !== 'undefined' ? document : null);
+
+            const readValue = (id, fallback) => {
+                if (!dom || typeof dom.getElementById !== 'function') return fallback;
+                const element = dom.getElementById(id);
+                return element && element.value ? element.value : fallback;
+            };
+
+            const toMinutes = (value) => {
+                const parts = String(value || '00:00').split(':');
+                const hours = Number.parseInt(parts[0], 10);
+                const minutes = Number.parseInt(parts[1], 10);
+                return (Number.isFinite(hours) ? hours : 0) * 60 +
+                    (Number.isFinite(minutes) ? minutes : 0);
+            };
+
+            const ntStart = readValue('input-nt-start', '22:00');
+            const ntEnd = readValue('input-nt-end', '06:00');
+            const stStart = readValue('input-st-start', '11:00');
+            const stEnd = readValue('input-st-end', '13:00');
+            const stElement = dom && typeof dom.getElementById === 'function'
+                ? dom.getElementById('chk-st-active')
+                : null;
+
+            return {
+                ntStartMin: toMinutes(ntStart),
+                ntEndMin: toMinutes(ntEnd),
+                stStartMin: toMinutes(stStart),
+                stEndMin: toMinutes(stEnd),
+                stAktiv: Boolean(stElement && stElement.checked)
+            };
+        };
+    }
+
     if (typeof window.isLeapYear === 'undefined') {
         window.isLeapYear = function(year) {
             return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);

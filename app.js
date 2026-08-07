@@ -1971,22 +1971,8 @@ function updateDashboard() {
             b.classList.toggle('active', b.dataset.agg === currentAggregation);
         });
 
-        // Get NT Config Times
-        const ntStartVal = document.getElementById('input-nt-start')?.value || '22:00';
-        const ntEndVal = document.getElementById('input-nt-end')?.value || '06:00';
-        const startParts = ntStartVal.split(':');
-        const endParts = ntEndVal.split(':');
-        const ntStartMin = parseInt(startParts[0] || 0, 10) * 60 + parseInt(startParts[1] || 0, 10);
-        const ntEndMin = parseInt(endParts[0] || 0, 10) * 60 + parseInt(endParts[1] || 0, 10);
-
-        // Get ST Config Times
-        const stAktiv = document.getElementById('chk-st-active')?.checked || false;
-        const stStartVal = document.getElementById('input-st-start')?.value || '11:00';
-        const stEndVal = document.getElementById('input-st-end')?.value || '13:00';
-        const stStartParts = stStartVal.split(':');
-        const stEndParts = stEndVal.split(':');
-        const stStartMin = parseInt(stStartParts[0] || 0, 10) * 60 + parseInt(stStartParts[1] || 0, 10);
-        const stEndMin = parseInt(stEndParts[0] || 0, 10) * 60 + parseInt(stEndParts[1] || 0, 10);
+        // Use one shared tariff-time configuration for every dashboard view.
+        const { ntStartMin, ntEndMin, stStartMin, stEndMin, stAktiv } = getTariffInputConfig();
 
         // Combined KPI Calculation across all active datasets
         let globalMaxObj = null;
@@ -2347,6 +2333,10 @@ function updatePivotTable(activeFilteredDatasets) {
     const tfoot = document.getElementById('pivot-table-tfoot');
     
     if (!tbody || !thead || !tfoot) return;
+
+    // This view also calculates HT/NT/ST energy shares. Read the tariff
+    // controls locally instead of relying on variables from updateDashboard.
+    const { ntStartMin, ntEndMin, stStartMin, stEndMin, stAktiv } = getTariffInputConfig();
 
     if (!activeFilteredDatasets || activeFilteredDatasets.length === 0) {
         thead.innerHTML = '<th style="padding: 0.6rem 0.8rem;">Keine Daten</th>';

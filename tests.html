@@ -1212,6 +1212,23 @@ Datum;Uhrzeit;Verbrauch
             assert(getQuarterKey(dateQ3) === '2024-Q3', "August 2024 muss als 2024-Q3 eingestuft werden");
         });
 
+        addTest('profiles', 'Tarifzeiten in der Periodenauswertung', 'Verifiziert, dass die Periodentabelle ihre HT/NT/ST-Zeitkonfiguration unabhängig vom Dashboard erhält', () => {
+            const values = {
+                'input-nt-start': { value: '21:30' },
+                'input-nt-end': { value: '05:15' },
+                'input-st-start': { value: '11:00' },
+                'input-st-end': { value: '13:30' },
+                'chk-st-active': { checked: true }
+            };
+            const mockRoot = { getElementById: (id) => values[id] || null };
+            const config = getTariffInputConfig(mockRoot);
+
+            assert(config.ntStartMin === 1290, 'NT-Beginn 21:30 muss als 1290 Minuten gelesen werden');
+            assert(config.ntEndMin === 315, 'NT-Ende 05:15 muss als 315 Minuten gelesen werden');
+            assert(config.stStartMin === 660 && config.stEndMin === 810, 'ST-Zeitfenster muss vollständig gelesen werden');
+            assert(config.stAktiv === true, 'Aktiver ST-Schalter muss übernommen werden');
+        });
+
         addTest('csv', 'Drag & Drop Event-Blockierung (Standardverhalten unterbinden)', 'Verifiziert die Unterdrückung der nativen Datei-Öffnung im Browser', () => {
             let prevented = false;
             let stopped = false;

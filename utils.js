@@ -1,4 +1,4 @@
-const LASTGANG_APP_VERSION = '2026.08.07-beta.2';
+const LASTGANG_APP_VERSION = '2026.08.08-beta.3';
 
 function getIntervalTariffFractions(startMs, endMs, ntStartMin, ntEndMin, stStartMin, stEndMin, stAktiv, options = {}) {
     if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
