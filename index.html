@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lastgang Analyse | Web-App</title>
+    <!-- ECharts -->
+    <script src="lib/echarts.min.js"></script>
+    <!-- PapaParse -->
+    <script src="lib/papaparse.min.js"></script>
+    
+    <link rel="stylesheet" href="styles.css?v=109">
+    <!-- PWA Meta tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+    <div id="app">
+        <!-- Public beta landing page and upload screen -->
+        <div id="upload-screen" class="screen active">
+            <header class="landing-header" aria-label="Seitennavigation">
+                <a class="landing-brand" href="#top" aria-label="Zur Startseite">
+                    <span class="landing-brand-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </span>
+                    <span>Lastgang Analyse</span>
+                    <span class="beta-badge">Beta</span>
+                </a>
+                <nav class="landing-links" aria-label="Bereiche">
+                    <a href="#modules">Funktionen</a>
+                    <a href="#import">Datei einlesen</a>
+                    <a href="#transparency">Hinweise</a>
+                    <a href="#feedback">Feedback</a>
+                </nav>
+            </header>
+
+            <main id="top" class="landing-main">
+                <section class="landing-hero" aria-labelledby="landing-title">
+                    <div>
+                        <span class="landing-kicker">Browserbasiertes Energie-Werkzeug · öffentliche Beta</span>
+                        <h1 id="landing-title">Energiedaten schnell verstehen – ohne Upload in eine Cloud.</h1>
+                        <p>CSV- oder MSCONS-Lastgänge per Drag & Drop einlesen, Datenqualität prüfen und Lastverläufe unmittelbar grafisch auswerten. Ohne Konto, ohne EDM-Anbindung und ohne automatische Datenübertragung.</p>
+                        <div class="landing-actions">
+                            <a class="btn landing-primary" href="#import">Lastgang analysieren</a>
+                            <a class="btn landing-secondary" href="#format-example">CSV-Beispiel ansehen</a>
+                        </div>
+                        <ul class="trust-list" aria-label="Datenschutz- und Nutzungshinweise">
+                            <li>Dateien bleiben im Browser</li>
+                            <li>Keine Registrierung</li>
+                            <li>Keine Schnittstelle zu EDM oder Abrechnung</li>
+                        </ul>
+                    </div>
+                    <aside class="hero-preview" aria-label="Vorschau des Analyseablaufs">
+                        <div class="preview-topline"><span>Analyseablauf</span><span class="status-dot">lokal</span></div>
+                        <ol>
+                            <li><strong>1</strong><span><b>Datei einlesen</b><small>CSV oder MSCONS</small></span></li>
+                            <li><strong>2</strong><span><b>Daten prüfen</b><small>Lücken, Dubletten, Einheiten</small></span></li>
+                            <li><strong>3</strong><span><b>Verlauf verstehen</b><small>Diagramme, Profile, Kennzahlen</small></span></li>
+                        </ol>
+                    </aside>
+                </section>
+
+                <section id="modules" class="landing-section" aria-labelledby="modules-title">
+                    <div class="section-heading">
+                        <span class="landing-kicker">Modular erweiterbar</span>
+                        <h2 id="modules-title">Ein schlanker Einstieg – mit Platz für weitere Energiewerkzeuge</h2>
+                    </div>
+                    <div class="module-card-grid">
+                        <article class="landing-module-card featured">
+                            <span class="module-state ready">Verfügbar</span>
+                            <h3>Lastgang-Schnellanalyse</h3>
+                            <p>Zeitverlauf, Tagesprofile, Kennzahlen, Spitzenlasten und Datenqualität für CSV- und MSCONS-Dateien.</p>
+                            <a href="#import">Analyse starten →</a>
+                        </article>
+                        <article class="landing-module-card">
+                            <span class="module-state beta">Beta-Szenario</span>
+                            <h3>Kapazitätsbestellung</h3>
+                            <p>Experimentelle Szenariorechnung für Bestellleistung und Kosten – keine Abrechnungsempfehlung und kein verbindliches AgNes-Modell.</p>
+                        </article>
+                        <article class="landing-module-card muted">
+                            <span class="module-state planned">In Planung</span>
+                            <h3>Weitere Energiemodule</h3>
+                            <p>Die Plattform bleibt offen für Funktionen, die auch ohne Lastgangdatei genutzt werden können.</p>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="import" class="landing-section import-section" aria-labelledby="import-title">
+                    <div class="import-copy">
+                        <span class="landing-kicker">Direkt ausprobieren</span>
+                        <h2 id="import-title">Lastgang lokal einlesen</h2>
+                        <p>Die Analyse läuft auf diesem Gerät. Der Browser überträgt den Inhalt der ausgewählten Lastgangdateien nicht an einen Anwendungsserver.</p>
+                        <ul class="plain-check-list">
+                            <li>Mehrere Lastgänge gleichzeitig einlesbar</li>
+                            <li>CSV mit Datum, Uhrzeit und Messwert</li>
+                            <li>MSCONS-Erkennung ohne EDM-Schnittstelle</li>
+                        </ul>
+                        <div class="privacy-note" role="note">
+                            <strong>Vor einer Weitergabe prüfen:</strong> Zählpunkt-/Marktlokationsnummer, Standort, Firmenname, Dateiname und sonstige Kopfzeilen entfernen. Auch ein Lastprofil kann durch Zeitraum und Verlauf Rückschlüsse auf einen Betrieb zulassen. Die Datei wird hier lokal verarbeitet, aber Exporte und Screenshots können sichtbare Bezeichnungen enthalten.
+                        </div>
+                    </div>
+                    <div class="upload-container">
+                        <div id="drop-zone" class="drop-zone">
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <h2>CSV oder MSCONS hier ablegen</h2>
+                            <p>oder antippen, um eine oder mehrere Dateien auszuwählen</p>
+                            <input type="file" id="file-input" accept=".csv,.txt,.mscons" multiple style="display: none;">
+                        </div>
+                        <div class="empty-start-row">
+                            <button id="btn-start-empty" class="btn btn-secondary">Mit leerem Lastgang starten</button>
+                            <span>für manuelle Eingaben und Tests</span>
+                        </div>
+                        <div id="upload-progress" class="hidden">
+                            <div class="spinner"></div>
+                            <p id="upload-status">Lese Datei...</p>
+                        </div>
+                    </div>
+                </section>
+                <details id="format-example" class="format-example">
+                    <summary><span aria-hidden="true">ⓘ</span> So kann eine CSV-Datei aussehen</summary>
+                    <div class="format-example-body">
+                        <div>
+                            <p>Ein einfaches, unterstütztes Format ist eine semikolongetrennte Datei mit deutscher Dezimalschreibweise:</p>
+                            <pre><code>Datum;Uhrzeit;Wert
+01.01.2026;00:15;125,40
+01.01.2026;00:30;127,10
+01.01.2026;00:45;121,85</code></pre>
+                        </div>
+                        <ul>
+                            <li>Ein Messwert pro Zeile</li>
+                            <li>15-Minuten-Werte sind der typische Anwendungsfall</li>
+                            <li>Die Einheit wird beim Import bestätigt</li>
+                            <li>Keine Formeln, verbundenen Zellen oder Summenzeilen verwenden</li>
+                        </ul>
+                    </div>
+                </details>
+
+                <section id="transparency" class="landing-section transparency-panel" aria-labelledby="transparency-title">
+                    <div>
+                        <span class="landing-kicker">Transparent statt überversprochen</span>
+                        <h2 id="transparency-title">Was diese Beta leistet – und was nicht</h2>
+                    </div>
+                    <div class="transparency-columns">
+                        <div>
+                            <h3>Das Tool unterstützt</h3>
+                            <ul class="plain-check-list">
+                                <li>Visuelle und rechnerische Orientierung</li>
+                                <li>Lokale Prüfung eigener Lastgangdateien</li>
+                                <li>Vergleich und Export von Analyseergebnissen</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3>Nicht Bestandteil</h3>
+                            <ul class="plain-x-list">
+                                <li>Keine EDM- oder Abrechnungsschnittstelle</li>
+                                <li>Keine Rechts-, Tarif- oder Investitionsberatung</li>
+                                <li>Keine Garantie für Vollständigkeit oder Fehlerfreiheit</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="beta-disclaimer"><strong>Beta-Hinweis:</strong> Ergebnisse sind unverbindliche Analyse- und Szenariowerte. Vor betrieblichen, vertraglichen oder wirtschaftlichen Entscheidungen müssen Eingangsdaten, Annahmen und Ergebnisse fachlich geprüft werden. Für Entscheidungen allein auf Grundlage dieser Beta-Auswertung wird keine Haftung übernommen.</p>
+                </section>
+
+                <section id="feedback" class="landing-section feedback-panel" aria-labelledby="feedback-title">
+                    <div>
+                        <span class="landing-kicker">Beta mitgestalten</span>
+                        <h2 id="feedback-title">Was hilft dir – und was fehlt?</h2>
+                        <p>Hilfreich sind insbesondere Hinweise zu Importproblemen, unverständlichen Kennzahlen und Funktionen, die im Arbeitsalltag tatsächlich Zeit sparen würden.</p>
+                    </div>
+                    <button id="btn-copy-feedback-template" type="button" class="btn landing-secondary" title="Kopiert fünf kurze Leitfragen für eine strukturierte Rückmeldung">Feedback-Leitfragen kopieren</button>
+                </section>
+            </main>
+
+            <footer class="landing-footer">
+                <span>Lastgang Analyse · Beta</span>
+                <span>Lokale Verarbeitung · keine EDM-Anbindung · unverbindliche Ergebnisse</span>
+            </footer>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div id="dashboard-screen" class="screen hidden">
+            <!-- Neue linksbündige Primärnavigation (Sidebar-Navigation) -->
+            <aside class="module-sidebar">
+                <div class="module-logo" title="Lastgang Analyse">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                </div>
+                <nav class="module-nav">
+                    <button class="module-btn active" data-module="basis" title="Basis-Analyse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18"/>
+                            <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                        </svg>
+                        <span>Basis</span>
+                    </button>
+                    <button class="module-btn" data-module="agnes" title="Kapazitätsbestellung – experimentelle Szenariorechnung (Beta)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        <span>Kapazität</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <div class="main-workspace">
+                <header class="dashboard-header">
+                    <div class="brand">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        <h2>Lastgang Analyse</h2>
+                    </div>
+                    
+                    <div class="header-center">
+                        <!-- Basis Module Navigation Tabs -->
+                        <nav class="header-tabs basis-tabs">
+                            <button class="tab-btn active" data-target="tab-lastgang">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 3v18h18"></path>
+                                    <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+                                </svg>
+                                <span>Verlauf & Struktur</span>
+                            </button>
+                            <button class="tab-btn" data-target="tab-tagesprofil">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span>Tagesprofile</span>
+                            </button>
+                            <button class="tab-btn" data-target="tab-statistik" style="position: relative;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                </svg>
+                                <span>Statistik & Details</span>
+                                <span id="statistik-warning-dot" class="warning-dot hidden" style="position: absolute; top: 6px; right: 8px; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface-hover);"></span>
+                            </button>
+                            <button class="tab-btn" data-target="tab-editor">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                </svg>
+                                <span>Daten-Editor</span>
+                            </button>
+                        </nav>
+
+                        <!-- AgNes Module Navigation Tabs -->
+                        <nav class="header-tabs agnes-tabs" style="display: none;">
+                            <button class="tab-btn" data-target="tab-agnes-charts">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                    <polyline points="2 17 12 22 22 17"></polyline>
+                                    <polyline points="2 12 12 17 22 12"></polyline>
+                                </svg>
+                                <span>Optimierung & Kurven</span>
+                            </button>
+                            <button class="tab-btn" data-target="tab-agnes-scenarios">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="9" y1="9" x2="15" y2="9"></line>
+                                    <line x1="9" y1="13" x2="15" y2="13"></line>
+                                    <line x1="9" y1="17" x2="15" y2="17"></line>
+                                </svg>
+                                <span>Szenarien-Vergleich</span>
+                            </button>
+                            <button id="tab-btn-agnes-breakdown" class="tab-btn" data-target="tab-agnes-breakdown" style="display: none;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                                <span>Jahresvergleich</span>
+                            </button>
+                        </nav>
+                    </div>
+
+                <div class="header-actions" style="position: relative;">
+                    <button id="btn-theme-toggle" class="btn btn-icon" title="Design wechseln (Dunkel / Hell)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4"/>
+                            <path d="M12 2v2"/><path d="M12 20v2"/>
+                            <path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
+                            <path d="M2 12h2"/><path d="M20 12h2"/>
+                            <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+                        </svg>
+                    </button>
+
+                    <!-- Header Options Dropdown Button -->
+                    <button id="btn-header-menu-toggle" class="btn btn-secondary btn-sm" style="display: flex; align-items: center; gap: 0.4rem; height: 34px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                        </svg>
+                        <span>Optionen</span>
+                    </button>
+
+                    <!-- Header Dropdown Menu -->
+                    <div id="header-menu-dropdown" class="dropdown-menu hidden" style="position: absolute; top: calc(100% + 8px); right: 0; min-width: 270px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1000; padding: 0.5rem 0;">
+                        <div style="padding: 0.5rem 0.85rem; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border-color);">
+                            Geladene Dateien (<span id="header-menu-file-count">0</span>)
+                        </div>
+                        <div id="header-menu-file-list" style="max-height: 160px; overflow-y: auto; padding: 0.35rem 0.85rem; font-size: 0.8rem; color: var(--text-main); word-break: break-all; border-bottom: 1px solid var(--border-color);">
+                            <!-- Populated via JS -->
+                        </div>
+
+                        <div style="padding: 0.25rem 0;">
+                            <button id="btn-new-file" class="dropdown-item" style="width: 100%; text-align: left; padding: 0.6rem 0.85rem; background: none; border: none; color: var(--text-main); font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.6rem;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <span>Neue Datei laden</span>
+                            </button>
+                            <button id="btn-open-holiday-manager" class="dropdown-item" style="width: 100%; text-align: left; padding: 0.6rem 0.85rem; background: none; border: none; color: var(--text-main); font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.6rem;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                <span>Feiertags-Kalender</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-layout">
+                <aside class="sidebar">
+                    <button type="button" id="btn-sidebar-toggle" class="btn-sidebar-toggle" title="Seitenleiste fixieren">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="17" x2="12" y2="22"></line>
+                            <path d="M5 17h14v-1.76a2 2 0 0 0-.44-1.24l-2.78-3.56A2 2 0 0 1 15 9.2V5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4.2a2 2 0 0 1-.78 1.24L5.44 14a2 2 0 0 0-.44 1.24z"></path>
+                        </svg>
+                    </button>
+                    <div class="filter-section" id="display-unit-section">
+                        <div class="section-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sidebar-icon" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 16v-4"></path>
+                                <path d="M12 8h.01"></path>
+                            </svg>
+                            <span class="section-title">Darstellungseinheit</span>
+                        </div>
+                        <div class="section-content">
+                            <div style="display: flex; gap: 0.1rem; background-color: var(--surface-color); padding: 2px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                                <button class="btn-unit-toggle active" data-unit="kw" style="flex: 1; text-align: center; border: none; padding: 0.35rem 0; font-size: 0.8rem; border-radius: var(--radius-sm); cursor: pointer;">Leistung (kW)</button>
+                                <button class="btn-unit-toggle" data-unit="kwh" style="flex: 1; text-align: center; border: none; padding: 0.35rem 0; font-size: 0.8rem; border-radius: var(--radius-sm); cursor: pointer;">Arbeit (kWh)</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section hidden" id="dataset-section">
+                        <div class="section-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sidebar-icon" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                            </svg>
+                            <span class="section-title">Lastgänge</span>
+                        </div>
+                        <div class="section-content">
+                            <div id="dataset-checkboxes-container" class="checkbox-list">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-section" id="zoom-section">
+                        <div class="section-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sidebar-icon" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <span class="section-title">Zeitraum wählen</span>
+                        </div>
+                        <div class="section-content" style="display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0.25rem;">
+                            <div class="zoom-controls">
+                                <button class="btn-zoom" data-zoom="day">1 Tag</button>
+                                <button class="btn-zoom" data-zoom="week">1 Wo</button>
+                                <button class="btn-zoom" data-zoom="month">1 Mo</button>
+                                <button class="btn-zoom" data-zoom="year">1 J</button>
+                                <button class="btn-zoom active" data-zoom="max">Max</button>
+                            </div>
+                            
+                            <div class="date-inputs-row">
+                                <input type="date" id="date-start" class="input-field date-field">
+                                <span class="date-separator">-</span>
+                                <input type="date" id="date-end" class="input-field date-field">
+                            </div>
+                            
+                            <div class="date-nav-row">
+                                <button class="btn-nav" id="btn-nav-prev-double" data-nav="prev-double" title="Weit zurück">&laquo;</button>
+                                <button class="btn-nav" id="btn-nav-prev-single" data-nav="prev-single" title="Zurück">&lsaquo;</button>
+                                <button class="btn-nav" id="btn-nav-next-single" data-nav="next-single" title="Vorwärts">&rsaquo;</button>
+                                <button class="btn-nav" id="btn-nav-next-double" data-nav="next-double" title="Weit vorwärts">&raquo;</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+
+                    <div class="filter-section hidden" id="tariff-section">
+                        <div class="section-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sidebar-icon" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span class="section-title">Tarifzeiten (HT / NT / ST)</span>
+                        </div>
+                        <div class="section-content" style="display: flex; flex-direction: column; gap: 0.6rem;">
+                            <label class="checkbox-list-item" style="cursor: pointer; padding: 0; font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
+                                <input type="checkbox" id="chk-show-nt-shading" checked>
+                                Tarif-Schattierung im Chart
+                            </label>
+                            
+                            <!-- NT Configuration -->
+                            <div style="border-top: 1px dashed var(--border-color); padding-top: 0.4rem;">
+                                <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem;">Niedertarif (NT)</div>
+                                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.15rem;">NT Beginn</div>
+                                        <input type="time" id="input-nt-start" class="input-field" value="22:00" style="padding: 0.2rem; font-size: 0.75rem; height: 26px;">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.15rem;">NT Ende</div>
+                                        <input type="time" id="input-nt-end" class="input-field" value="06:00" style="padding: 0.2rem; font-size: 0.75rem; height: 26px;">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- ST Configuration -->
+                            <div style="border-top: 1px dashed var(--border-color); padding-top: 0.4rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Standardtarif (ST)</span>
+                                    <label style="cursor: pointer; font-size: 0.7rem; display: flex; align-items: center; gap: 0.2rem; margin: 0; color: var(--text-muted);">
+                                        <input type="checkbox" id="chk-st-active"> Aktiv
+                                    </label>
+                                </div>
+                                <div id="st-time-inputs" style="display: none; gap: 0.4rem; align-items: center;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.15rem;">ST Beginn</div>
+                                        <input type="time" id="input-st-start" class="input-field" value="11:00" style="padding: 0.2rem; font-size: 0.75rem; height: 26px;">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.15rem;">ST Ende</div>
+                                        <input type="time" id="input-st-end" class="input-field" value="13:00" style="padding: 0.2rem; font-size: 0.75rem; height: 26px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dynamic Sidebar Sections (Priority 3) -->
+                    <div id="sidebar-verlauf-controls">
+                        <div class="filter-section">
+                            <div class="section-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sidebar-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                                    <line x1="15" y1="3" x2="15" y2="21"></line>
+                                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                                </svg>
+                                <span class="section-title">Aggregation</span>
+                            </div>
+                            <div class="section-content">
+                                <select id="aggregation-select" style="display: none;">
+                                    <option value="15m">Viertelstunde (Original)</option>
+                                    <option value="1h">Stunde</option>
+                                    <option value="1d">Tag</option>
+                                    <option value="1w">Woche</option>
+                                    <option value="1M" selected>Monat</option>
+                                </select>
+                                <div class="zoom-controls">
+                                    <button type="button" class="btn-comp btn-agg-select" data-agg="15m" title="Viertelstunde">15m</button>
+                                    <button type="button" class="btn-comp btn-agg-select" data-agg="1h" title="Stunde">1h</button>
+                                    <button type="button" class="btn-comp btn-agg-select" data-agg="1d" title="Tag">1d</button>
+                                    <button type="button" class="btn-comp btn-agg-select" data-agg="1w" title="Woche">1w</button>
+                                    <button type="button" class="btn-comp active btn-agg-select" data-agg="1M" title="Monat">1M</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-section" id="lines-section">
+                            <div class="section-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sidebar-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                                <span class="section-title">Messwerte</span>
+                            </div>
+                            <div class="section-content">
+                                <input type="checkbox" id="chk-show-avg" checked style="display: none;">
+                                <input type="checkbox" id="chk-show-max" style="display: none;">
+                                <input type="checkbox" id="chk-show-min" style="display: none;">
+                                <div class="zoom-controls">
+                                    <button type="button" class="btn-comp active btn-metric-select" data-chk-id="chk-show-avg" title="Durchschnitt (durchgezogene Linie)">
+                                        <span class="metric-swatch metric-swatch-solid"></span>Ø
+                                    </button>
+                                    <button type="button" class="btn-comp btn-metric-select" data-chk-id="chk-show-max" title="Maximum (gestrichelte Linie)">
+                                        <span class="metric-swatch metric-swatch-dashed"></span>max
+                                    </button>
+                                    <button type="button" class="btn-comp btn-metric-select" data-chk-id="chk-show-min" title="Minimum (gepunktete Linie)">
+                                        <span class="metric-swatch metric-swatch-dotted"></span>min
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sidebar-profil-controls" class="hidden">
+                        <div class="filter-section">
+                            <div class="section-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sidebar-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 20v-6M6 20V10M18 20V4"></path>
+                                </svg>
+                                <span class="section-title">Profil-Filter</span>
+                            </div>
+                            <div class="section-content" style="display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0.25rem;">
+                                <div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">Vergleichs-Modus</div>
+                                    <select id="select-profile-compare-mode" style="display: none;">
+                                        <option value="datasets" selected>Mehrere Lastgänge vergleichen</option>
+                                        <option value="quarters">Mehrere Quartale vergleichen (1 Lastgang)</option>
+                                        <option value="days">Wochentage vergleichen (1 Lastgang)</option>
+                                    </select>
+                                    <div class="zoom-controls compare-mode-selector">
+                                        <button type="button" class="btn-comp active btn-comp-mode" data-compare-mode="datasets">Lastgänge</button>
+                                        <button type="button" class="btn-comp btn-comp-mode" data-compare-mode="quarters">Quartale</button>
+                                        <button type="button" class="btn-comp btn-comp-mode" data-compare-mode="days">Wochentage</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="profile-days-group" class="filter-group">
+                                    <div class="group-header">
+                                        <span>Wochentage</span>
+                                        <span class="group-badge">Filter</span>
+                                    </div>
+                                    <select id="select-profile-days" style="display: none;">
+                                        <option value="all" selected>Gesamtwoche</option>
+                                        <option value="workdays">Werktage (Mo-Fr, ohne Feiertage)</option>
+                                        <option value="weekends">Wochenenden & Feiertage (NRW)</option>
+                                    </select>
+                                    <input type="checkbox" id="chk-profile-days-all" checked style="display: none;">
+                                    <input type="checkbox" id="chk-profile-days-workdays" checked style="display: none;">
+                                    <input type="checkbox" id="chk-profile-days-weekends" checked style="display: none;">
+                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                        <div class="zoom-controls">
+                                            <button type="button" class="btn-comp active btn-day-select" data-day-val="all" data-chk-id="chk-profile-days-all">Gesamtwoche</button>
+                                        </div>
+                                        <div class="zoom-controls">
+                                            <button type="button" class="btn-comp btn-day-select" data-day-val="workdays" data-chk-id="chk-profile-days-workdays">Werktage</button>
+                                            <button type="button" class="btn-comp btn-day-select" data-day-val="weekends" data-chk-id="chk-profile-days-weekends">Wochenende/Feiertag</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="profile-quarters-group" class="filter-group">
+                                    <div class="group-header">
+                                        <span>Zeitbereich / Quartale</span>
+                                        <span class="group-badge">Filter</span>
+                                    </div>
+                                    <select id="select-profile-quarter" style="display: none;">
+                                        <option value="all" selected>Gesamtzeitraum</option>
+                                        <option value="q1">Quartal 1 (Jan-Mär)</option>
+                                        <option value="q2">Quartal 2 (Apr-Jun)</option>
+                                        <option value="q3">Quartal 3 (Jul-Sep)</option>
+                                        <option value="q4">Quartal 4 (Okt-Dez)</option>
+                                    </select>
+                                    <input type="checkbox" id="chk-profile-q-all" checked style="display: none;">
+                                    <input type="checkbox" id="chk-profile-q1" checked style="display: none;">
+                                    <input type="checkbox" id="chk-profile-q2" checked style="display: none;">
+                                    <input type="checkbox" id="chk-profile-q3" checked style="display: none;">
+                                    <input type="checkbox" id="chk-profile-q4" checked style="display: none;">
+                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                        <div class="zoom-controls">
+                                            <button type="button" class="btn-comp active btn-quarter-select" data-q-val="all" data-chk-id="chk-profile-q-all">Gesamtzeitraum</button>
+                                        </div>
+                                        <div class="zoom-controls">
+                                            <button type="button" class="btn-comp btn-quarter-select" data-q-val="q1" data-chk-id="chk-profile-q1">Q1</button>
+                                            <button type="button" class="btn-comp btn-quarter-select" data-q-val="q2" data-chk-id="chk-profile-q2">Q2</button>
+                                            <button type="button" class="btn-comp btn-quarter-select" data-q-val="q3" data-chk-id="chk-profile-q3">Q3</button>
+                                            <button type="button" class="btn-comp btn-quarter-select" data-q-val="q4" data-chk-id="chk-profile-q4">Q4</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sidebar-agnes-controls" class="hidden">
+                        <!-- Analyse-Modus Switcher -->
+                        <div class="filter-section" style="margin-bottom: 0.8rem;">
+                            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sidebar-icon" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    <span class="section-title">Analyse-Modus</span>
+                                </div>
+                                <button type="button" class="btn-info" onclick="showAgnesInfoModal('general')" style="background: none; border: none; color: var(--primary-color); cursor: pointer; padding: 2px 4px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s;" title="Mathematische Erklärung, Annahmen und Grenzen der Kapazitätsrechnung">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                </button>
+                            </div>
+                            <div class="section-content">
+                                <div class="zoom-controls" style="width: 100%; display: flex; gap: 0;">
+                                    <button id="btn-agnes-mode-single" type="button" class="btn-comp active btn-agnes-mode" style="padding: 0.4rem 0.2rem; font-size: 0.75rem; flex: 1;">
+                                        Einzeljahr
+                                    </button>
+                                    <button id="btn-agnes-mode-multi" type="button" class="btn-comp btn-agnes-mode" style="padding: 0.4rem 0.2rem; font-size: 0.75rem; flex: 1;" title="Mehrjährige Optimierung durchführen">
+                                        Mehrjährig
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Capacity scenario beta parameters -->
+                        <div class="filter-section">
+                            <div class="section-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sidebar-icon" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                </svg>
+                                <span class="section-title">Kapazitätsrechnung (Beta)</span>
+                            </div>
+                            <div class="section-content" style="display: flex; flex-direction: column; gap: 0.8rem; padding: 0 0.25rem;">
+                                <div>
+                                    <label class="sub-text" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">
+                                        Kapazitätspreis (KP)
+                                    </label>
+                                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                        <input type="number" id="input-agnes-kp" class="input-field" value="50.00" step="1.00" min="0" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; height: 30px; flex: 1;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; width: 55px; display: inline-block; flex-shrink: 0;">€/kW/a</span>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="sub-text" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">
+                                        Arbeitspreis AP 1 (Innerhalb)
+                                    </label>
+                                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                        <input type="number" id="input-agnes-ap1" class="input-field" value="1.50" step="0.10" min="0" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; height: 30px; flex: 1;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; width: 55px; display: inline-block; flex-shrink: 0;">ct/kWh</span>
+                                    </div>
+                                </div>
+ 
+                                <div>
+                                    <label class="sub-text" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">
+                                        Arbeitspreis AP 2 (Exzess)
+                                    </label>
+                                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                        <input type="number" id="input-agnes-ap2" class="input-field" value="4.50" step="0.10" min="0" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; height: 30px; flex: 1;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; width: 55px; display: inline-block; flex-shrink: 0;">ct/kWh</span>
+                                    </div>
+                                </div>
+ 
+                                <div>
+                                    <label class="sub-text" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">
+                                        Geplante Buchung
+                                    </label>
+                                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                        <input type="number" id="input-agnes-min-kw" class="input-field" value="" step="1" min="0" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; height: 30px; flex: 1;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; width: 55px; display: inline-block; flex-shrink: 0;">kW</span>
+                                    </div>
+                                    <div id="agnes-min-kw-percent-badge" style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.2rem; font-weight: 500; padding-left: 0.1rem;">
+                                        (0% der Peaklast)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <main class="dashboard-content">
+                    <!-- Tab Contents -->
+                    <div id="tab-statistik" class="tab-content" style="overflow-y: auto; padding-right: 0.5rem; gap: 0;">
+
+                        <!-- SCHNELLNAVIGATION -->
+                        <div id="stats-quicknav" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; flex: none;">
+                            <button class="btn btn-secondary btn-sm stats-nav-btn active" data-stats-section="section-quality" style="display: flex; align-items: center; gap: 0.35rem; height: 32px; font-size: 0.78rem; font-weight: 600;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                Datenqualität
+                            </button>
+                            <button class="btn btn-secondary btn-sm stats-nav-btn" data-stats-section="section-kpis" style="display: flex; align-items: center; gap: 0.35rem; height: 32px; font-size: 0.78rem; font-weight: 600;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+                                Kennzahlen &amp; Spitzen
+                            </button>
+                            <button class="btn btn-secondary btn-sm stats-nav-btn" data-stats-section="section-periods" style="display: flex; align-items: center; gap: 0.35rem; height: 32px; font-size: 0.78rem; font-weight: 600;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                                Periodenauswertung
+                            </button>
+                        </div>
+
+                        <!-- SEKTION 1: Datenqualität -->
+                        <div class="chart-card stats-section" id="section-quality" data-loaded="false" style="width: 100%; box-sizing: border-box; flex: none; min-height: auto; border-left: 4px solid var(--primary-color); margin-bottom: 1rem;">
+                            <div class="stats-section-header" data-toggle-section="section-quality" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; flex-wrap: wrap; gap: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                    <span class="stats-section-chevron" style="transition: transform 0.25s ease; display: inline-flex;">▼</span>
+                                    <div>
+                                        <h3 class="chart-title" style="margin: 0;">Datenqualität &amp; Messdaten-Integrität</h3>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Vollständigkeit &amp; Validität der erfassten Zeitreihen</div>
+                                    </div>
+                                </div>
+                                <button id="btn-toggle-gap-log" class="btn btn-secondary btn-sm" style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; height: 34px;" onclick="event.stopPropagation();">
+                                    <span id="gap-log-toggle-icon">▼</span>
+                                    <span id="gap-log-toggle-text">Lückenprotokoll anzeigen</span>
+                                </button>
+                            </div>
+                            <div class="stats-section-body" style="margin-top: 1.25rem;">
+                                <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 0;">
+                                    <div class="kpi-card" style="border-left-color: var(--primary-color);">
+                                        <div class="kpi-title">Datenpunkte</div>
+                                        <div class="kpi-value" id="kpi-count">0</div>
+                                        <div class="kpi-sub" id="kpi-range">Gültige Messungen</div>
+                                    </div>
+                                    <div class="kpi-card" id="kpi-card-quality" style="border-left-color: #10b981;">
+                                        <div class="kpi-title">Datenqualität</div>
+                                        <div class="kpi-value" id="kpi-quality">100.00 <span class="unit">%</span></div>
+                                        <div class="kpi-sub" id="kpi-quality-sub">100% fehlerfreie Messwerte</div>
+                                    </div>
+                                </div>
+                                <div id="collapsible-gap-log-wrapper" style="display: none; margin-top: 1.25rem; border-top: 1px dashed var(--border-color); padding-top: 1rem;">
+                                    <p class="sub-text" style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">Vollständigkeitstest über den gesamten ausgewählten Zeitraum. Eventuelle zeitliche Lücken werden hier chronologisch aufgeführt.</p>
+                                    <div id="quality-log-container"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEKTION 2: Leistungs- & Energiekennzahlen -->
+                        <div class="chart-card stats-section" id="section-kpis" data-loaded="false" style="width: 100%; box-sizing: border-box; flex: none; min-height: auto; margin-bottom: 1rem;">
+                            <div class="stats-section-header" data-toggle-section="section-kpis" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; flex-wrap: nowrap; gap: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; align-items: center; gap: 0.6rem; min-width: 0; flex: 1;">
+                                    <span class="stats-section-chevron" style="transition: transform 0.25s ease; display: inline-flex; flex-shrink: 0;">▶</span>
+                                    <div style="min-width: 0; overflow: hidden;">
+                                        <h3 class="chart-title" style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Leistungs- &amp; Energiekennzahlen</h3>
+                                        <div id="stats-kpi-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            Zeitraum: <span id="stats-kpi-range">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="stats-dataset-select-wrapper" style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;" onclick="event.stopPropagation();">
+                                    <label class="sub-text" style="font-size: 0.8rem; font-weight: 500; margin: 0; white-space: nowrap;">Lastgang:</label>
+                                    <select id="select-stats-dataset" class="input-field" style="height: 34px; width: 220px; max-width: 260px; padding: 0 0.5rem; font-size: 0.8rem; border-radius: var(--radius-sm); background: var(--bg-color); color: var(--text-main); border-color: var(--border-color); cursor: pointer; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></select>
+                                </div>
+                            </div>
+                            <div class="stats-section-body" style="display: none; margin-top: 1.25rem;">
+                                <div class="kpi-grid">
+                                    <div class="kpi-card"><div class="kpi-title" id="kpi-title-max">Max. Leistung</div><div class="kpi-value" id="kpi-max">0.00 <span class="unit">kW</span></div><div class="kpi-sub" id="kpi-max-time">-</div></div>
+                                    <div class="kpi-card"><div class="kpi-title" id="kpi-title-avg">Durchschnitt</div><div class="kpi-value" id="kpi-avg">0.00 <span class="unit">kW</span></div><div class="kpi-sub">Über ausgewählten Zeitraum</div></div>
+                                    <div class="kpi-card"><div class="kpi-title" id="kpi-title-min">Min. Leistung</div><div class="kpi-value" id="kpi-min">0.00 <span class="unit">kW</span></div><div class="kpi-sub" id="kpi-min-time">-</div></div>
+                                    <div class="kpi-card"><div class="kpi-title">Gesamtenergie</div><div class="kpi-value" id="kpi-energy">0.00 <span class="unit">kWh</span></div><div class="kpi-sub">Zeitliches Integral (Wirkarbeit)</div></div>
+                                    <div class="kpi-card" id="kpi-card-ht"><div class="kpi-title">HT-Verbrauch (Hochtarif)</div><div class="kpi-value" id="kpi-energy-ht">0.00 <span class="unit">kWh</span></div><div class="kpi-sub" id="kpi-sub-ht">Hochtarif (HT)</div></div>
+                                    <div class="kpi-card" id="kpi-card-nt"><div class="kpi-title">NT-Verbrauch (Niedertarif)</div><div class="kpi-value" id="kpi-energy-nt">0.00 <span class="unit">kWh</span></div><div class="kpi-sub" id="kpi-sub-nt">Niedertarif (NT)</div></div>
+                                    <div class="kpi-card" id="kpi-card-st" style="display: none;"><div class="kpi-title">ST-Verbrauch (Standardtarif)</div><div class="kpi-value" id="kpi-energy-st">0.00 <span class="unit">kWh</span></div><div class="kpi-sub" id="kpi-sub-st">Standardtarif (ST)</div></div>
+                                </div>
+                                <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                                        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--text-main);">Leistungsspitzen</h4>
+                                        <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                            <div style="display: flex; align-items: center; gap: 0.4rem;"><label class="sub-text" style="font-size: 0.8rem; font-weight: 500; margin: 0; white-space: nowrap;">Anzahl:</label><select id="select-peaks-limit" class="input-field" style="width: 95px; height: 34px; padding: 0 0.5rem; font-size: 0.8rem; border-radius: var(--radius-sm); background: var(--bg-color); color: var(--text-main); border-color: var(--border-color); cursor: pointer;"><option value="10" selected>Top 10</option><option value="20">Top 20</option><option value="50">Top 50</option><option value="100">Top 100</option></select></div>
+                                            <div style="display: flex; align-items: center; gap: 0.4rem;"><label class="sub-text" style="font-size: 0.8rem; font-weight: 500; margin: 0; white-space: nowrap;">Mindestabstand:</label><select id="select-peaks-distance" class="input-field" style="width: 155px; height: 34px; padding: 0 0.5rem; font-size: 0.8rem; border-radius: var(--radius-sm); background: var(--bg-color); color: var(--text-main); border-color: var(--border-color); cursor: pointer;"><option value="0">Kein Abstand</option><option value="1">1 Stunde</option><option value="4" selected>4 Stunden</option><option value="12">12 Stunden</option><option value="24">24 Stunden (1 Tag)</option><option value="168">168 Stunden (1 Woche)</option></select></div>
+                                        </div>
+                                    </div>
+                                    <div class="table-container" style="border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden;">
+                                        <table id="peaks-table" class="data-table"><thead><tr><th>Rang</th><th>Datum</th><th>Uhrzeit</th><th>kW</th><th>Datenreihe / Messkanal</th></tr></thead><tbody></tbody></table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEKTION 3: Periodenauswertung -->
+                        <div class="chart-card stats-section" id="section-periods" data-loaded="false" style="width: 100%; box-sizing: border-box; flex: none; min-height: auto; margin-bottom: 1rem;">
+                            <div class="stats-section-header" data-toggle-section="section-periods" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; flex-wrap: wrap; gap: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                    <span class="stats-section-chevron" style="transition: transform 0.25s ease; display: inline-flex;">▶</span>
+                                    <div>
+                                        <h3 class="chart-title" style="margin: 0;" id="pivot-table-title">Periodenauswertung</h3>
+                                        <div id="pivot-table-subtitle" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Monats-, Quartals- &amp; Datenreihenvergleich der Verbrauchswerte</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;" onclick="event.stopPropagation();">
+                                    <div style="display: flex; align-items: center; gap: 0.3rem;">
+                                        <label class="sub-text" style="font-size: 0.78rem; font-weight: 600; margin: 0; white-space: nowrap; color: var(--text-muted);">Ansicht:</label>
+                                        <select id="select-pivot-view" class="input-field" style="height: 34px; padding: 0 0.4rem; font-size: 0.78rem; border-radius: var(--radius-sm); background: var(--bg-color); color: var(--text-main); border-color: var(--border-color); cursor: pointer;">
+                                            <option value="timeline" selected>Perioden-Verlauf</option>
+                                            <option value="matrix">Pivot-Matrix (Horizontal)</option>
+                                            <option value="datasets">Datenreihenvergleich</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div id="wrapper-pivot-interval" style="display: flex; align-items: center; gap: 0.3rem;">
+                                        <label class="sub-text" style="font-size: 0.78rem; font-weight: 600; margin: 0; white-space: nowrap; color: var(--text-muted);">Intervall:</label>
+                                        <select id="select-pivot-interval" class="input-field" style="height: 34px; padding: 0 0.4rem; font-size: 0.78rem; border-radius: var(--radius-sm); background: var(--bg-color); color: var(--text-main); border-color: var(--border-color); cursor: pointer;">
+                                            <option value="month" selected>Monatlich</option>
+                                            <option value="quarter">Quartalsweise (Q1-Q4)</option>
+                                            <option value="week">Wöchentlich (KW)</option>
+                                            <option value="day">Täglich</option>
+                                        </select>
+                                    </div>
+
+                                    <div id="wrapper-pivot-mode" style="display: flex; align-items: center; gap: 0.3rem;">
+                                        <label class="sub-text" style="font-size: 0.78rem; font-weight: 600; margin: 0; white-space: nowrap; color: var(--text-muted);">Fokus:</label>
+                                        <select id="select-pivot-mode" class="input-field" style="height: 34px; padding: 0 0.4rem; font-size: 0.78rem; border-radius: var(--radius-sm); background: var(--bg-color); color: var(--text-main); border-color: var(--border-color); cursor: pointer;">
+                                            <option value="performance" selected>Leistung &amp; Gesamtenergie</option>
+                                            <option value="tariffs">Tarif-Verbrauch (HT / NT / ST)</option>
+                                            <option value="pivot_peak">Pivot Peak (kW)</option>
+                                            <option value="pivot_energy">Pivot Verbrauch (kWh)</option>
+                                        </select>
+                                    </div>
+
+                                    <button id="btn-export-pivot-csv" class="btn btn-secondary btn-sm" title="Tabelle als CSV exportieren" style="height: 34px; padding: 0 0.6rem;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        <span>CSV</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="stats-section-body" style="display: none; margin-top: 1rem;">
+                                <div class="table-container" style="border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow-x: auto; max-height: 500px;">
+                                    <table id="pivot-table" class="data-table" style="width: 100%; text-align: left; border-collapse: collapse;">
+                                        <thead><tr id="pivot-table-thead"></tr></thead>
+                                        <tbody id="pivot-table-tbody"></tbody>
+                                        <tfoot id="pivot-table-tfoot" style="font-weight: 700; background-color: var(--surface-hover); border-top: 2px solid var(--border-color);"></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id="tab-lastgang" class="tab-content active">
+                        <div class="chart-card">
+                            <div class="chart-header-row">
+                                <div class="chart-heading">
+                                    <h3 class="chart-title" id="timeline-chart-title">Leistungsverlauf</h3>
+                                    <div id="timeline-chart-context" class="chart-context" aria-live="polite">
+                                        <span id="timeline-aggregation-badge" class="aggregation-badge">Monatsmittel</span>
+                                        <span id="timeline-range-info">Zeitraum wird geladen</span>
+                                    </div>
+                                </div>
+                                <div class="chart-actions">
+                                    <button id="btn-export-png" class="btn btn-secondary btn-sm" title="Diagramm als PNG-Bild speichern">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                        <span>Bild</span>
+                                    </button>
+                                    <button id="btn-export-csv" class="btn btn-secondary btn-sm" title="Aggregierte Daten als CSV exportieren">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        <span>CSV Daten</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="chart-timeline" style="width: 100%; min-height: 520px; flex: 1;"></div>
+                        </div>
+                    </div>
+
+                    <div id="tab-tagesprofil" class="tab-content">
+                        <div class="chart-card" style="display: flex; flex-direction: column;">
+                            <div class="chart-header-row">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <h3 class="chart-title" id="daily-profile-title">Überlagerte Tagesprofile</h3>
+                                    <button type="button" class="btn-info" onclick="showDailyProfileInfoModal()" style="background: none; border: none; color: var(--primary-color); cursor: pointer; padding: 2px 4px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s;" title="Erklärung &amp; Möglichkeiten der Tagesprofile">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    </button>
+                                </div>
+                                <div class="chart-actions">
+                                    <button id="btn-export-profile-png" class="btn btn-secondary btn-sm" title="Diagramm als PNG-Bild speichern">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                        <span>Bild</span>
+                                    </button>
+                                    <button id="btn-export-profile-csv" class="btn btn-secondary btn-sm" title="Aggregierte Tagesprofildaten als CSV exportieren">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        <span>CSV Daten</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="chart-daily-profile" style="width: 100%; height: 100%; flex: 1;"></div>
+                        </div>
+                    </div>
+
+                    <div id="tab-editor" class="tab-content">
+                        <div class="chart-card" style="display: flex; flex-direction: column; overflow: hidden; max-height: 100%; min-height: 550px; flex: 1; gap: 1rem; padding: 1.5rem;">
+                            <!-- Header Control Row -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                                <div>
+                                    <h3 class="chart-title" style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                                        Daten-Editor
+                                    </h3>
+                                </div>
+                                
+                                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                                    <!-- Action Buttons Group -->
+                                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                        <button id="btn-editor-toggle-lock" class="btn btn-secondary" style="height: 34px; padding: 0 0.8rem; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-color: var(--border-color);">
+                                            <span id="editor-lock-icon" style="display: flex; align-items: center;">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                            </span>
+                                            <span id="editor-lock-text">Bearbeiten freischalten</span>
+                                        </button>
+
+                                        <button id="btn-editor-cancel-edit" class="btn btn-secondary" style="display: none; height: 34px; font-size: 0.8rem; padding: 0 0.8rem; align-items: center; gap: 0.3rem; cursor: pointer; color: var(--warning-color); border-color: rgba(239, 68, 68, 0.2);">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                            Abbrechen
+                                        </button>
+
+                                        <button id="btn-editor-add-channel" class="btn btn-secondary" style="height: 34px; font-size: 0.8rem; padding: 0 0.8rem; display: flex; align-items: center; gap: 0.3rem; cursor: pointer;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                            Lastgang hinzufügen
+                                        </button>
+
+                                        <button id="btn-editor-mass-copy-paste" class="btn btn-secondary" style="height: 34px; font-size: 0.8rem; padding: 0 0.8rem; display: flex; align-items: center; gap: 0.3rem; cursor: pointer; border-color: var(--border-color);">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                            <span id="editor-mass-btn-text">Massen-Import / Export</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Divider -->
+                                    <div style="width: 1px; height: 24px; background-color: var(--border-color); display: inline-block;"></div>
+
+                                    <!-- Navigation Group -->
+                                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                            <label class="sub-text" style="font-size: 0.8rem; font-weight: 500; margin: 0; white-space: nowrap;">Gehe zu:</label>
+                                            <input type="date" id="editor-jump-date" class="input-field" style="width: 130px; height: 34px; padding: 0 0.5rem; font-size: 0.8rem; border-radius: var(--radius-sm);">
+                                        </div>
+
+                                        <div style="display: flex; gap: 0.2rem; align-items: center;">
+                                            <button id="editor-table-prev" class="btn btn-secondary btn-sm" style="width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;">&lt;</button>
+                                            <span id="editor-table-info" class="sub-text" style="font-size: 0.8rem; font-weight: 600; min-width: 140px; text-align: center; white-space: nowrap;">0 Zeilen geladen</span>
+                                            <button id="editor-table-next" class="btn btn-secondary btn-sm" style="width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;">&gt;</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Scrollable Grid Table -->
+                            <div class="table-container" style="flex: 1; overflow: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md); outline: none; background-color: var(--bg-color); scrollbar-gutter: stable;" tabindex="0" id="editor-grid-wrapper">
+                                <table class="data-table spreadsheet-grid" id="editor-values-table" style="width: auto; border-collapse: collapse; table-layout: fixed;">
+                                    <thead style="position: sticky; top: 0; z-index: 10; background-color: var(--surface-color);">
+                                        <!-- Will be dynamically populated via JS -->
+                                    </thead>
+                                    <tbody style="background-color: var(--surface-color);">
+                                        <!-- Will be dynamically populated via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- AgNes Tab 1: Kennzahlen & Kurven -->
+                    <div id="tab-agnes-charts" class="tab-content" style="overflow-y: auto; padding-right: 0.5rem; gap: 1rem;">
+                        <!-- Zeitraum Warnung (Standardmäßig ausgeblendet) -->
+                        <div id="agnes-timeframe-warning" class="hidden" style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--warning-color); border-radius: var(--radius-md); padding: 1.5rem; text-align: center; margin-top: 0.5rem; flex-shrink: 0; width: 100%; box-sizing: border-box;">
+                            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--warning-color)" stroke-width="2" style="margin-bottom: 0.75rem; margin: 0 auto 0.75rem auto; display: block;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <h3 style="margin: 0 0 0.5rem 0; color: var(--text-main); font-size: 1.1rem;">Zeitraum zu lang für Netzentgelt-Optimierung</h3>
+                            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem; max-width: 600px; margin: 0 auto; line-height: 1.4;">
+                                Die Kapazitäts-Szenariorechnung basiert auf den Jahreshöchstlasten eines Kalenderjahres. Dein ausgewählter Zeitraum beträgt <strong id="agnes-warning-days">0</strong> Tage. Bitte schränke den Zeitraum in der linken Seitenleiste auf maximal 366 Tage ein, um die Berechnung zu starten.
+                            </p>
+                        </div>
+
+                        <!-- Zeitraum zu kurz Warnung (Standardmäßig ausgeblendet) -->
+                        <div id="agnes-timeframe-short-warning" class="hidden" style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--warning-color); border-radius: var(--radius-md); padding: 1.5rem; text-align: center; margin-top: 0.5rem; flex-shrink: 0; width: 100%; box-sizing: border-box;">
+                            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--warning-color)" stroke-width="2" style="margin-bottom: 0.75rem; margin: 0 auto 0.75rem auto; display: block;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <h3 style="margin: 0 0 0.5rem 0; color: var(--text-main); font-size: 1.1rem;">Zeitraum zu kurz für Netzentgelt-Optimierung</h3>
+                            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem; max-width: 600px; margin: 0 auto; line-height: 1.4;">
+                                Die Kapazitäts-Szenariorechnung erfordert für eine aussagekräftigere Hochrechnung mindestens <strong>30 Tage</strong> an Daten. Dein ausgewählter Zeitraum beträgt aktuell <strong id="agnes-warning-short-days">0</strong> Tage.
+                            </p>
+                        </div>
+
+                        <div id="agnes-quality-alert" class="hidden" role="status" style="background: rgba(245, 158, 11, 0.10); border: 1px solid var(--warning-color); border-radius: var(--radius-md); padding: 0.8rem 1rem; margin-top: 0.5rem; color: var(--text-main); font-size: 0.85rem; line-height: 1.4;">
+                            <div id="agnes-quality-alert-text"></div>
+                        </div>
+
+                        <!-- Hauptinhalt für Tab 1 -->
+                        <div id="tab-agnes-content" style="display: flex; flex-direction: column; gap: 1rem; flex: 1; width: 100%;">
+                            <!-- Single-Line Kopfbereich für AgNes Ergebnisse (Dauerhaft oben sichtbar) -->
+                            <div id="agnes-active-info-bar" style="background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.45rem 0.8rem; font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; box-sizing: border-box; box-shadow: var(--shadow-sm); flex-wrap: wrap; margin-bottom: 0.25rem;">
+                                
+                                <!-- Links: Titel & Haupt-Metadaten -->
+                                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1; min-width: 0;">
+                                    <h2 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--primary-color)" stroke-width="2.5" style="flex-shrink: 0;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                                        Kapazitätsbestellung <span class="beta-badge" style="margin-left: 0.3rem; vertical-align: middle;">Beta</span>
+                                    </h2>
+                                    
+                                    <span style="color: var(--border-color); font-size: 0.8rem; flex-shrink: 0;">|</span>
+                                    
+                                    <!-- Inkrementelle Metadaten-Badges -->
+                                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.78rem; min-width: 0; flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 6px; min-width: 0;" title="Fokus-Lastgang für die Kapazitäts-Szenariorechnung wählen">
+                                            <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; font-weight: 600; flex-shrink: 0;">Optimierungs-Lastgang:</span>
+                                            <select id="select-agnes-dataset" class="input-field" style="height: 28px; padding: 0 0.4rem; font-size: 0.78rem; font-weight: 600; border-radius: var(--radius-sm); background: var(--bg-color); color: var(--primary-color); border-color: var(--border-color); cursor: pointer; max-width: 260px; text-overflow: ellipsis; white-space: nowrap;" onchange="updateDashboard()"></select>
+                                            <span id="agnes-info-count-badge" style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted); white-space: nowrap;"></span>
+                                        </div>
+                                        
+                                        <span style="color: var(--text-muted); opacity: 0.4;">•</span>
+                                        
+                                        <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                                            <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Modus:</span>
+                                            <span id="agnes-info-mode" style="font-weight: 600; color: var(--primary-color);">-</span>
+                                        </div>
+                                        
+                                        <span style="color: var(--text-muted); opacity: 0.4;">•</span>
+                                        
+                                        <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                                            <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; font-weight: 600;">Zeitraum:</span>
+                                            <span id="agnes-info-zeitraum" style="font-weight: 500; color: var(--text-main);">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Rechts: Kompakte Aktionsbuttons -->
+                                <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="exportAgnesCSV()" style="display: flex; align-items: center; gap: 4px; padding: 0.25rem 0.55rem; font-size: 0.72rem; font-weight: 600; cursor: pointer; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-main); transition: all 0.2s;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='var(--surface-color)'" title="CSV herunterladen">
+                                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                        CSV
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="printAgnesReport()" style="display: flex; align-items: center; gap: 4px; padding: 0.25rem 0.55rem; font-size: 0.72rem; font-weight: 600; cursor: pointer; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-main); transition: all 0.2s;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='var(--surface-color)'" title="PDF-Bericht drucken">
+                                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                        PDF
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="showAgnesInfoModal('general')" style="display: flex; align-items: center; gap: 4px; padding: 0.25rem 0.55rem; font-size: 0.72rem; font-weight: 600; cursor: pointer; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-main); transition: all 0.2s;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='var(--surface-color)'" title="Modell-Erklärung anzeigen">
+                                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--primary-color)" stroke-width="2.5" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                        Info
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Kompakter KPI-Streifen (Dauerhaft oben sichtbar) -->
+                            <div class="kpi-strip" style="display: flex; flex-wrap: wrap; gap: 1px; background: var(--border-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; box-shadow: var(--shadow-sm); width: 100%; margin-bottom: 0.5rem;">
+                                <div class="kpi-strip-item" style="flex: 1; background: var(--surface-color); padding: 0.5rem 0.75rem; border-top: 3px solid #ef4444; display: flex; flex-direction: column; justify-content: center; min-width: 150px;">
+                                    <div class="kpi-title" style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.15rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Jahreshöchstlast (Peak)</div>
+                                    <div class="kpi-value" id="agnes-kpi-peak" style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.05rem;">-</div>
+                                    <div class="kpi-desc" style="font-size: 0.65rem; color: var(--text-muted);">Maximalwert im Zeitraum</div>
+                                </div>
+                                <div class="kpi-strip-item" style="flex: 1; background: var(--surface-color); padding: 0.5rem 0.75rem; border-top: 3px solid var(--primary-color); display: flex; flex-direction: column; justify-content: center; min-width: 150px;">
+                                    <div class="kpi-title" id="agnes-opt-cost-title" style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.15rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Optimale Buchung (K<sub>opt</sub>)</div>
+                                    <div class="kpi-value" id="agnes-kpi-opt" style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.05rem;">-</div>
+                                    <div class="kpi-desc" id="agnes-kpi-opt-percent" style="font-size: 0.65rem; color: var(--text-muted);">Empfohlene Leistung</div>
+                                </div>
+                                <div class="kpi-strip-item" style="flex: 1; background: var(--surface-color); padding: 0.5rem 0.75rem; border-top: 3px solid var(--warning-color); display: flex; flex-direction: column; justify-content: center; min-width: 150px;">
+                                    <div class="kpi-title" style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.15rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Kosten bei 100%</div>
+                                    <div class="kpi-value" id="agnes-kpi-max-cost" style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.05rem;">-</div>
+                                    <div class="kpi-desc" id="agnes-kpi-max-cost-desc" style="font-size: 0.65rem; color: var(--text-muted);">Peak-Leistungsbuchung</div>
+                                </div>
+                                <div class="kpi-strip-item" style="flex: 1; background: var(--surface-color); padding: 0.5rem 0.75rem; border-top: 3px solid var(--primary-color); display: flex; flex-direction: column; justify-content: center; min-width: 150px;">
+                                    <div class="kpi-title" style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.15rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Kosten bei K<sub>opt</sub></div>
+                                    <div class="kpi-value" id="agnes-kpi-opt-cost" style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.05rem;">-</div>
+                                    <div class="kpi-desc" id="agnes-kpi-opt-cost-desc" style="font-size: 0.65rem; color: var(--text-muted);">Optimum-Leistungsbuchung</div>
+                                </div>
+                                <div class="kpi-strip-item" style="flex: 1; background: var(--surface-color); padding: 0.5rem 0.75rem; border-top: 3px solid var(--success-color); display: flex; flex-direction: column; justify-content: center; min-width: 150px; background: rgba(16, 185, 129, 0.04);">
+                                    <div class="kpi-title" style="font-size: 0.7rem; color: var(--success-color); margin-bottom: 0.15rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Jährliche Ersparnis</div>
+                                    <div class="kpi-value" id="agnes-kpi-savings" style="font-size: 1.25rem; font-weight: 700; color: var(--success-color); margin-bottom: 0.05rem;">-</div>
+                                    <div class="kpi-desc" id="agnes-kpi-savings-percent" style="font-size: 0.65rem; color: var(--success-color); font-weight: 600;">Einsparpotenzial</div>
+                                </div>
+                            </div>
+
+                            <!-- Diagramme nebeneinander -->
+                            <!-- Diagramme nebeneinander -->
+                            <div class="comparison-grid">
+                                <div class="chart-card" style="min-height: 460px; padding: 1.2rem 1.5rem; flex: 1;">
+                                    <div class="chart-header-row">
+                                        <div class="chart-heading">
+                                            <h3 class="chart-title" id="agnes-duration-title">Jahresdauerlinie & Kapazitätsgrenze</h3>
+                                            <div class="chart-context">
+                                                <span class="aggregation-badge">Experimentelles Modell</span>
+                                                <span id="agnes-duration-context-info">Kumulierte Jahresstunden (h)</span>
+                                            </div>
+                                        </div>
+                                        <div class="chart-actions">
+                                            <label id="lbl-agnes-show-individual-years" class="sub-text" style="font-size: 0.78rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-muted); margin-right: 0.5rem;" title="Einzelne Jahresdauerlinien zusätzlich zur Hüllkurve einblenden">
+                                                <input type="checkbox" id="chk-agnes-show-individual-years" onchange="updateDashboard()">
+                                                <span>Einzeljahre</span>
+                                            </label>
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="exportAgnesChart('duration')" title="Diagramm als PNG-Bild speichern">
+                                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                                <span>Bild</span>
+                                            </button>
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="showAgnesInfoModal('duration')" title="Erklärung & Methodik">
+                                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                                <span>Info</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="chart-agnes-duration" style="width: 100%; height: 400px;"></div>
+                                </div>
+                                <div class="chart-card" style="min-height: 460px; padding: 1.2rem 1.5rem; flex: 1;">
+                                    <div class="chart-header-row">
+                                        <div class="chart-heading">
+                                            <h3 class="chart-title" id="agnes-cost-title">Netzkosten-Kurve nach Buchungshöhe</h3>
+                                            <div class="chart-context">
+                                                <span class="aggregation-badge">K-Sweep</span>
+                                                <span>Kostenverlauf in Abhängigkeit der Kapazität K</span>
+                                            </div>
+                                        </div>
+                                        <div class="chart-actions">
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="exportAgnesChart('cost')" title="Diagramm als PNG-Bild speichern">
+                                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                                <span>Bild</span>
+                                            </button>
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="showAgnesInfoModal('cost')" title="Erklärung & Methodik">
+                                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                                <span>Info</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="chart-agnes-cost" style="width: 100%; height: 400px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AgNes Tab 2: Szenarien-Vergleich -->
+                    <div id="tab-agnes-scenarios" class="tab-content" style="overflow-y: auto; padding-right: 0.5rem; gap: 1rem;">
+                        <div class="chart-card" style="flex: none; margin-top: 0.5rem; padding: 1.5rem; max-width: 850px; margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box;">
+                            <div class="chart-header-row" style="margin-bottom: 1rem;">
+                                <div class="chart-heading">
+                                    <h3 class="chart-title">Szenarien-Vergleich (Hochgerechnete Jahresentgelte)</h3>
+                                    <div class="chart-context">
+                                        <span class="aggregation-badge">Drei Buchungsstufen</span>
+                                        <span id="agnes-scenario-ds-label">Lastgang</span>
+                                    </div>
+                                </div>
+                                <div class="chart-actions">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="exportAgnesCSV()" title="Szenarien-Vergleich & Berechnungen als CSV herunterladen">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                        <span>CSV Daten</span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="showAgnesInfoModal('general')" title="Erklärung anzeigen">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                        <span>Info</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-container" style="border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; background: var(--surface-color); width: 100%;">
+                                <table class="data-table" id="agnes-comparison-table" style="display: table; width: 100%;">
+                                    <thead style="background-color: var(--surface-hover); color: var(--text-muted); display: table-header-group;">
+                                        <tr>
+                                            <th style="padding: 0.8rem; font-weight: 600; text-align: left;">Kostenart / Parameter</th>
+                                            <th style="padding: 0.8rem; font-weight: 600; text-align: right;" id="agnes-table-hdr-min">Geplante Buchung (10%)</th>
+                                            <th style="padding: 0.8rem; font-weight: 700; text-align: right; color: var(--success-color);" id="agnes-table-hdr-opt">Optimale Buchung (K<sub>opt</sub>)</th>
+                                            <th style="padding: 0.8rem; font-weight: 600; text-align: right;" id="agnes-table-hdr-max">Maximale Buchung (100%)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody style="display: table-row-group;">
+                                        <!-- Wird über JS befüllt -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AgNes Tab 3: Risiko-Matrix -->
+                    <div id="tab-agnes-breakdown" class="tab-content" style="overflow-y: auto; padding-right: 0.5rem; gap: 1rem;">
+                        <div id="agnes-multi-breakdown-card" class="chart-card hidden" style="flex: none; margin-top: 0.5rem; padding: 1.5rem; max-width: 850px; margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box;">
+                            <div class="chart-header-row" style="margin-bottom: 1rem;">
+                                <div class="chart-heading">
+                                    <h3 class="chart-title">Jahresvergleich & Kostenrisiken</h3>
+                                    <div class="chart-context">
+                                        <span class="aggregation-badge">Mehrjahres-Risiko</span>
+                                        <span id="agnes-breakdown-ds-label">Einzeljahr-Optima vs. Vertrag</span>
+                                    </div>
+                                </div>
+                                <div class="chart-actions">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="exportAgnesCSV()" title="Jahresvergleich & Mehrjahres-Risikomatrix als CSV herunterladen">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="16" x2="12" y2="3"></line></svg>
+                                        <span>CSV Daten</span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="showAgnesInfoModal('matrix')" title="Erklärung der Risiko-Matrix & Mehrjährige Analyse">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                        <span>Info</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-container" style="border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; background: var(--surface-color); width: 100%;">
+                                <table class="data-table" id="agnes-multi-breakdown-table" style="display: table; width: 100%;">
+                                    <thead style="background-color: var(--surface-hover); color: var(--text-muted); display: table-header-group;">
+                                        <tr>
+                                            <th style="padding: 0.8rem; font-weight: 600; text-align: left;">Jahr / Lastgang</th>
+                                            <th style="padding: 0.8rem; font-weight: 600; text-align: right;">Höchstlast</th>
+                                            <th style="padding: 0.8rem; font-weight: 600; text-align: right; color: var(--primary-color);">Einzeljahr-Opt. (K<sub>opt</sub>)</th>
+                                            <th style="padding: 0.8rem; font-weight: 600; text-align: right; color: var(--success-color);">Mehrjahres-Vertrag (K<sub>opt</sub>)</th>
+                                            <th style="padding: 0.8rem; font-weight: 600; text-align: right;">Netzkosten (€)</th>
+                                            <th style="padding: 0.8rem; font-weight: 600; text-align: right;">davon AP 2 (Überschr.)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody style="display: table-row-group;">
+                                        <!-- Wird über JS befüllt -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div> <!-- Closes main-workspace -->
+    </div> <!-- Closes dashboard-screen -->
+    </div>
+    
+    <!-- Unit Selection Modal -->
+    <div id="unit-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 class="modal-title">Einheit des Lastgangs festlegen</h3>
+            <p class="modal-desc" id="unit-modal-filename">Datei: daten.csv</p>
+            <p class="modal-info">Bitte wähle die Einheit der importierten Daten aus, um die korrekte Skalierung zu gewährleisten:</p>
+            
+            <div class="modal-form-group">
+                <select id="modal-import-unit" class="input-field" style="width: 100%; box-sizing: border-box;">
+                    <option value="kw">kW</option>
+                    <option value="kwh">kWh</option>
+                </select>
+            </div>
+            
+            <div class="modal-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button id="btn-modal-cancel" class="btn btn-secondary" style="padding: 0.5rem 1.2rem; cursor: pointer;">Abbrechen</button>
+                <button id="btn-modal-confirm" class="btn btn-primary" style="padding: 0.5rem 1.2rem; cursor: pointer;">Importieren</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mass Copy Paste Modal -->
+    <div id="mass-copy-paste-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width: 700px; width: 90%;">
+            <h3 class="modal-title" id="mass-modal-title">Massen-Import / Export (Excel / CSV)</h3>
+            <p class="modal-desc" id="mass-modal-desc">Kopiere die rohen Daten des gewählten Zeitraums (Export) oder füge neue Tabellendaten ein, um einen neuen Lastgang zu generieren (Import).</p>
+            
+            <div class="modal-form-group" style="margin-top: 1rem;">
+                <label class="sub-text" style="font-weight: 600; display: block; margin-bottom: 0.25rem;">Rohdaten (Tabulator- oder Semikolon-getrennt, Spalten: Datum | Uhrzeit | Wert):</label>
+                <textarea id="mass-modal-textarea" class="input-field" style="width: 100%; height: 320px; font-family: monospace; font-size: 0.85rem; box-sizing: border-box; resize: vertical; background: var(--bg-color); color: var(--text-main); border-color: var(--border-color);" placeholder="Datum\tUhrzeit\tWert..."></textarea>
+            </div>
+            
+            <div class="modal-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
+                <button id="btn-mass-modal-download" class="btn btn-secondary" style="padding: 0.5rem 1.2rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Als CSV exportieren
+                </button>
+
+                <button id="btn-mass-modal-copy" class="btn btn-secondary" style="padding: 0.5rem 1.2rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Text kopieren
+                </button>
+                
+                <button id="btn-mass-modal-clear" class="btn btn-secondary" style="padding: 0.5rem 1.2rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; color: var(--warning-color); border-color: rgba(239, 68, 68, 0.2);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    Text leeren
+                </button>
+                <button id="btn-mass-modal-close" class="btn btn-secondary" style="padding: 0.5rem 1.2rem; cursor: pointer;">Schließen</button>
+                <button id="btn-mass-modal-confirm" class="btn btn-primary" style="padding: 0.5rem 1.2rem; cursor: pointer;">Als neue Spalte importieren</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Capacity scenario mathematical explanation modal -->
+    <div id="agnes-info-modal" class="modal-overlay hidden" style="z-index: 10000; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.75); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="modal-content" style="background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); width: 550px; max-width: 90%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-lg);">
+            <div class="modal-header" style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="modal-title" style="margin: 0; font-size: 1.1rem; color: var(--text-color); display: flex; align-items: center;">
+                    <!-- JS populated title -->
+                </h3>
+                <button type="button" onclick="closeAgnesInfoModal()" class="btn-close-modal" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body modal-body-content" style="padding: 1.25rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 0.8rem; font-size: 0.85rem; color: var(--text-main); line-height: 1.5;">
+                <!-- JS populated body content -->
+            </div>
+            <div class="modal-footer" style="padding: 0.75rem 1.25rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; background: var(--surface-hover);">
+                <button type="button" onclick="closeAgnesInfoModal()" class="btn" style="font-size: 0.8rem; padding: 0.4rem 1.2rem; background: var(--primary-color); color: #0f172a; font-weight: 600; cursor: pointer; border: none; border-radius: var(--radius-sm);">Verstanden</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Holiday Manager Modal -->
+    <div id="modal-holiday-manager" class="modal hidden" style="z-index: 1000; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.75); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="modal-content" style="background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); width: 500px; max-width: 90%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-lg);">
+            <div class="modal-header" style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-color); display: flex; align-items: center; gap: 0.5rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-color);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Feiertags-Manager
+                </h3>
+                <button type="button" id="btn-close-holiday-modal" class="btn-close-modal" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 1.25rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1rem; font-size: 0.85rem;">
+                
+                <!-- State Selection -->
+                <div>
+                    <label for="select-holiday-state" style="font-weight: 600; display: block; margin-bottom: 0.35rem; color: var(--text-color);">Bundesland für gesetzliche Feiertage:</label>
+                    <select id="select-holiday-state" style="width: 100%; box-sizing: border-box; padding: 0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface-hover); color: var(--text-color); font-family: inherit;">
+                        <option value="BW">Baden-Württemberg</option>
+                        <option value="BY">Bayern</option>
+                        <option value="BE">Berlin</option>
+                        <option value="BB">Brandenburg</option>
+                        <option value="HB">Bremen</option>
+                        <option value="HH">Hamburg</option>
+                        <option value="HE">Hessen</option>
+                        <option value="MV">Mecklenburg-Vorpommern</option>
+                        <option value="NI">Niedersachsen</option>
+                        <option value="NW">Nordrhein-Westfalen (NRW)</option>
+                        <option value="RP">Rheinland-Pfalz</option>
+                        <option value="SL">Saarland</option>
+                        <option value="SN">Sachsen</option>
+                        <option value="ST">Sachsen-Anhalt</option>
+                        <option value="SH">Schleswig-Holstein</option>
+                        <option value="TH">Thüringen</option>
+                    </select>
+                </div>
+                
+                <!-- Holidays List -->
+                <div>
+                    <span style="font-weight: 600; display: block; margin-bottom: 0.35rem; color: var(--text-color);">Aktive Feiertage im aktuellen Jahr:</span>
+                    <div id="holiday-list-container" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--surface-hover); max-height: 180px; overflow-y: auto; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem;">
+                        <!-- JS populated list -->
+                    </div>
+                </div>
+                
+                <!-- Add Custom Holiday Form -->
+                <div style="border-top: 1px dashed var(--border-color); padding-top: 1rem;">
+                    <span style="font-weight: 600; display: block; margin-bottom: 0.5rem; color: var(--text-color);">Feiertag hinzufügen / überschreiben:</span>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="input-custom-holiday-name" placeholder="Name (z.B. Brückentag)" style="flex: 1; padding: 0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface-hover); color: var(--text-color); font-family: inherit;">
+                            <select id="select-custom-holiday-type" style="width: 130px; padding: 0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface-hover); color: var(--text-color); font-family: inherit;">
+                                <option value="fixed">Jährlich fest</option>
+                                <option value="easter">Ostern-relativ</option>
+                                <option value="specific">Einmalig</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Fixed Date Inputs -->
+                        <div id="custom-holiday-fixed-inputs" style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span>Am:</span>
+                            <input type="number" id="input-custom-holiday-day" placeholder="Tag" min="1" max="31" style="width: 60px; padding: 0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface-hover); color: var(--text-color); text-align: center;">
+                            <span>.</span>
+                            <select id="select-custom-holiday-month" style="flex: 1; padding: 0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface-hover); color: var(--text-color);">
+                                <option value="1">Januar</option>
+                                <option value="2">Februar</option>
+                                <option value="3">März</option>
+                                <option value="4">April</option>
+                                <option value="5">Mai</option>
+                                <option value="6">Juni</option>
+                                <option value="7">Juli</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Dezember</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Easter Offset Inputs -->
+                        <div id="custom-holiday-easter-inputs" style="display: flex; gap: 0.5rem; align-items: center; display: none;">
+                            <span>Tage relativ zu Ostern:</span>
+                            <input type="number" id="input-custom-holiday-easter-offset" placeholder="-2, 50, etc." style="width: 100px; padding: 0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface-hover); color: var(--text-color); text-align: center;">
+                            <span style="color: var(--text-muted); font-size: 0.75rem;">(z.B. -2 = Karfreitag)</span>
+                        </div>
+                        
+                        <!-- Specific Date Inputs -->
+                        <div id="custom-holiday-specific-inputs" style="display: flex; gap: 0.5rem; align-items: center; display: none;">
+                            <span>Datum:</span>
+                            <input type="date" id="input-custom-holiday-specific-date" style="flex: 1; padding: 0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--surface-hover); color: var(--text-color); font-family: inherit;">
+                        </div>
+                        
+                        <button type="button" id="btn-add-custom-holiday" class="btn btn-secondary" style="width: 100%; font-size: 0.8rem; background: var(--surface-color); border: 1px solid var(--primary-color); color: var(--primary-color);">Feiertag hinzufügen</button>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="modal-footer" style="padding: 0.75rem 1.25rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; gap: 0.5rem; background: var(--surface-hover);">
+                <button type="button" id="btn-reset-holidays" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Zurücksetzen</button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" id="btn-cancel-holidays" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Abbrechen</button>
+                    <button type="button" id="btn-save-holidays" class="btn" style="font-size: 0.8rem; padding: 0.4rem 0.8rem; background: var(--primary-color); color: #0f172a; font-weight: 600;">Speichern & Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Application Script Imports (Architecture Etappe C Sprints 1-4) -->
+    <script src="js/shared/identifiers.js?v=304"></script>
+    <script src="js/shared/numbers.js?v=304"></script>
+    <script src="js/shared/dates.js?v=304"></script>
+    <script src="js/shared/html.js?v=304"></script>
+    <script src="js/shared/download.js?v=304"></script>
+    <script src="js/domain/measurement-model.js?v=304"></script>
+    <script src="js/domain/energy-calculation.js?v=304"></script>
+    <script src="js/domain/data-quality.js?v=304"></script>
+    <script src="js/domain/tariff-calculation.js?v=304"></script>
+    <script src="js/domain/profile-calculation.js?v=304"></script>
+    <script src="js/domain/aggregation.js?v=304"></script>
+    <script src="js/agnes/agnes-cost-model.js?v=304"></script>
+    <script src="js/agnes/agnes-validation.js?v=304"></script>
+    <script src="js/agnes/agnes-result.js?v=304"></script>
+    <script src="js/agnes/agnes-optimizer.js?v=304"></script>
+    <script src="js/agnes/agnes-multi-year.js?v=304"></script>
+    <script src="js/state/app-state.js?v=304"></script>
+
+    <!-- Application Scripts -->
+    <script src="import/parser.js?v=304"></script>
+    <script src="data-quality/quality.js?v=304"></script>
+    <script src="energy/energy.js?v=304"></script>
+    <script src="agnes/agnes.js?v=304"></script>
+    <script src="export/export.js?v=304"></script>
+    <script src="ui/ui.js?v=304"></script>
+    <script src="state.js?v=304"></script>
+    <script src="utils.js?v=304"></script>
+    <script src="parser.js?v=304"></script>
+    <script src="charts.js?v=304"></script>
+    <script src="app.js?v=304"></script>
+</body>
+</html>

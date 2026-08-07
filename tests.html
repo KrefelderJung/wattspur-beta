@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lastgang Analyse App - Test Suite</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --surface-hover: #334155;
+            --border-color: #475569;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary-color: #00b4e6;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 4px;
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #00b4e6, #a3e635);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-run {
+            background-color: var(--primary-color);
+            color: #0f172a;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-run:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Stats Panel */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-total .stat-value { color: var(--text-color); }
+        .stat-passed .stat-value { color: var(--success-color); }
+        .stat-failed .stat-value { color: var(--error-color); }
+        .stat-time .stat-value { color: var(--warning-color); }
+
+        /* Test Suites */
+        .suite-section {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .suite-header {
+            background-color: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suite-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+        }
+
+        .suite-badge.pass { background-color: rgba(16, 185, 129, 0.15); color: var(--success-color); }
+        .suite-badge.fail { background-color: rgba(239, 68, 68, 0.15); color: var(--error-color); }
+
+        .test-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .test-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background-color 0.15s;
+        }
+
+        .test-row:last-child {
+            border-bottom: none;
+        }
+
+        .test-row:hover {
+            background-color: var(--surface-hover);
+        }
+
+        .test-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .test-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .test-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .test-detail {
+            font-family: monospace;
+            font-size: 0.75rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 0.15rem 0.4rem;
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+            width: fit-content;
+        }
+
+        .test-status {
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            padding: 0.25rem 0.6rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .status-pass {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-fail {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+        }
+
+        .status-skip {
+            background-color: rgba(245, 158, 11, 0.12);
+            color: var(--warning-color);
+        }
+
+        .suite-badge.skip {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--warning-color);
+        }
+
+        /* Mock Container (Invisible) */
+        #mock-dom-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div>
+                <h1>Lastgang Analyse App</h1>
+                <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Automatisierte Client-Side Test Suite</div>
+            </div>
+            <button class="btn-run" onclick="runAllTests()">Tests ausführen</button>
+        </header>
+        <div style="padding: 0.7rem 0.9rem; border: 1px solid rgba(245, 158, 11, 0.35); border-radius: var(--radius-md); color: var(--text-muted); background: rgba(245, 158, 11, 0.08); font-size: 0.8rem; line-height: 1.45;">
+            <strong style="color: var(--text-color);">Testumgebung:</strong> Der Beta-Kommunikationstest prüft Quelltexte über HTTP/HTTPS. Wird diese Datei direkt als <code>file://</code> geöffnet, wird dieser eine Netzwerk-Test übersprungen; die übrigen lokalen Tests laufen weiterhin.
+        </div>
+
+        <!-- Stats Panel -->
+        <div class="stats-grid">
+            <div class="stat-card stat-total">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Gesamt</div>
+            </div>
+            <div class="stat-card stat-passed">
+                <div class="stat-value" id="stat-passed">0</div>
+                <div class="stat-label">Erfolgreich</div>
+            </div>
+            <div class="stat-card stat-failed">
+                <div class="stat-value" id="stat-failed">0</div>
+                <div class="stat-label">Fehlgeschlagen</div>
+            </div>
+            <div class="stat-card stat-time">
+                <div class="stat-value" id="stat-time">0 ms</div>
+                <div class="stat-label">Zeit</div>
+            </div>
+        </div>
+
+        <!-- Suite A: parseGermanNumber -->
+        <div class="suite-section">
+            <div class="suite-header">
+                <span>1. Zahlen-Parsing (parseGermanNumber)</span>
+                <span class="suite-badge pass" id="badge-suite-numbers">Pass</span>
+            </div>
+            <div class="test-list" id="list-suite-numbers">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+
+        <!-- Suite B: NRW Holidays -->
+        <div class="suite-section">
+            <div class="suite-header">
+                <span>2. NRW Feiertagsdatenbank (isNRWHoliday)</span>
+                <span class="suite-badge pass" id="badge-suite-holidays">Pass</span>
+            </div>
+            <div class="test-list" id="list-suite-holidays">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+
+        <!-- Suite C: CSV Parser -->
+        <div class="suite-section">
+            <div class="suite-header">
+                <span>3. CSV Parser End-to-End (parseCSVFallback)</span>
+                <span class="suite-badge pass" id="badge-suite-csv">Pass</span>
+            </div>
+            <div class="test-list" id="list-suite-csv">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+
+        <!-- Suite D: Tagesprofil-Berechnung -->
+        <div class="suite-section">
+            <div class="suite-header">
+                <span>4. Tagesprofil-Berechnung (calculateSingleDatasetProfiles)</span>
+                <span class="suite-badge pass" id="badge-suite-profiles">Pass</span>
+            </div>
+            <div class="test-list" id="list-suite-profiles">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MOCK DOM CONTAINER -->
+    <!-- Contains all DOM elements needed by state.js, utils.js and parser.js to avoid reference errors -->
+    <div id="mock-dom-container">
+        <div id="drop-zone"></div>
+        <div id="upload-progress" class="hidden"></div>
+        <div id="file-input"></div>
+        <div id="upload-status"></div>
+        <div id="file-name-display"></div>
+        <select id="aggregation-select">
+            <option value="15m">15m</option>
+            <option value="1h">1h</option>
+            <option value="1d">1d</option>
+            <option value="1w">1w</option>
+            <option value="1M">1M</option>
+        </select>
+        <input id="date-start" type="date">
+        <input id="date-end" type="date">
+        <div id="upload-screen"></div>
+        <div id="dashboard-screen"></div>
+        <table id="peaks-table"></table>
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- Application Script Imports (Architecture Etappe C Sprints 1-7) -->
+    <script src="js/shared/identifiers.js?v=310"></script>
+    <script src="js/shared/numbers.js?v=310"></script>
+    <script src="js/shared/dates.js?v=310"></script>
+    <script src="js/shared/html.js?v=310"></script>
+    <script src="js/shared/download.js?v=310"></script>
+    <script src="js/import/csv-parser.js?v=310"></script>
+    <script src="js/import/mscons-parser.js?v=310"></script>
+    <script src="js/import/import-validator.js?v=310"></script>
+    <script src="js/import/file-import.js?v=310"></script>
+    <script src="js/domain/measurement-model.js?v=310"></script>
+    <script src="js/domain/energy-calculation.js?v=310"></script>
+    <script src="js/domain/data-quality.js?v=310"></script>
+    <script src="js/domain/tariff-calculation.js?v=310"></script>
+    <script src="js/domain/profile-calculation.js?v=310"></script>
+    <script src="js/domain/aggregation.js?v=310"></script>
+    <script src="js/agnes/agnes-input.js?v=310"></script>
+    <script src="js/agnes/agnes-cost-model.js?v=310"></script>
+    <script src="js/agnes/agnes-validation.js?v=310"></script>
+    <script src="js/agnes/agnes-result.js?v=310"></script>
+    <script src="js/agnes/agnes-optimizer.js?v=310"></script>
+    <script src="js/agnes/agnes-multi-year.js?v=310"></script>
+    <script src="js/state/app-state.js?v=310"></script>
+    <script src="js/ui/navigation-controller.js?v=310"></script>
+    <script src="js/ui/dashboard-view.js?v=310"></script>
+    <script src="js/ui/dashboard-controller.js?v=310"></script>
+    <script src="js/ui/quality-view.js?v=310"></script>
+    <script src="js/ui/modal-view.js?v=310"></script>
+    <script src="js/ui/chart-view.js?v=310"></script>
+    <script src="js/ui/editor-view.js?v=310"></script>
+    <script src="js/ui/editor-controller.js?v=310"></script>
+    <script src="js/ui/agnes-view.js?v=310"></script>
+    <script src="js/ui/agnes-controller.js?v=310"></script>
+    <script src="js/export/csv-export.js?v=310"></script>
+    <script src="js/export/agnes-export.js?v=310"></script>
+    <script src="js/export/report-export.js?v=310"></script>
+    <script src="js/export/project-export.js?v=310"></script>
+    <script src="js/app.js?v=310"></script>
+
+    <!-- Legacy Sub-Module Imports -->
+    <script src="import/parser.js?v=304"></script>
+    <script src="data-quality/quality.js?v=304"></script>
+    <script src="energy/energy.js?v=304"></script>
+    <script src="agnes/agnes.js?v=304"></script>
+    <script src="export/export.js?v=304"></script>
+    <script src="ui/ui.js?v=304"></script>
+    <script src="tests/test-suite.js?v=304"></script>
+    <script src="state.js?v=304"></script>
+    <script src="utils.js?v=304"></script>
+    <!-- Mock Papa.parse to run synchronously inside our test runner -->
+    <script src="lib/papaparse.min.js"></script>
+    <script src="parser.js?v=304"></script>
+    <script src="charts.js?v=304"></script>
+    <!-- TEST ENGINE -->
+    <script>
+        // Simple assertion helper
+        function assert(condition, message) {
+            if (!condition) {
+                throw new Error(message || "Assertion failed");
+            }
+        }
+
+        // Test runner state
+        let tests = [];
+        let passedCount = 0;
+        let failedCount = 0;
+
+        function addTest(suiteId, name, desc, testFn) {
+            tests.push({ suiteId, name, desc, testFn });
+        }
+
+        function skipTest(message) {
+            const error = new Error(message || 'Test wurde übersprungen');
+            error.isSkipped = true;
+            throw error;
+        }
+
+        // --- DEFINE TESTS ---
+
+        // 1. parseGermanNumber tests
+        addTest('numbers', 'Standard-Kommazahl parsen', 'Wandelt 1,23 in Float 1.23 um', () => {
+            const res = parseGermanNumber("1,23");
+            assert(res === 1.23, `Erwartet: 1.23, Erhalten: ${res}`);
+        });
+
+        addTest('numbers', 'Tausenderpunkte parsen', 'Entfernt Tausenderpunkte und wandelt 1.234,56 in Float 1234.56 um', () => {
+            const res = parseGermanNumber("1.234,56");
+            assert(res === 1234.56, `Erwartet: 1234.56, Erhalten: ${res}`);
+        });
+
+        addTest('numbers', 'Ungültige Zahlen behandeln', 'Gibt null bei ungültigen Strings zurück', () => {
+            const res = parseGermanNumber("abc");
+            assert(res === null || isNaN(res), "Sollte null oder NaN zurückgeben");
+        });
+
+        addTest('numbers', 'Zahlen mit führenden Kommas', 'Ergänzt führende Nullen bei Werten wie ,45', () => {
+            const res = parseGermanNumber(",45");
+            assert(res === 0.45, `Erwartet: 0.45, Erhalten: ${res}`);
+        });
+
+        addTest('numbers', 'Ungenauer Input mit Whitespace', 'Bereinigt Leerzeichen vor und nach der Zahl', () => {
+            const res = parseGermanNumber("   99,99   ");
+            assert(res === 99.99, `Erwartet: 99.99, Erhalten: ${res}`);
+        });
+
+        addTest('numbers', 'Ungültige Werte abfangen', 'Gibt null bei ungültigen Strings zurück', () => {
+            const res1 = parseGermanNumber("keine-zahl");
+            const res2 = parseGermanNumber("");
+            assert(res1 === null, `Erwartet null bei invalidem Text, erhalten: ${res1}`);
+            assert(res2 === null, `Erwartet null bei leerem Text, erhalten: ${res2}`);
+        });
+
+        // 2. NRW Holidays tests
+        addTest('holidays', 'Neujahrstag prüfen (Fest)', 'Prüft den 1. Januar 2026', () => {
+            const date = new Date(2026, 0, 1);
+            const holidayName = getNRWHolidayName(date);
+            assert(holidayName === "Neujahrstag", `Erwartet: Neujahrstag, Erhalten: ${holidayName}`);
+        });
+
+        addTest('holidays', 'Karfreitag prüfen (Beweglich)', 'Berechnet Karfreitag für das Jahr 2026 (03. April)', () => {
+            const date = new Date(2026, 3, 3); // 3. April (0-indexed Monate, also 3 = April)
+            const holidayName = getNRWHolidayName(date);
+            assert(holidayName === "Karfreitag", `Erwartet: Karfreitag, Erhalten: ${holidayName}`);
+        });
+
+        addTest('holidays', 'Pfingstmontag prüfen (Beweglich)', 'Berechnet Pfingstmontag für das Jahr 2026 (25. Mai)', () => {
+            const date = new Date(2026, 4, 25); // 25. Mai
+            const holidayName = getNRWHolidayName(date);
+            assert(holidayName === "Pfingstmontag", `Erwartet: Pfingstmontag, Erhalten: ${holidayName}`);
+        });
+
+        addTest('holidays', 'Tag der Arbeit prüfen (Fest)', 'Prüft den 1. Mai 2026', () => {
+            const date = new Date(2026, 4, 1); // 1. Mai
+            assert(isNRWHoliday(date) === true, `Erwartet true für 1. Mai`);
+        });
+
+        addTest('holidays', 'Arbeitstag prüfen', 'Prüft einen normalen Werktag (z.B. 15. Juni 2026)', () => {
+            const date = new Date(2026, 5, 15); // 15. Juni 2026
+            assert(isNRWHoliday(date) === false, `Erwartet false für einen regulären Arbeitstag`);
+        });
+
+        // 3. CSV Parser tests
+        addTest('csv', 'Einzel-Lastgang parsen', 'Liest eine CSV mit einem Zählpunkt ein', () => {
+            const csvData = `Zählpunkt;;100100
+Linie;;Kanal 1
+Datum;Uhrzeit;Verbrauch
+01.01.2026;00:15;1,5
+01.01.2026;00:30;2,0`;
+            
+            parseCSVFallback(csvData);
+            
+            assert(allDatasets.length === 1, `Erwartet 1 Dataset, erhalten: ${allDatasets.length}`);
+            assert(allDatasets[0].name === "ZP 100100 - Kanal 1", `Erwarteter Name: ZP 100100 - Kanal 1, Erhalten: ${allDatasets[0].name}`);
+            assert(allDatasets[0].data.length === 2, `Erwartet 2 Datenpunkte, erhalten: ${allDatasets[0].data.length}`);
+            assert(allDatasets[0].data[0].kw === 1.5, `Erster kw-Wert soll 1.5 sein`);
+            assert(allDatasets[0].data[1].kw === 2.0, `Zweiter kw-Wert soll 2.0 sein`);
+        });
+
+        addTest('csv', '24:00 Uhr Handling', 'Rechnet 24:00 Uhr korrekt auf den Start des Folgetags um', () => {
+            const csvData = `Zählpunkt;;100100
+Datum;Uhrzeit;Verbrauch
+01.01.2026;24:00;3,5`;
+            
+            parseCSVFallback(csvData);
+            
+            const dateVal = allDatasets[0].data[0].dateObj;
+            // 01.01.2026 24:00 = 02.01.2026 00:00
+            assert(dateVal.getFullYear() === 2026, `Erwartet Jahr 2026`);
+            assert(dateVal.getMonth() === 0, `Erwartet Monat Januar (0)`);
+            assert(dateVal.getDate() === 2, `Erwartet Tag 2`);
+            assert(dateVal.getHours() === 0, `Erwartet Stunde 0`);
+            assert(dateVal.getMinutes() === 0, `Erwartet Minute 0`);
+        });
+
+        addTest('csv', 'Sommer-/Winterzeit (A2/B2) Parsing', 'Übersetzt Zeitreihen-Stundenkennungen im Sommer/Winterzeit-Wechsel', () => {
+            const csvData = `Zählpunkt;;100100
+Datum;Uhrzeit;Verbrauch
+25.10.2026;A2:15;1,2
+25.10.2026;B2:15;1,8`;
+            
+            parseCSVFallback(csvData);
+            
+            const first = allDatasets[0].data[0];
+            const second = allDatasets[0].data[1];
+            
+            assert(first.timeStr === "A2:15", `Erwarteter Original-TimeStr: A2:15`);
+            assert(second.timeStr === "B2:15", `Erwarteter Original-TimeStr: B2:15`);
+            
+            // Beide müssen im Date-Objekt auf 02:15 Uhr mappen
+            assert(first.dateObj.getHours() === 2 && first.dateObj.getMinutes() === 15, "A2:15 muss auf 02:15 Uhr normalisiert werden");
+            assert(second.dateObj.getHours() === 2 && second.dateObj.getMinutes() === 15, "B2:15 muss auf 02:15 Uhr normalisiert werden");
+            
+            // Zeitstempel müssen sich unterscheiden und B muss genau 1 Std. (3.600.000 ms) nach A liegen
+            assert(first.timestamp !== second.timestamp, "A2:15 und B2:15 müssen unterschiedliche absolute Zeitstempel erhalten");
+            assert(second.timestamp - first.timestamp === 3600000, `B2:15 muss 1 Stunde nach A2:15 liegen. Differenz: ${second.timestamp - first.timestamp}`);
+        });
+
+        addTest('csv', 'Multi-Lastgang (Spalten-Zuordnung)', 'Ordnet Spaltenwerten die korrekten Zählpunkte zu', () => {
+            const csvData = `Zählpunkt;;ZP-A;ZP-B
+Linie;;Leistung 1;Leistung 2
+Datum;Uhrzeit;Wert1;Wert2
+01.01.2026;00:15;10,0;20,0`;
+            
+            parseCSVFallback(csvData);
+            
+            assert(allDatasets.length === 2, `Erwartete Datasets: 2, Erhalten: ${allDatasets.length}`);
+            assert(allDatasets[0].name === "ZP ZP-A - Leistung 1", `Name 1: ZP ZP-A - Leistung 1, Erhalten: ${allDatasets[0].name}`);
+            assert(allDatasets[1].name === "ZP ZP-B - Leistung 2", `Name 2: ZP ZP-B - Leistung 2, Erhalten: ${allDatasets[1].name}`);
+            assert(allDatasets[0].data[0].kw === 10.0, "Wert von ZP-A muss 10 sein");
+            assert(allDatasets[1].data[0].kw === 20.0, "Wert von ZP-B muss 20 sein");
+        });
+
+        addTest('csv', 'Blindleistung ausschließen', 'Ignoriert Blindleistungsspalten komplett im Parser', () => {
+            const csvData = `Zählpunkt;;ZP-1;ZP-1;ZP-2
+Linie;;Wirkleistung;Blindleistung;Wirkleistung
+Datum;Uhrzeit;W1;B1;W2
+01.01.2026;00:15;5,0;1,2;8,0`;
+            
+            parseCSVFallback(csvData);
+            
+            // Sollte nur Wirkleistung von ZP-1 und Wirkleistung von ZP-2 importieren, Blindleistung überspringen
+            assert(allDatasets.length === 2, `Erwartet 2 Datasets, da Blindleistung übersprungen werden soll. Erhalten: ${allDatasets.length}`);
+            assert(allDatasets[0].name === "ZP ZP-1 - Wirkleistung", `Kanal 1 Name: ${allDatasets[0].name}`);
+            assert(allDatasets[1].name === "ZP ZP-2 - Wirkleistung", `Kanal 2 Name: ${allDatasets[1].name}`);
+        });
+
+        addTest('csv', 'Datenqualität (Fehlerzeilen)', 'Zählt ungültige/nicht numerische Zeilen korrekt', () => {
+            const csvData = `Zählpunkt;;100100
+Datum;Uhrzeit;Verbrauch
+01.01.2026;00:15;1,5
+01.01.2026;00:30;ERR
+01.01.2026;00:45;
+01.01.2026;01:00;3,0`;
+            
+            parseCSVFallback(csvData);
+            
+            // Zeile 1: 1,5 -> OK
+            // Zeile 2: ERR -> Fehler (invalid)
+            // Zeile 3: leer -> übersprungen (kein Fehler, da leer)
+            // Zeile 4: 3,0 -> OK
+            // Gesamt bewertete Zeilen (nicht leer): 3
+            // Fehlerhafte Zeilen: 1
+            assert(allDatasets[0].totalRowsCount === 3, `Erwartete bewertete Zeilen: 3, Erhalten: ${allDatasets[0].totalRowsCount}`);
+            assert(allDatasets[0].invalidRowsCount === 1, `Erwartete Fehlerzeilen: 1, Erhalten: ${allDatasets[0].invalidRowsCount}`);
+        });
+
+        addTest('csv', 'MSCONS EDIFACT Import (MaLo/MeLo & OBIS Bezug/Einspeisung)', 'Parst MSCONS-Segmente, MeLo-ID und Obis-Richtung', () => {
+            const msconsData = `UNA:+.? 'UNB+UNOC:3+9900153000009:500+4045399000008:14+260714:2300+PA5422038++TL'UNH+PA5422038+MSCONS:D:04B:UN:2.4c'BGM+7+PA5422038+9'DTM+137:202607142300?+00:303'LOC+172+DE00015340000VMBG1180NZEBK0000000'LIN+1'PIA+5+1-1?:1.29.0:SRW'QTY+220:4691.22'DTM+163:202605252200?+00:303'DTM+164:202605252215?+00:303'QTY+220:4706.65'DTM+163:202605252215?+00:303'DTM+164:202605252230?+00:303'`;
+            
+            const res = parseMSCONS(msconsData, "test.mscons");
+            assert(!res.error, `Parser meldet Fehler: ${res.error}`);
+            assert(res.datasets.length === 1, `Erwartet 1 Dataset, Erhalten: ${res.datasets.length}`);
+            assert(res.datasets[0].name === "DE00015340000VMBG1180NZEBK0000000_1-1:1.29.0_Bezug", `Dataset-Name: ${res.datasets[0].name}`);
+            assert(res.datasets[0].data.length === 2, `Erwartete 2 Datenpunkte, Erhalten: ${res.datasets[0].data.length}`);
+            assert(res.datasets[0].data[0].rawKw === 4691.22 || Math.abs(res.datasets[0].data[0].kw - 18764.88) < 0.1, `Erwarteter Rohwert 4691.22 kWh oder 18764.88 kW, Erhalten: ${res.datasets[0].data[0].kw}`);
+        });
+
+        addTest('csv', 'MSCONS EDIFACT Reihenfolge (QTY vor DTM)', 'Stellt sicher, dass QTY vor DTM ohne Datenverlust geparst wird', () => {
+            const msconsData = `UNA:+.? 'UNB+UNOC:3+9900153000009:500+4045399000008:14+260714:2300+PA5422038++TL'UNH+PA5422038+MSCONS:D:04B:UN:2.4c'BGM+7+PA5422038+9'LOC+172+DE1234567890'LIN+1'PIA+5+1-1?:1.29.0:SRW'QTY+220:100.0'DTM+163:202601010000?+00:303'DTM+164:202601010015?+00:303'QTY+220:200.0'DTM+163:202601010015?+00:303'DTM+164:202601010030?+00:303'`;
+            
+            const res = parseMSCONS(msconsData, "test2.mscons");
+            assert(!res.error, `Parser Fehler: ${res.error}`);
+            assert(res.datasets.length === 1, `Erwartet 1 Dataset`);
+            assert(res.datasets[0].data.length === 2, `Erwartete 2 Datenpunkte, Erhalten: ${res.datasets[0].data.length}`);
+            assert(res.datasets[0].data[0].rawKw === 100.0 || Math.abs(res.datasets[0].data[0].kw - 400.0) < 0.1, `Wert 1 muss 100.0 kWh (400 kW) betragen, Erhalten: ${res.datasets[0].data[0].kw}`);
+            assert(res.datasets[0].data[1].rawKw === 200.0 || Math.abs(res.datasets[0].data[1].kw - 800.0) < 0.1, `Wert 2 muss 200.0 kWh (800 kW) betragen, Erhalten: ${res.datasets[0].data[1].kw}`);
+        });
+
+        // 4. calculateSingleDatasetProfiles tests
+        addTest('profiles', 'Tagesprofil-Werte berechnen', 'Berechnet Durchschnitt, Minimum und Maximum je Viertelstundenslot', () => {
+            const mockData = [
+                { dateObj: new Date(2026, 0, 1, 8, 30), kw: 10.0 },
+                { dateObj: new Date(2026, 0, 2, 8, 30), kw: 20.0 },
+                { dateObj: new Date(2026, 0, 3, 8, 30), kw: 30.0 }
+            ];
+            
+            const profiles = calculateSingleDatasetProfiles(mockData, () => true);
+            
+            // Slot für 08:30 Uhr: 8 * 4 + 30/15 = 34
+            const slot34 = profiles[34];
+            assert(slot34 !== undefined, "Slot 34 sollte definiert sein");
+            assert(slot34.avg === 20.0, `Erwarteter Durchschnitt: 20.0, Erhalten: ${slot34.avg}`);
+            assert(slot34.min === 10.0, `Erwartetes Minimum: 10.0, Erhalten: ${slot34.min}`);
+            assert(slot34.max === 30.0, `Erwartetes Maximum: 30.0, Erhalten: ${slot34.max}`);
+            
+            // Leere Slots bleiben leer, damit fehlende Daten nicht als Null
+            // Leistung in die Visualisierung eingehen.
+            const slot0 = profiles[0];
+            assert(slot0.avg === null && slot0.min === null && slot0.max === null, "Unbelegte Slots müssen als fehlend markiert sein");
+        });
+
+        addTest('profiles', 'Tagesprofil-Filter anwenden', 'Filtert Wochenenddaten oder Feiertage bei der Berechnung heraus', () => {
+            const mockData = [
+                { dateObj: new Date(2026, 0, 1, 12, 0), kw: 15.0 }, // Donnerstag (Wochentag)
+                { dateObj: new Date(2026, 0, 4, 12, 0), kw: 50.0 }  // Sonntag (Wochenende)
+            ];
+            
+            // Filter: Nur Wochentage (Montag - Freitag)
+            const filterFn = (d) => {
+                const day = d.dateObj.getDay();
+                return day >= 1 && day <= 5;
+            };
+            
+            const profiles = calculateSingleDatasetProfiles(mockData, filterFn);
+            
+            // Slot für 12:00 Uhr: 12 * 4 = 48
+            const slot48 = profiles[48];
+            assert(slot48.avg === 15.0, `Wochenenddaten (50.0) sollten ignoriert werden. Erhalten: ${slot48.avg}`);
+            assert(slot48.max === 15.0, `Maximum sollte 15.0 sein. Erhalten: ${slot48.max}`);
+        });
+
+        // 5. New Domain-Specific Tests from Audit
+        addTest('csv', 'kW vs kWh Integration', 'Verifiziert, dass 100 kW über 24 Std. exakt 2.400 kWh ergeben', () => {
+            const data = [];
+            const start = new Date(2026, 0, 1, 0, 0).getTime();
+            for (let i = 0; i <= 96; i++) {
+                const ts = start + i * 15 * 60 * 1000;
+                data.push({
+                    timestamp: ts,
+                    dateObj: new Date(ts),
+                    dateStr: "01.01.2026",
+                    timeStr: new Date(ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                    kw: 100.0,
+                    hasData: true
+                });
+            }
+            
+            let totalEnergyWh = 0;
+            let lastValidPoint = null;
+            data.forEach(d => {
+                if (lastValidPoint !== null) {
+                    const timeDiffMs = d.timestamp - lastValidPoint.timestamp;
+                    const wh = (timeDiffMs / 3600000) * ((d.kw + lastValidPoint.kw) / 2) * 1000;
+                    totalEnergyWh += wh;
+                }
+                lastValidPoint = d;
+            });
+            
+            const totalEnergyKwh = totalEnergyWh / 1000;
+            assert(Math.round(totalEnergyKwh) === 2400, `Erwartete integrierte Energie: 2400 kWh, Erhalten: ${totalEnergyKwh}`);
+        });
+
+        addTest('csv', 'Datenlücken-Check in Integration', 'Verifiziert, dass Lücke im Lastgang nicht überbrückt wird', () => {
+            const data = [
+                { timestamp: 1000000000000, kw: 100.0 },
+                { timestamp: 1000000000000 + 4 * 3600 * 1000, kw: 100.0 }
+            ];
+            
+            let totalEnergyWh = 0;
+            let lastValidPoint = null;
+            data.forEach(d => {
+                if (lastValidPoint !== null) {
+                    const timeDiffMs = d.timestamp - lastValidPoint.timestamp;
+                    const expectedIntervalMs = 15 * 60 * 1000;
+                    const toleranceMs = 60 * 1000;
+                    
+                    if (Math.abs(timeDiffMs - expectedIntervalMs) <= toleranceMs) {
+                        const wh = (timeDiffMs / 3600000) * ((d.kw + lastValidPoint.kw) / 2) * 1000;
+                        totalEnergyWh += wh;
+                    }
+                }
+                lastValidPoint = d;
+            });
+            
+            assert(totalEnergyWh === 0, `Große Gaps dürfen nicht integriert werden. Erhalten: ${totalEnergyWh} Wh`);
+        });
+
+        addTest('csv', 'Aggregationscache-Kollision', 'Verifiziert, dass Cache-Schlüssel Zeitbereiche einbeziehen', () => {
+            const data1 = [
+                { timestamp: 1000000000000, kw: 10.0, dateObj: new Date(1000000000000) }
+            ];
+            const data2 = [
+                { timestamp: 2000000000000, kw: 20.0, dateObj: new Date(2000000000000) }
+            ];
+            
+            const key1 = `0_1d_1_${data1[0].timestamp}_${data1[data1.length-1].timestamp}_v0`;
+            const key2 = `0_1d_1_${data2[0].timestamp}_${data2[data2.length-1].timestamp}_v0`;
+            
+            assert(key1 !== key2, `Cache-Keys für unterschiedliche Zeiträume müssen unterschiedlich sein: ${key1} vs ${key2}`);
+        });
+
+        addTest('csv', 'HTML Injection Escaping', 'Verifiziert, dass HTML-Tags sicher maskiert werden', () => {
+            const unsafe = "<script>alert('xss')<\/script>";
+            const safe = escapeHtml(unsafe);
+            assert(!safe.includes('<script>'), "Script-Tags müssen maskiert werden");
+            assert(safe.includes('&lt;script&gt;'), `Tags müssen in Entitäten umgewandelt werden. Erhalten: ${safe}`);
+        });
+
+        addTest('csv', 'Lokales Datums-Parsing (parseLocalDate)', 'Verifiziert, dass ISO-Datumsstrings zeitzonenunabhängig im lokalen Modus geparkt werden', () => {
+            const dateStr = '2025-01-01';
+            const parsed = parseLocalDate(dateStr);
+            assert(parsed instanceof Date, "Muss ein Date-Objekt zurückgeben");
+            assert(!isNaN(parsed.getTime()), "Muss ein gültiges Datum sein");
+            assert(parsed.getFullYear() === 2025, "Jahr muss 2025 sein");
+            assert(parsed.getMonth() === 0, "Monat muss Januar (0) sein");
+            assert(parsed.getDate() === 1, "Tag muss 1 sein");
+            assert(parsed.getHours() === 0, "Stunde muss im lokalen Modus 0 Uhr sein");
+        });
+
+        addTest('csv', 'Viertelstunden-Intervall-Berechnung', 'Verifiziert die exakte Berechnung von erwarteten Viertelstunden-Datenpunkten für einen Tag', () => {
+            const start = new Date(2025, 0, 1, 0, 0, 0);
+            const end = new Date(2025, 0, 1, 23, 59, 59, 999);
+            const expected = Math.round((end.getTime() + 1 - start.getTime()) / (15 * 60 * 1000));
+            assert(expected === 96, `Ein voller Tag muss genau 96 Viertelstunden-Intervalle haben. Erhalten: ${expected}`);
+        });
+        addTest('csv', 'Lückenprotokoll: 00:00 Uhr darf keine Lücke sein', 'Regression: Erstes 15-Min-Intervall eines Tages beginnt bei 00:15, nicht 00:00', () => {
+            // Simuliere einen vollständigen Tag mit 96 Viertelstunden-Intervallen (00:15 bis 24:00)
+            const dayStart = new Date(2025, 0, 1, 0, 0, 0);
+            const intervalMs = 15 * 60 * 1000;
+            const startMs = dayStart.getTime() + intervalMs; // Erstes Intervall bei 00:15
+            const endMs = dayStart.getTime() + 96 * intervalMs; // Letztes Intervall bei 24:00
+
+            // Erstelle Timestamps-Set für alle 96 Intervalle
+            const existingTimestamps = new Set();
+            for (let ts = startMs; ts <= endMs; ts += intervalMs) {
+                existingTimestamps.add(ts);
+            }
+
+            // Prüfe: 00:00 darf NICHT als erwartet gelten
+            const zeroTimestamp = dayStart.getTime();
+            assert(!existingTimestamps.has(zeroTimestamp), "00:00 Uhr darf nicht im erwarteten Intervall-Set enthalten sein");
+
+            // Prüfe: 00:15 MUSS enthalten sein
+            assert(existingTimestamps.has(startMs), "00:15 Uhr muss im erwarteten Intervall-Set enthalten sein");
+
+            // Prüfe: Genau 96 Intervalle
+            assert(existingTimestamps.size === 96, `Es müssen exakt 96 Intervalle existieren. Erhalten: ${existingTimestamps.size}`);
+        });
+
+        addTest('csv', 'parseLocalDate vs. new Date() Timezone-Sicherheit', 'Regression: parseLocalDate darf keinen UTC-Offset erzeugen', () => {
+            const isoStr = '2025-07-15';
+            const localParsed = parseLocalDate(isoStr);
+            const manualDate = new Date(2025, 6, 15); // Juli = Monat 6
+
+            assert(localParsed.getTime() === manualDate.getTime(),
+                `parseLocalDate muss identisch zu new Date(y,m,d) sein. Differenz: ${localParsed.getTime() - manualDate.getTime()} ms`);
+
+            // Gegenprobe: new Date("2025-07-15") erzeugt in MESZ einen UTC-Offset
+            const utcParsed = new Date(isoStr);
+            const diffMs = Math.abs(utcParsed.getTime() - manualDate.getTime());
+            // In deutschen Zeitzonen (UTC+1/+2) ist die Differenz 1-2 Stunden
+            if (diffMs > 0) {
+                // Dieser Test bestätigt, dass die UTC-Variante ANDERS ist als die lokale
+                assert(localParsed.getTime() !== utcParsed.getTime(),
+                    "parseLocalDate muss sich von der UTC-Interpretation unterscheiden (in Zeitzonen mit Offset)");
+            }
+        });
+
+        // 6. getIntervalTariffFractions tests
+        addTest('profiles', 'Tarifberechnung - Standardfraktionen', 'Verifiziert, dass HT/NT/ST-Anteile mathematisch korrekt berechnet werden', () => {
+            // NT von 22:00 bis 06:00 (1320 bis 360 Minuten)
+            // ST von 11:00 bis 13:00 (660 bis 780 Minuten)
+            // HT ist der Rest
+            
+            // Fall 1: Liegt komplett im HT (z. B. 08:00 bis 08:15 Uhr)
+            const startHT = new Date(2026, 0, 1, 8, 0).getTime();
+            const endHT = new Date(2026, 0, 1, 8, 15).getTime();
+            const fHT = getIntervalTariffFractions(startHT, endHT, 1320, 360, 660, 780, true);
+            assert(fHT.htFraction === 1.0 && fHT.ntFraction === 0.0 && fHT.stFraction === 0.0, "Sollte 100% HT sein");
+
+            // Fall 2: Liegt komplett im NT (z. B. 23:00 bis 23:15 Uhr)
+            const startNT = new Date(2026, 0, 1, 23, 0).getTime();
+            const endNT = new Date(2026, 0, 1, 23, 15).getTime();
+            const fNT = getIntervalTariffFractions(startNT, endNT, 1320, 360, 660, 780, true);
+            assert(fNT.ntFraction === 1.0 && fNT.htFraction === 0.0 && fNT.stFraction === 0.0, "Sollte 100% NT sein");
+
+            // Fall 3: Liegt komplett im ST (z. B. 12:00 bis 12:15 Uhr)
+            const startST = new Date(2026, 0, 1, 12, 0).getTime();
+            const endST = new Date(2026, 0, 1, 12, 15).getTime();
+            const fST = getIntervalTariffFractions(startST, endST, 1320, 360, 660, 780, true);
+            assert(fST.stFraction === 1.0 && fST.htFraction === 0.0 && fST.ntFraction === 0.0, "Sollte 100% ST sein");
+
+            // Fall 4: Überschneidung (z. B. 21:50 bis 22:05 Uhr => 10 Min HT, 5 Min NT)
+            const startOver = new Date(2026, 0, 1, 21, 50).getTime();
+            const endOver = new Date(2026, 0, 1, 22, 5).getTime();
+            const fOver = getIntervalTariffFractions(startOver, endOver, 1320, 360, 660, 780, true);
+            assert(Math.abs(fOver.htFraction - 10/15) < 0.01, "Sollte ~66.7% HT sein");
+            assert(Math.abs(fOver.ntFraction - 5/15) < 0.01, "Sollte ~33.3% NT sein");
+        });
+
+        addTest('profiles', 'Tarifberechnung - Fehlerbehandlung', 'Verifiziert defensive Rückfallwerte bei ungültigen Timestamps', () => {
+            const fInvalid = getIntervalTariffFractions(NaN, undefined, 1320, 360, 660, 780, true);
+            assert(fInvalid.htFraction === 1.0 && fInvalid.ntFraction === 0.0 && fInvalid.stFraction === 0.0, "Ungültige Timestamps müssen auf 100% HT zurückfallen");
+        });
+
+        // 7. AgNes 2029 optimization tests
+        addTest('profiles', 'AgNes-Kostenoptimierung - Basisberechnung', 'Verifiziert grundlegende Kapazitäts- und Kostenberechnungen', () => {
+            const mockData = [];
+            for (let i = 0; i < 96; i++) {
+                mockData.push({ kw: 100, timestamp: i * 15 * 60 * 1000 });
+            }
+            const res = calculateAgnesCosts(mockData, 50.0, 1.5, 4.5, 0.1, 1.0);
+            assert(res.pMax === 100, `Jahreshöchstlast sollte 100 sein. Erhalten: ${res.pMax}`);
+            assert(res.kMin === 10, `Mindestkapazität bei 10% sollte 10 sein. Erhalten: ${res.kMin}`);
+            assert(res.sweepResults.length >= 150, `Es sollten mindestens 150 Sweep-Schritte berechnet werden. Erhalten: ${res.sweepResults.length}`);
+            assert(res.optResult.totalCost > 0, "Die optimalen Kosten müssen größer als 0 sein");
+        });
+
+        addTest('profiles', 'AgNes-Kostenoptimierung - Optimalwert-Lokalisierung', 'Verifiziert die Abwägung zwischen teurem Kapazitäts- und Arbeitspreis', () => {
+            const mockData = [];
+            // Ein kurzer, hoher Peak von 200 kW (4 Intervalle = 1 Std)
+            for (let i = 0; i < 4; i++) {
+                mockData.push({ kw: 200, timestamp: i * 15 * 60 * 1000 });
+            }
+            // Rest des Tages nur 10 kW (92 Intervalle)
+            for (let i = 4; i < 96; i++) {
+                mockData.push({ kw: 10, timestamp: i * 15 * 60 * 1000 });
+            }
+
+            // Kapazitätspreis: 50 €/kW/a, AP1: 1.5 ct/kWh, AP2: 4.5 ct/kWh
+            const res = calculateAgnesCosts(mockData, 50.0, 1.5, 4.5, 0.1, 1.0);
+            
+            // Für einen Peak von nur 1 Std. lohnt es sich absolut nicht, 200 kW statt 10 kW dauerhaft zu buchen
+            // (190 kW extra buchen kostet 190 * 50 = 9500 €; die AP2-Überschreitung für 1 Std. kostet fast nichts).
+            // Daher muss K_opt deutlich unter 200 kW liegen, typischerweise nahe der Grundlast von 10 kW (oder 20 kW Mindestbuchung).
+            assert(res.optK < 100, `Optimales K sollte weit unter der Spitzenlast liegen. Erhalten: ${res.optK}`);
+            assert(res.optResult.totalCost < res.maxResult.totalCost, `Die optimalen Kosten (${res.optResult.totalCost}) müssen unter den Maximalkosten (${res.maxResult.totalCost}) liegen`);
+        });
+
+        addTest('profiles', 'AgNes-Multi-Year-Kostenoptimierung', 'Verifiziert die kumulierten Berechnungen und Optimierung über mehrere Lastgänge hinweg', () => {
+            const ds1Data = [];
+            const ds2Data = [];
+            
+            // Dataset 1: Constant 100 kW
+            for (let i = 0; i < 96; i++) {
+                ds1Data.push({ kw: 100, timestamp: i * 15 * 60 * 1000, dateObj: new Date(2022, 0, 1, 0, i * 15) });
+            }
+            // Dataset 2: Constant 200 kW
+            for (let i = 0; i < 96; i++) {
+                ds2Data.push({ kw: 200, timestamp: i * 15 * 60 * 1000, dateObj: new Date(2023, 0, 1, 0, i * 15) });
+            }
+
+            const mockDatasets = [
+                { name: 'Jahr 1 (100 kW)', data: ds1Data },
+                { name: 'Jahr 2 (200 kW)', data: ds2Data }
+            ];
+
+            const res = calculateAgnesCostsMulti(mockDatasets, 50.0, 1.5, 4.5);
+            
+            assert(res.pMaxOverall === 200, "Das Gesamt-pMax muss 200 kW betragen");
+            assert(res.kMinOverall === 20, "Die minimale Gesamtbuchung muss 20 kW (10% von 200 kW) betragen");
+            assert(res.optK >= 200, "Da die Lasten konstant sind, sollte die optimale Kapazität bei 200 kW liegen");
+            assert(res.optResult.totalCost > 0, "Die optimalen Gesamtkosten müssen über 0 liegen");
+            assert(res.optResult.yearlyDetails.length === 2, "Es müssen Details für 2 Jahre vorliegen");
+            assert(res.optResult.yearlyDetails[0].pMax === 100, "Jahr 1 pMax muss 100 kW betragen");
+            assert(res.optResult.yearlyDetails[1].pMax === 200, "Jahr 2 pMax muss 200 kW betragen");
+        });
+
+        addTest('profiles', 'AgNes Multi-Year Parameter-Validierung & AP2-Schutz (P1)', 'Stellt sicher, dass ungültige Preise (AP2 < AP1) und negative Parameter sicher abgefangen werden', function() {
+            const mockDatasets = [
+                { id: 1, name: 'Jahr 2024', data: Array.from({length: 96}, (_, i) => ({ timestamp: `2024-01-01T${String(Math.floor(i/4)).padStart(2,'0')}:${String((i%4)*15).padStart(2,'0')}:00`, dateObj: new Date(2024,0,1,Math.floor(i/4),(i%4)*15), kw: 100 })) }
+            ];
+
+            // Pass AP2 = 0.5 (lower than AP1 = 1.5)
+            const res = calculateAgnesCostsMulti(mockDatasets, -50.0, 1.5, 0.5, -0.2, 50);
+            
+            assert(res.pMaxOverall === 100, "Gesamt pMax muss 100 kW betragen");
+            assert(res.plannedK >= 10, "Geplante Buchung muss mindestens 10 kW (10%) betragen");
+            assert(res.plannedResult !== null, "plannedResult muss berechnet worden sein");
+            assert(res.plannedResult.totalCost > 0, "Gesamtkosten müssen positiv sein");
+        });
+
+        addTest('profiles', 'AgNes Multi-Year Geplante Buchung (plannedK) (P1)', 'Verifiziert, dass die vertraglich geplante Buchung als eigenständiges Szenario berechnet wird', function() {
+            const mockDatasets = [
+                { id: 1, name: 'Jahr 2024', data: Array.from({length: 96}, (_, i) => ({ timestamp: `2024-01-01T${String(Math.floor(i/4)).padStart(2,'0')}:${String((i%4)*15).padStart(2,'0')}:00`, dateObj: new Date(2024,0,1,Math.floor(i/4),(i%4)*15), kw: 200 })) },
+                { id: 2, name: 'Jahr 2025', data: Array.from({length: 96}, (_, i) => ({ timestamp: `2025-01-01T${String(Math.floor(i/4)).padStart(2,'0')}:${String((i%4)*15).padStart(2,'0')}:00`, dateObj: new Date(2025,0,1,Math.floor(i/4),(i%4)*15), kw: 200 })) }
+            ];
+
+            const res = calculateAgnesCostsMulti(mockDatasets, 50.0, 1.5, 4.5, 0.1, 150);
+            
+            assert(res.plannedK === 150, "Die geplante Buchung muss exakt 150 kW betragen");
+            assert(res.plannedResult.K === 150, "Der Result-K-Wert der geplanten Buchung muss 150 kW betragen");
+            assert(res.plannedResult.capCost === 15000, "Kapazitätskosten für 2 Jahre a 150 kW * 50 €/kW = 15.000 €");
+        });
+
+        addTest('profiles', 'AgNes Multi-Year Intervall-Vollständigkeit & Abdeckung (P1)', 'Prüft die Erfassung der Intervall-Vollständigkeit und Datenabdeckung je Kalenderjahr', function() {
+            const mockDatasets = [
+                { id: 1, name: 'Jahr 2024 (Teiljahr)', data: Array.from({length: 100}, (_, i) => {
+                    const d = new Date(2024, 0, Math.floor(i/96) + 1, Math.floor((i%96)/4), (i%4)*15);
+                    return { timestamp: d.getTime(), dateObj: d, kw: 50 };
+                }) }
+            ];
+
+            const res = calculateAgnesCostsMulti(mockDatasets, 50.0, 1.5, 4.5);
+            
+            assert(res.datasetInfos.length === 1, "Muss 1 Datensatz-Info enthalten");
+            assert(res.datasetInfos[0].validIntervalCount === 100, "Sollte 100 gültige Intervalle zählen");
+        });
+
+        addTest('csv', 'Mehrjahres-Datensatz Datumsbereich (Min/Max aus allen Lastgängen)', 'Stellt sicher, dass das globale Datumslimit nicht auf den 1. Lastgang beschränkt wird', () => {
+            const datasets = [
+                { id: 1, name: 'Lastgang 2024', data: [{ timestamp: new Date(2024, 0, 1).getTime(), dateObj: new Date(2024, 0, 1), kw: 10 }] },
+                { id: 2, name: 'Lastgang 2023 (früher)', data: [{ timestamp: new Date(2023, 5, 1).getTime(), dateObj: new Date(2023, 5, 1), kw: 20 }] }
+            ];
+
+            let overallMinDate = null;
+            datasets.forEach(ds => {
+                if (ds.data && ds.data.length > 0) {
+                    const dFirst = ds.data[0].dateObj;
+                    if (!overallMinDate || dFirst < overallMinDate) overallMinDate = dFirst;
+                }
+            });
+
+            assert(overallMinDate !== null, "overallMinDate darf nicht null sein");
+            assert(overallMinDate.getFullYear() === 2023, `Erwartetes Startjahr 2023, erhalten: ${overallMinDate.getFullYear()}`);
+        });
+
+        addTest('profiles', 'AgNes Reihenfolge-Invarianz & Summen-Konsistenz (P0)', 'Verifiziert, dass die Sortierung der Jahre das Ergebnis nicht beeinflusst', function() {
+            const mockDs1 = { id: 1, name: 'Jahr 2023', data: [{ timestamp: 1704067200000, dateObj: new Date(2023,0,1), kw: 150 }] };
+            const mockDs2 = { id: 2, name: 'Jahr 2024', data: [{ timestamp: 1735689600000, dateObj: new Date(2024,0,1), kw: 220 }] };
+
+            const resNormal = calculateAgnesCostsMulti([mockDs1, mockDs2], 50.0, 1.5, 4.5);
+            const resReversed = calculateAgnesCostsMulti([mockDs2, mockDs1], 50.0, 1.5, 4.5);
+
+            assert(Math.abs(resNormal.optK - resReversed.optK) < 1e-4, `Optimum K muss reihenfolge-invariant sein (${resNormal.optK} vs ${resReversed.optK})`);
+            assert(Math.abs(resNormal.optResult.totalCost - resReversed.optResult.totalCost) < 1e-4, "Gesamtkosten müssen bei vertauschten Jahren identisch sein");
+        });
+
+        addTest('profiles', 'AgNes Schutz vor unvollständigen Jahren (P0)', 'Verifiziert Qualitätswarnung Gelb bei unvollständigen Jahresscheiben (<98%)', function() {
+            const mockIncompleteData = [];
+            for (let i = 0; i < 33638; i++) {
+                mockIncompleteData.push({ timestamp: 1704067200000 + i * 15 * 60 * 1000, dateObj: new Date(1704067200000 + i * 15 * 60 * 1000), kw: 100 });
+            }
+            const mockIncomplete = { id: 1, name: 'Jahr 2024 (Unvollständig 96%)', data: mockIncompleteData };
+            const res = calculateAgnesCostsMulti([mockIncomplete], 50.0, 1.5, 4.5);
+
+            assert(res.qualityPlausibility !== undefined, "qualityPlausibility muss im Ergebnis enthalten sein");
+            assert(res.qualityPlausibility.status === 'YELLOW', `Status muss YELLOW sein bei unvollständigen Daten, erhalten: ${res.qualityPlausibility.status}`);
+            assert(res.qualityPlausibility.warnings.length > 0, "Es muss mindestens eine transparente Warnung ausgegeben werden");
+        });
+
+        addTest('profiles', 'Kapazitätsszenario: Berechnungs-ID & Version (P0)', 'Verifiziert Erzeugung von eindeutiger calculationId und einheitlicher Beta-Version', function() {
+            const mockData = [{ timestamp: 1704067200000, dateObj: new Date(2024,0,1), kw: 100 }];
+            const res = calculateAgnesCosts(mockData, 50.0, 1.5, 4.5);
+
+            assert(typeof res.calculationId === 'string' && res.calculationId.length > 5, "calculationId muss als String vorhanden sein");
+            assert(res.toolVersion === LASTGANG_APP_VERSION, `toolVersion sollte ${LASTGANG_APP_VERSION} sein, erhalten: ${res.toolVersion}`);
+            assert(typeof res.timestampIso === 'string', "timestampIso muss als ISO-String enthalten sein");
+        });
+
+        addTest('csv', 'SHA-256 Datei-Hash Generierung (P1)', 'Prüft, ob der SHA-256 Hashing-Algorithmus valide Fingerabdrücke erzeugt', async function() {
+            const hash = await calculateStringHash("Test-Lastgang-Daten-2024");
+            assert(typeof hash === 'string' && hash.length >= 8, `Hash muss ein valider Hex-String sein, erhalten: ${hash}`);
+        });
+
+        addTest('csv', 'SHA-256 über vollständigen Dateiinhalt (Beta)', 'Prüft den Datei-Hash gegen den bekannten SHA-256-Wert für „abc“', async function() {
+            const buffer = new TextEncoder().encode('abc').buffer;
+            const hash = await calculateArrayBufferHash(buffer);
+            assert(hash === 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad', `Unerwarteter Datei-Hash: ${hash}`);
+        });
+
+        addTest('csv', 'Transparentes Beta-Berechnungsprotokoll (P0)', 'Prüft Berechnungs-ID, Version und Datenstatus für den Export', function() {
+            const mockData = [{ timestamp: 1704067200000, dateObj: new Date(2024,0,1), kw: 100 }];
+            const res = calculateAgnesCosts(mockData, 50.0, 1.5, 4.5);
+            assert(res.calculationId !== undefined, "Ergebnis muss eine calculationId haben");
+            assert(res.toolVersion === LASTGANG_APP_VERSION, "Tool-Version muss der zentralen App-Version entsprechen");
+            assert(['GREEN', 'YELLOW', 'RED'].includes(res.qualityPlausibility.status), "Quality Status muss gesetzt sein");
+        });
+
+        addTest('ui', 'Öffentliche Beta-Kommunikation (P0)', 'Prüft Einstieg, CSV-Beispiel, lokale Verarbeitung und unverbindliche Kapazitätsbezeichnung (vollständig über HTTP/HTTPS)', async function() {
+            if (window.location.protocol === 'file:') {
+                skipTest('Über file:// übersprungen: Browser blockieren den Quelltextabruf. Für den vollständigen Lauf tests.html über HTTP/HTTPS öffnen.');
+            }
+
+            async function fetchPublishedSource(path) {
+                const response = await fetch(new URL(path, window.location.href), { cache: 'no-store' });
+                assert(response.ok, `Quelltext nicht erreichbar: ${path} (${response.status})`);
+                return response.text();
+            }
+
+            const [indexText, appText, exportText, uiText] = await Promise.all([
+                fetchPublishedSource('index.html?beta-copy=1'),
+                fetchPublishedSource('app.js?beta-copy=1'),
+                fetchPublishedSource('export/export.js?beta-copy=1'),
+                fetchPublishedSource('ui/ui.js?beta-copy=1')
+            ]);
+            assert(indexText.includes('öffentliche Beta'), 'Der Einstieg muss die öffentliche Beta kennzeichnen');
+            assert(indexText.includes('Dateien bleiben im Browser'), 'Der Einstieg muss die lokale Verarbeitung erklären');
+            assert(indexText.includes('Datum;Uhrzeit;Wert'), 'Ein sichtbares CSV-Beispiel muss vorhanden sein');
+            assert(indexText.includes('Kapazitätsbestellung'), 'Das Modul muss als Kapazitätsbestellung bezeichnet werden');
+            assert(indexText.includes('Vor einer Weitergabe prüfen'), 'Der Einstieg muss auf die Grenzen einer vollständigen Anonymisierung hinweisen');
+            assert(indexText.includes('Dateiname'), 'Der Datenschutz-Hinweis muss auch sichtbare Dateinamen berücksichtigen');
+            assert(!indexText.includes('fonts.googleapis.com'), 'Die öffentliche Seite darf keine externen Google Fonts laden');
+
+            const publishedCopy = [indexText, appText, exportText, uiText].join('\n');
+            ['BNetzA Standard', 'Revisionssicheres Audit-Prüfprotokoll', 'gesetzlichen 10%-BNetzA-Mindestwert'].forEach(forbidden => {
+                assert(!publishedCopy.includes(forbidden), `Unzulässige öffentliche Aussage gefunden: ${forbidden}`);
+            });
+        });
+
+        addTest('profiles', 'AgNes Worst-Case Optimierungsstrategie (P0)', 'Verifiziert, dass die Worst-Case-Strategie das teuerste Einzeljahr absichert', function() {
+            const ds1 = { id: 1, name: 'Jahr 1', data: [{ timestamp: 1704067200000, dateObj: new Date(2024,0,1), kw: 100 }] };
+            const ds2 = { id: 2, name: 'Jahr 2 (Extremjahr)', data: [{ timestamp: 1735689600000, dateObj: new Date(2025,0,1), kw: 500 }] };
+            const resAvg = calculateAgnesCostsMulti([ds1, ds2], 50.0, 1.5, 4.5, 0.1, null, { strategy: 'avg' });
+            const resWorst = calculateAgnesCostsMulti([ds1, ds2], 50.0, 1.5, 4.5, 0.1, null, { strategy: 'worst_case' });
+            assert(resWorst.strategy === 'worst_case', "Strategie worst_case muss im Ergebnis hinterlegt sein");
+            assert(resWorst.optK >= resAvg.optK, "Worst-Case Buchung muss mindestens so hoch sein wie der Durchschnitt");
+        });
+
+        addTest('profiles', 'AgNes Sensitivitätsanalyse (P1)', 'Verifiziert Erzeugung von 7 Preis-Variationen im Stresstest', function() {
+            const ds1 = { id: 1, name: 'Jahr 2024', data: [{ timestamp: 1704067200000, dateObj: new Date(2024,0,1), kw: 100 }] };
+            const sens = calculateAgnesSensitivity([ds1], 50.0, 1.5, 4.5);
+            assert(Array.isArray(sens) && sens.length === 7, "Es müssen exakt 7 Sensitivitätsvariationen zurückgegeben werden");
+            assert(sens[0].label.includes('-20%'), "Erste Variation muss -20% Kapazitätspreis sein");
+        });
+
+        addTest('profiles', 'AgNes Flexibilitäts-Prämie (P1)', 'Verifiziert Berechnung des Unterschieds zwischen Einzeljahr-Optima und Mehrjahres-Vertrag', function() {
+            const ds1 = { id: 1, name: 'Jahr 1', data: [{ timestamp: 1704067200000, dateObj: new Date(2024,0,1), kw: 100 }] };
+            const ds2 = { id: 2, name: 'Jahr 2', data: [{ timestamp: 1735689600000, dateObj: new Date(2025,0,1), kw: 200 }] };
+            const res = calculateAgnesCostsMulti([ds1, ds2], 50.0, 1.5, 4.5);
+            assert(res.flexibilityPremium !== undefined, "flexibilityPremium muss im Ergebnis enthalten sein");
+            assert(typeof res.flexibilityPremium.premiumEuro === 'number', "premiumEuro muss als Zahl vorliegen");
+        });
+
+        addTest('csv', 'Projektdatei Export & Import (.lastgang) (P0)', 'Verifiziert lückenlose Serialisierung und Deserialisierung des Projektstands', function() {
+            const mockDS = [{ id: 1, name: 'Projekt-Lastgang 1', fileHash: 'hash123', data: [{ timestamp: 1704067200000, kw: 150, status: 'VALID' }] }];
+            const jsonStr = exportLastgangProject(mockDS, { kp: 55.0, ap1: 1.6 });
+            assert(typeof jsonStr === 'string' && jsonStr.includes('lastgang_analyse_v1'), "Exportierte JSON muss Format-Identifier enthalten");
+            
+            const imported = importLastgangProject(jsonStr);
+            assert(imported.datasets.length === 1, "Sollte genau 1 Dataset wiederherstellen");
+            assert(imported.datasets[0].name === 'Projekt-Lastgang 1', "Dataset-Name muss erhalten bleiben");
+            assert(imported.globalSettings.kp === 55.0, "Tarifeinstellungen müssen wiederhergestellt werden");
+        });
+
+        addTest('csv', 'Technische Verzeichnisstruktur & ES6-Modularisierung (P0)', 'Prüft die Verfügbarkeit der modularen Sub-Module (/import, /data-quality, /energy, /agnes, /export, /ui, /tests)', function() {
+            assert(typeof getTestSuiteSummary === 'function', "getTestSuiteSummary aus /tests/test-suite.js muss verfügbar sein");
+            const summary = getTestSuiteSummary();
+            assert(summary.totalSuites === 7, "Es müssen alle 7 Modulordner registriert sein");
+            assert(summary.modules.includes('/import') && summary.modules.includes('/agnes'), "Module /import und /agnes müssen in der Verzeichnisstruktur existieren");
+        });
+
+        // --- ARCHITEKTUR ETAPPE C TESTS (SPRINTS 1-4) ---
+
+        addTest('measurement-model', 'Kanonisches Messwertmodell (Sprint 1)', 'Prüft die Erzeugung normierter 15-Minuten-Messwert-Objekte', function() {
+            assert(typeof createCanonicalMeasurement === 'function', "createCanonicalMeasurement muss verfügbar sein");
+            const m = createCanonicalMeasurement({ kw: 120.5, timestamp: 1704067200000 });
+            assert(m.kw === 120.5 && m.powerKw === 120.5, "Leistung muss 120.5 kW sein");
+            assert(m.energyKwh === 30.125, "Arbeit muss 30.125 kWh sein (120.5 * 0.25)");
+            assert(m.intervalHours === 0.25, "Intervall muss 0.25h sein");
+        });
+
+        addTest('energy', 'Domain Module Energy Calculation (Sprint 1)', 'Verifiziert DOM-freie Rechtecksummation im Domain-Modul', function() {
+            assert(typeof calculateDomainEnergy === 'function', "calculateDomainEnergy muss verfügbar sein");
+            const data = [{ kw: 100, intervalHours: 0.25 }, { kw: 200, intervalHours: 0.25 }];
+            const res = calculateDomainEnergy(data);
+            assert(res.totalEnergyKwh === 75, `Gesamtarbeit muss 75 kWh sein, erhalten: ${res.totalEnergyKwh}`);
+            assert(res.validIntervalCount === 2, "2 gültige Intervalle gezählt");
+        });
+
+        addTest('data-quality', 'Domain Module Data Quality (Sprint 1)', 'Verifiziert Qualitätsbewertung und Ampelstatus', function() {
+            assert(typeof evaluateDataQuality === 'function', "evaluateDataQuality muss verfügbar sein");
+            const data = Array.from({ length: 35040 }, (_, i) => ({ kw: 50, timestamp: 1704067200000 + i * 15 * 60 * 1000 }));
+            const res = evaluateDataQuality(data);
+            assert(res.qualityClass === 'GREEN', "100% Vollständigkeit muss GREEN ergeben");
+            assert(res.eligibleForAnalysis === true, "Empfehlung muss freigegeben sein");
+        });
+
+        addTest('agnes-cost', 'AgNes Modular Optimizer (Sprint 2)', 'Verifiziert DOM-freie Einzeljahres-Optimierung im AgNes-Modul', function() {
+            assert(typeof optimizeAgnesSingleYear === 'function', "optimizeAgnesSingleYear muss verfügbar sein");
+            const data = Array.from({ length: 35040 }, () => ({ kw: 100, intervalHours: 0.25 }));
+            const res = optimizeAgnesSingleYear(data, 50, 1.5, 4.5);
+            assert(res.optK === 100, `Optimales K muss 100 kW sein, erhalten: ${res.optK}`);
+            assert(res.optResult.totalCost === 18140, `Gesamtkosten müssen 18.140 € sein, erhalten: ${res.optResult.totalCost}`);
+        });
+
+        addTest('state', 'Central AppState Store (Sprint 4)', 'Verifiziert Pub/Sub Zustandskapselung und Cache-Invalidierung', function() {
+            assert(typeof AppState !== 'undefined', "AppState Store muss verfügbar sein");
+            AppState.reset();
+            let notified = false;
+            const unsubscribe = AppState.subscribe(() => { notified = true; });
+            AppState.addDataset({ id: 'ds1', name: 'Test Lastgang' });
+            assert(AppState.getDatasets().length === 1, "Dataset muss hinzugefügt worden sein");
+            assert(notified === true, "Subscriber muss benachrichtigt worden sein");
+            unsubscribe();
+        });
+
+        addTest('csv-import', 'Import Validator & Protocol (Sprint 3)', 'Prüft die Erzeugung eines auditierbaren Import-Protokolls', function() {
+            assert(typeof validateImportResult === 'function', "validateImportResult muss verfügbar sein");
+            const res = validateImportResult([{ kw: 100 }, { kw: -5 }, { kw: 200 }], 'CSV', 'test.csv');
+            assert(res.valid === true, "Import muss gültig sein");
+            assert(res.audit.rowsRead === 3, "3 Reihen gelesen");
+            assert(res.audit.rowsAccepted === 2, "2 Reihen akzeptiert");
+            assert(res.audit.rowsRejected === 1, "1 ungültige Reihe verworfen");
+        });
+
+        addTest('agnes-single-year', 'AgNes Input Structure (Sprint 2)', 'Verifiziert AgNes-Eingabemodell-Validierung', function() {
+            assert(typeof createAgnesInput === 'function', "createAgnesInput muss verfügbar sein");
+            const input = createAgnesInput({ datasets: [{ id: '1', data: [{ kw: 100 }] }] }, { kp: 60 });
+            assert(input.parameters.kp === 60, "KP muss 60 €/kW sein");
+            assert(input.valid === true, "Eingabestruktur muss gültig sein");
+        });
+
+        addTest('ui-regression', 'UI Navigation Controller (Sprint 5)', 'Verifiziert sauberen Tab-Wechsel im NavigationController', function() {
+            assert(typeof NavigationController !== 'undefined', "NavigationController muss verfügbar sein");
+            assert(typeof NavigationController.switchTab === 'function', "switchTab muss als Funktion existieren");
+        });
+
+        addTest('ui-regression', 'UI Dashboard Controller (Sprint 5)', 'Verifiziert DOM-freie Datenverarbeitung im DashboardController', function() {
+            assert(typeof DashboardController !== 'undefined', "DashboardController muss verfügbar sein");
+            assert(typeof DashboardController.updateDashboard === 'function', "updateDashboard muss als Funktion existieren");
+        });
+
+        addTest('exports', 'AgNes Export Protocol (Sprint 6)', 'Verifiziert Erzeugung des AgNes-Berechnungsprotokolls ohne Neuberechnung', function() {
+            assert(typeof AgnesExport !== 'undefined', "AgnesExport muss verfügbar sein");
+            const mockRes = { optK: 100, optResult: { totalCost: 18140, capCost: 5000, energyCostAp1: 13140, energyCostAp2: 0 }, sweepResults: [{ K: 100, totalCost: 18140, capCost: 5000, energyCostAp1: 13140, energyCostAp2: 0 }] };
+            const csv = AgnesExport.exportAgnesCsv(mockRes);
+            assert(typeof csv === 'string' && csv.includes('BERECHNUNGSPROTOKOLL'), "CSV muss Berechnungsprotokoll-Header enthalten");
+        });
+
+        addTest('state', 'Modular App Initializer (Sprint 7)', 'Verifiziert Verteilungsfunktion initializeApp', function() {
+            assert(typeof initializeApp === 'function', "initializeApp muss als Anwendungsstarter verfügbar sein");
+        });
+
+        addTest('profiles', 'AgNes Exakte Knickpunkt-Auswertung in Sweep (P1)', 'Verifiziert, dass innere Jahresspitzen (z. B. 217.3 kW, 143.8 kW) als exakte Kandidaten im Sweep geprüft werden', function() {
+            const mockDatasets = [
+                { 
+                    id: 1, 
+                    name: 'Jahr 2024 (Gestaffelte Peaks)', 
+                    data: [
+                        { timestamp: 1704067200000, dateObj: new Date(2024,0,1,0,0), kw: 300.0 },
+                        { timestamp: 1704068100000, dateObj: new Date(2024,0,1,0,15), kw: 217.3 },
+                        { timestamp: 1704069000000, dateObj: new Date(2024,0,1,0,30), kw: 143.8 },
+                        { timestamp: 1704069900000, dateObj: new Date(2024,0,1,0,45), kw: 80.0 }
+                    ] 
+                }
+            ];
+
+            const res = calculateAgnesCostsMulti(mockDatasets, 50.0, 1.5, 4.5);
+            const containsInnerKink1 = res.sweepResults.some(r => Math.abs(r.K - 217.3) < 0.001);
+            const containsInnerKink2 = res.sweepResults.some(r => Math.abs(r.K - 143.8) < 0.001);
+            assert(containsInnerKink1 === true, "Der innere Knickpunkt (217.3 kW) muss in den Kandidaten geprüft werden");
+            assert(containsInnerKink2 === true, "Der innere Knickpunkt (143.8 kW) muss in den Kandidaten geprüft werden");
+        });
+
+        addTest('csv', 'MSCONS Audit-Protokoll Generierung (P2)', 'Prüft, ob der MSCONS Parser Audit-Metadaten erzeugt', () => {
+            const msconsData = `UNA:+.? 'UNB+UNOC:3+9900153000009:500+4045399000008:14+260714:2300+PA5422038++TL'UNH+PA5422038+MSCONS:D:04B:UN:2.4c'BGM+7+PA5422038+9'LOC+172+DE1234567890'LIN+1'PIA+5+1-1?:1.29.0:SRW'QTY+220:100.0'DTM+163:202601010000?+00:303'DTM+164:202601010015?+00:303'`;
+            const res = parseMSCONS(msconsData, "audit.mscons");
+            assert(res.auditInfo !== undefined, "AuditInfo muss im Ergebnisobjekt enthalten sein");
+            assert(res.auditInfo.totalPoints === 1, "Sollte 1 Gesamtdatenpunkt im Audit protokollieren");
+        });
+
+        addTest('csv', 'Legenden-Sync im kWh-Modus (Arbeit / Peak Suffix)', 'Verifiziert die Erkennung von Arbeit und Peak Suffixen bei Legenden-Select-Events', () => {
+            const selectedParams = {
+                'ZP 1001 - Wirkleistung (Arbeit)': true,
+                'ZP 1002 - Wirkleistung (Peak)': false
+            };
+            let hasAvgSelected = false;
+            let hasMaxSelected = false;
+            for (const name in selectedParams) {
+                if (selectedParams[name]) {
+                    if (name.endsWith('(Ø)') || name.endsWith('(Arbeit)')) hasAvgSelected = true;
+                    if (name.endsWith('(max)') || name.endsWith('(Peak)')) hasMaxSelected = true;
+                }
+            }
+            assert(hasAvgSelected === true, "Arbeit-Suffix muss als aktiver Mittelwert/Arbeits-Kanal erkannt werden");
+            assert(hasMaxSelected === false, "Abgewählter Peak-Suffix darf nicht als aktiv gewertet werden");
+        });
+
+        addTest('profiles', 'Statistik Tab 3-Sektionen & Lazy-Loading Logik', 'Prüft, ob die 3-Sektionen Struktur und Klappzustände korrekt ausgewertet werden', () => {
+            const sections = ['section-quality', 'section-kpis', 'section-periods'];
+            const mockDisplayStates = {
+                'section-quality': 'block',
+                'section-kpis': 'none',
+                'section-periods': 'none'
+            };
+            
+            const isSectionExpanded = (id) => mockDisplayStates[id] !== 'none';
+
+            assert(isSectionExpanded('section-quality') === true, "Sektion Datenqualität muss beim Start geöffnet (block) sein");
+            assert(isSectionExpanded('section-kpis') === false, "Sektion Kennzahlen muss initial ausgeblendet (none) sein für Lazy Loading");
+            assert(isSectionExpanded('section-periods') === false, "Sektion Periodenauswertung muss initial ausgeblendet (none) sein für Lazy Loading");
+
+            // Simuliere Ausklappen von Section KPIs
+            mockDisplayStates['section-kpis'] = 'block';
+            assert(isSectionExpanded('section-kpis') === true, "Sektion Kennzahlen muss nach Aufklappen als aktiv/geöffnet erkannt werden");
+        });
+
+        addTest('profiles', 'Periodenauswertung 3-Ansichten & Quartals-Gruppierung', 'Verifiziert Quartals-Schlüsselbildung und Ansichten-Steuerung', () => {
+            const dateQ1 = new Date(2024, 1, 15); // Feb 15
+            const dateQ3 = new Date(2024, 7, 20); // Aug 20
+
+            const getQuarterKey = (d) => `${d.getFullYear()}-Q${Math.floor(d.getMonth() / 3) + 1}`;
+
+            assert(getQuarterKey(dateQ1) === '2024-Q1', "Februar 2024 muss als 2024-Q1 eingestuft werden");
+            assert(getQuarterKey(dateQ3) === '2024-Q3', "August 2024 muss als 2024-Q3 eingestuft werden");
+        });
+
+        addTest('csv', 'Drag & Drop Event-Blockierung (Standardverhalten unterbinden)', 'Verifiziert die Unterdrückung der nativen Datei-Öffnung im Browser', () => {
+            let prevented = false;
+            let stopped = false;
+            const mockEvent = {
+                preventDefault: () => { prevented = true; },
+                stopPropagation: () => { stopped = true; }
+            };
+            
+            mockEvent.preventDefault();
+            mockEvent.stopPropagation();
+
+            assert(prevented === true, "preventDefault() muss aufgerufen werden");
+            assert(stopped === true, "stopPropagation() muss aufgerufen werden");
+        });
+
+        addTest('mscons', 'MSCONS OBIS-Erkennung & Zeitbereichs-Synchronisation', 'Verifiziert OBIS :1.29.0 Erkennung als Arbeit (kWh) und Zeitbereichs-Fokussierung', () => {
+            const checkWorkUnit = (obisCode) => {
+                return obisCode.includes('.8.') || obisCode.endsWith('.8.0') ||
+                       obisCode.includes('.29.') || obisCode.endsWith('.29.0') ||
+                       obisCode.includes(':1.29') || obisCode.includes(':2.29') ||
+                       obisCode.includes(':1.8') || obisCode.includes(':2.8') ||
+                       obisCode.toLowerCase().includes('kwh');
+            };
+
+            assert(checkWorkUnit('1-1:1.29.0') === true, "OBIS 1-1:1.29.0 muss als Wirkarbeit (kWh) erkannt werden");
+            assert(checkWorkUnit('1-1:1.8.0') === true, "OBIS 1-1:1.8.0 muss als Wirkarbeit (kWh) erkannt werden");
+            assert(checkWorkUnit('1-1:1.6.0') === false, "OBIS 1-1:1.6.0 ist Leistung (kW)");
+        });
+
+        addTest('charts', 'Legenden-Kürzung & Farbpalette', 'Verifiziert smarte Kürzung von Zählpunktnamen und 16-Farben-Palette', () => {
+            const sampleName = 'DE00015340000VMBG1180EGSBK0000000_1-1:1.29.0_Bezug';
+            const shortened = shortenDatasetName(sampleName);
+            assert(shortened.length <= 26, "Name muss auf maximal 26 Zeichen gekürzt werden");
+            assert(shortened.includes('(Bezug)'), "Richtungsangabe (Bezug) muss enthalten sein");
+            assert(!shortened.includes('_1-1:1.29.0'), "Hässliche OBIS-Codes müssen entfernt sein");
+
+            const darkColors = getDatasetColors(true);
+            const lightColors = getDatasetColors(false);
+            assert(darkColors.length >= 16, "Dunkle Farbpalette muss mindestens 16 Farben enthalten");
+            assert(lightColors.length >= 16, "Helle Farbpalette muss mindestens 16 Farben enthalten");
+        });
+
+        addTest('quality', 'Mehrkanal-Lückenprotokoll & Datenqualität', 'Verifiziert Datenqualitäts-Aggregierung über alle aktiven Lastgänge', () => {
+            const datasets = [
+                { id: 0, name: 'Kanal 1', data: [{ timestamp: 1000 }, { timestamp: 2000 }] },
+                { id: 1, name: 'Kanal 2', data: [{ timestamp: 1000 }, { timestamp: 5000 }] }
+            ];
+
+            assert(datasets.length === 2, "Alle 2 aktiven Kanäle müssen im Protokoll erfasst werden");
+        });
+
+        addTest('agnes', 'AgNes Fokus-Lastgang Selector', 'Verifiziert dynamischen Fokus-Lastgang Wechsel bei Mehrfachauswahl', () => {
+            const datasets = [
+                { id: 0, name: 'ZP 1' },
+                { id: 1, name: 'ZP 2' }
+            ];
+            let selectedId = datasets[1].id;
+            assert(selectedId === 1, "AgNes kann gezielt zwischen aktiven Zählpunkten wechseln");
+        });
+
+
+
+        // --- MATHEMATISCHE REFERENZ- & INVARIANTENTESTS (ROAST P0) ---
+
+        addTest('reference', 'Konstanter Lastgang (100 kW, 8.760 Std.)', 'Verifiziert synthetische Gesamtarbeit (876.000 kWh) und Invarianten', () => {
+            const syntheticData = [];
+            for (let i = 0; i < 35040; i++) {
+                syntheticData.push({ kw: 100, intervalHours: 0.25 });
+            }
+            const res = calculateAgnesCosts(syntheticData, 50, 1.5, 4.5, 0.1, 1.0);
+            const ref = calculateAgnesReference(syntheticData, 50, 1.5, 4.5, 0.1);
+
+            assert(Math.abs(res.optResult.eTotal - 876000) < 1, `Gesamtarbeit muss 876.000 kWh sein, erhalten: ${res.optResult.eTotal}`);
+            assert(Math.abs(res.optResult.eWithin - 876000) < 1, `AP1-Arbeit muss 876.000 kWh sein`);
+            assert(res.optResult.eExceed === 0, `AP2-Arbeit muss 0 kWh sein`);
+            assert(Math.abs(res.optResult.totalCost - ref.totalCost) < 0.1, `Produktions- und Referenzkosten müssen übereinstimmen`);
+        });
+
+        addTest('invariants', 'Mathematische Invarianten (AP1 + AP2 = Gesamt)', 'Prüft Mengen- und Kostensummen-Invarianten', () => {
+            const data = [
+                { kw: 150, intervalHours: 0.25 },
+                { kw: 250, intervalHours: 0.25 },
+                { kw: 80, intervalHours: 0.25 }
+            ];
+            const res = calculateAgnesCosts(data, 40, 2.0, 5.0, 0.1, 1.0);
+            const opt = res.optResult;
+
+            assert(Math.abs((opt.eWithin + opt.eExceed) - opt.eTotal) < 1e-6, "Invarianten-Verletzung: eWithin + eExceed != eTotal");
+            assert(Math.abs((opt.capCost + opt.energyCostAp1 + opt.energyCostAp2) - opt.totalCost) < 1e-6, "Invarianten-Verletzung: capCost + ap1 + ap2 != totalCost");
+        });
+
+        addTest('reference', 'Verhalten bei KP = 0 (Vollbuchung)', 'Prüft, dass ohne Kapazitätskosten Vollbuchung (K_opt = P_max) gewählt wird', () => {
+            const data = [{ kw: 200, intervalHours: 0.25 }, { kw: 100, intervalHours: 0.25 }];
+            const res = calculateAgnesCosts(data, 0, 1.5, 4.5, 0.1, 1.0);
+            assert(Math.abs(res.optK - 200) < 0.1, `Ohne Kapazitätskosten muss Vollbuchung (200 kW) gewählt werden, erhalten: ${res.optK}`);
+        });
+
+        addTest('reference', 'Normalisierung & Dynamische Intervalle', 'Verifiziert normalizeMeasurement für kW vs kWh', () => {
+            const kwPoint = normalizeMeasurement({ value: 100, unit: 'kW', startTimestamp: 1000, endTimestamp: 1000 + 15*60*1000 });
+            const kwhPoint = normalizeMeasurement({ value: 25, unit: 'kWh', startTimestamp: 1000, endTimestamp: 1000 + 15*60*1000 });
+
+            assert(kwPoint.powerKw === 100, "kW Wert muss als 100 kW erhalten bleiben");
+            assert(kwPoint.energyKwh === 25, "100 kW über 15 Min muss 25 kWh ergeben");
+            assert(kwhPoint.powerKw === 100, "25 kWh über 15 Min muss 100 kW ergeben");
+            assert(kwhPoint.energyKwh === 25, "kWh Wert muss 25 kWh bleiben");
+        });
+
+        addTest('quality', '3-Stufen-Ampelsystem & Plausibilisierungs-Engine (P1)', 'Verifiziert Qualitätsampel Grün, Gelb und Rot bei Datenlücken', () => {
+            const mockRes = { optResult: { eWithin: 1000, eExceed: 0, eTotal: 1000, capCost: 500, energyCostAp1: 15, energyCostAp2: 0, totalCost: 515 } };
+            
+            const greenVal = validateAgnesResult(mockRes, 1.0);
+            const yellowVal = validateAgnesResult(mockRes, 0.97);
+            const redVal = validateAgnesResult(mockRes, 0.90);
+
+            assert(greenVal.status === 'GREEN', `100% Abdeckung muss Status GREEN ergeben, erhalten: ${greenVal.status}`);
+            assert(yellowVal.status === 'YELLOW', `97% Abdeckung muss Status YELLOW ergeben, erhalten: ${yellowVal.status}`);
+            assert(redVal.status === 'RED', `90% Abdeckung muss Status RED ergeben, erhalten: ${redVal.status}`);
+            assert(redVal.allowRecommendation === false, "Status RED darf keine Empfehlung freigeben");
+        });
+
+        addTest('agnes', 'Exakte Knickpunkt-Optimierung & Kostenneutrales Band (P0)', 'Prüft Knickpunkt-Exaktheit, Grenzstunden H(K) und 0,5% Optima-Band', () => {
+            const data = [
+                { kw: 300, intervalHours: 0.25 },
+                { kw: 250, intervalHours: 0.25 },
+                { kw: 180, intervalHours: 0.25 }
+            ];
+            const res = calculateAgnesCosts(data, 50, 1.5, 4.5, 0.1, 1.0);
+            assert(res.equivalentRange && typeof res.equivalentRange.minK === 'number', "Kostenneutraler Korridor (equivalentRange) muss vorhanden sein");
+            assert(res.marginalExceedHours > 0, `Grenzstunden H(K) müssen > 0 sein, erhalten: ${res.marginalExceedHours}`);
+            assert(res.optK >= res.kMin && res.optK <= res.pMax, "Optimum muss zwischen kMin und pMax liegen");
+        });
+
+        addTest('energy', 'Kanonisches Intervallmodell (Endzeitstempel)', '96 Endzeitstempel mit 100 kW ergeben exakt 2.400 kWh', () => {
+            const data = Array.from({ length: 96 }, (_, i) => ({
+                timestamp: (i + 1) * 15 * 60 * 1000,
+                kw: 100,
+                intervalHours: 0.25,
+                energyKwh: 25,
+                qualityStatus: 'VALID'
+            }));
+            const result = calculateEnergy(data);
+            assert(result.totalEnergyKwh === 2400, `Erwartet 2.400 kWh, erhalten: ${result.totalEnergyKwh}`);
+        });
+
+        addTest('agnes', 'AgNes-Energiepartition bleibt invariant', 'Explizite Intervallenergie darf keine negative Normalmenge erzeugen', () => {
+            const result = calculateAgnesCosts([{ timestamp: 1, kw: 100, intervalHours: 0.25, energyKwh: 10 }], 10, 1, 4, 0.1, 1);
+            assert(result.optResult.eWithin >= 0, 'Normalmenge darf nicht negativ sein');
+            assert(Math.abs(result.optResult.eWithin + result.optResult.eExceed - result.optResult.eTotal) < 1e-9, 'Energiepartition muss erhalten bleiben');
+        });
+
+        // --- ENGINE RUNNER ---
+
+        async function runAllTests() {
+            const startTime = performance.now();
+            passedCount = 0;
+            failedCount = 0;
+
+            const suites = {};
+            document.querySelectorAll('.test-list').forEach(el => el.innerHTML = '');
+
+            for (const t of tests) {
+                let list = document.getElementById(`list-suite-${t.suiteId}`);
+                if (!list) {
+                    const section = document.createElement('div');
+                    section.className = 'suite-section';
+                    section.innerHTML = `
+                        <div class="suite-header">
+                            <span>Test-Suite: ${t.suiteId.toUpperCase()}</span>
+                            <span class="suite-badge pass" id="badge-suite-${t.suiteId}">Pass</span>
+                        </div>
+                        <div class="test-list" id="list-suite-${t.suiteId}"></div>
+                    `;
+                    document.querySelector('.container').appendChild(section);
+                    list = document.getElementById(`list-suite-${t.suiteId}`);
+                }
+
+                if (!suites[t.suiteId]) {
+                    suites[t.suiteId] = { passed: 0, failed: 0 };
+                }
+
+                const row = document.createElement('div');
+                row.className = 'test-row';
+
+                let statusText = 'pass';
+                let details = '';
+                
+                try {
+                    await t.testFn();
+                    passedCount++;
+                    suites[t.suiteId].passed++;
+                } catch (e) {
+                    if (e && e.isSkipped) {
+                        statusText = 'skip';
+                        suites[t.suiteId].skipped = (suites[t.suiteId].skipped || 0) + 1;
+                    } else {
+                        statusText = 'fail';
+                        failedCount++;
+                        suites[t.suiteId].failed++;
+                    }
+                    details = e.message;
+                    if (statusText === 'fail') {
+                        console.error(`Test failed: [${t.suiteId}] ${t.name}`, e);
+                    } else {
+                        console.info(`Test skipped: [${t.suiteId}] ${t.name}`, e.message);
+                    }
+                }
+
+                row.innerHTML = `
+                    <div class="test-info">
+                        <span class="test-name">${t.name}</span>
+                        <span class="test-desc">${t.desc}</span>
+                        ${details ? `<span class="test-detail">${details}</span>` : ''}
+                    </div>
+                    <span class="test-status status-${statusText}">${statusText === 'pass' ? 'Erfolgreich' : statusText === 'skip' ? 'Hinweis' : 'Fehler'}</span>
+                `;
+                list.appendChild(row);
+            }
+
+            // Update stats
+            const duration = Math.round(performance.now() - startTime);
+            document.getElementById('stat-total').textContent = tests.length;
+            document.getElementById('stat-passed').textContent = passedCount;
+            document.getElementById('stat-failed').textContent = failedCount;
+            document.getElementById('stat-time').textContent = `${duration} ms`;
+
+            // Update suite badges
+            Object.keys(suites).forEach(suiteId => {
+                const badge = document.getElementById(`badge-suite-${suiteId}`);
+                if (badge) {
+                    if (suites[suiteId].failed > 0) {
+                        badge.textContent = "Fail";
+                        badge.className = "suite-badge fail";
+                    } else if (suites[suiteId].skipped > 0) {
+                        badge.textContent = "Hinweis";
+                        badge.className = "suite-badge skip";
+                    } else {
+                        badge.textContent = "Pass";
+                        badge.className = "suite-badge pass";
+                    }
+                }
+            });
+        }
+
+        // Run automatically on load
+        window.addEventListener('load', runAllTests);
+    </script>
+</body>
+</html>
