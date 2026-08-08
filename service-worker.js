@@ -1,4 +1,4 @@
-const APP_VERSION = '2026.08.08-beta.4';
+const APP_VERSION = '2026.08.08-beta.5';
 const CACHE_NAME = `lastgang-analyse-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
@@ -10,6 +10,7 @@ const ASSETS_TO_CACHE = [
     'parser.js',
     'charts.js',
     'app.js',
+    'messkonzept.js',
     'import/parser.js',
     'data-quality/quality.js',
     'energy/energy.js',

@@ -9,7 +9,7 @@
     <!-- PapaParse -->
     <script src="lib/papaparse.min.js"></script>
     
-    <link rel="stylesheet" href="styles.css?v=110">
+    <link rel="stylesheet" href="styles.css?v=111">
     <!-- PWA Meta tags -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -57,11 +57,11 @@
                             <span class="tool-choice-body"><b>Lastgänge analysieren</b><small>CSV oder MSCONS · jetzt verfügbar</small></span>
                             <span class="tool-choice-arrow" aria-hidden="true">→</span>
                         </a>
-                        <div class="tool-choice upcoming" aria-label="Messkonzept-Konfigurator in Aufbau">
+                        <button type="button" class="tool-choice upcoming" id="btn-open-messkonzept" aria-label="Messkonzept-Konfigurator öffnen">
                             <span class="tool-choice-icon">02</span>
-                            <span class="tool-choice-body"><b>Messkonzept konfigurieren</b><small>Assets, Zähler und Zeitscheiben · im Aufbau</small></span>
-                            <span class="module-state planned">In Aufbau</span>
-                        </div>
+                            <span class="tool-choice-body"><b>Messkonzept konfigurieren</b><small>Assets, Zähler und Zeitscheiben · MVP</small></span>
+                            <span class="tool-choice-arrow" aria-hidden="true">→</span>
+                        </button>
                     </aside>
                 </section>
 
@@ -78,12 +78,13 @@
                             <a href="#import">Analyse starten →</a>
                         </article>
                         <article class="landing-module-card">
-                            <span class="module-state planned">In Aufbau</span>
+                            <span class="module-state ready">MVP verfügbar</span>
                             <h3>Messkonzept-Konfigurator</h3>
                             <p>Anlagen, Zähler und historische Zeitscheiben strukturiert erfassen.</p>
+                            <button type="button" class="landing-card-action" id="btn-open-messkonzept-card">Konfigurator öffnen →</button>
                             <details class="module-more">
                                 <summary>Was ist geplant?</summary>
-                                <p>Geführte Topologien, Prüfhinweise und ein nachvollziehbares Ergebnisdokument.</p>
+                                <p>Geführte Topologien, Prüfhinweise und ein nachvollziehbares Ergebnisdokument. Der aktuelle Stand ist ein technischer MVP.</p>
                             </details>
                         </article>
                         <article class="landing-module-card muted">
@@ -96,6 +97,15 @@
                             </details>
                         </article>
                     </div>
+                </section>
+
+                <section id="messkonzept" class="landing-section messkonzept-teaser" aria-labelledby="messkonzept-teaser-title">
+                    <div>
+                        <span class="landing-kicker">Neues Werkzeug</span>
+                        <h2 id="messkonzept-teaser-title">Messkonzepte als nachvollziehbare Skizze.</h2>
+                        <p>Zähler, Erzeugungsanlagen, Verbraucher und SteuVE werden als eigene Bausteine angeordnet. Die Hinweise erklären, wo eine Kombination fachlich geprüft werden muss.</p>
+                    </div>
+                    <button type="button" class="btn landing-primary" id="btn-open-messkonzept-teaser">Konfigurator öffnen</button>
                 </section>
 
                 <section id="import" class="landing-section import-section" aria-labelledby="import-title">
@@ -192,6 +202,70 @@
                 <span>Wattspur · Energiewerkzeuge</span>
                 <span>Lokale Verarbeitung · keine EDM-Anbindung · unverbindliche Ergebnisse</span>
             </footer>
+        </div>
+
+        <!-- Messkonzept-Konfigurator MVP -->
+        <div id="messkonzept-screen" class="screen hidden">
+            <header class="mk-header">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-mk-back">← Zur Werkzeugauswahl</button>
+                <div class="mk-brand"><span class="mk-brand-mark" aria-hidden="true">W</span><span><strong>Wattspur</strong><small>Messkonzept-Konfigurator</small></span></div>
+                <span class="module-state ready">MVP</span>
+            </header>
+            <main class="mk-main">
+                <div class="mk-intro">
+                    <div>
+                        <span class="landing-kicker">Eigenes Schema · VBEW-inspiriert</span>
+                        <h1>Messkonzept zusammenstellen</h1>
+                        <p>Wähle eine Grundtopologie und ziehe Bausteine in die passenden Messbereiche. Das Ergebnis ist eine Orientierungsskizze, keine Genehmigung.</p>
+                    </div>
+                    <details class="mk-reference">
+                        <summary>Quelle &amp; Grenzen</summary>
+                        <p>Die Oberfläche orientiert sich an den Kategorien der VBEW-Unterlage, verwendet aber eigene Symbole und Darstellungen. Die Auswahl muss mit Netzbetreiber, Messstellenbetreiber und Elektrofachbetrieb abgestimmt werden.</p>
+                        <a href="https://cdn-matterhorn.swk.de/assets/download/VBEW-Messkonzepte_Handout-1.pdf" target="_blank" rel="noopener">VBEW-Messkonzepte, Stand 09/2024 ↗</a>
+                    </details>
+                </div>
+
+                <div class="mk-layout">
+                    <aside class="mk-palette" aria-label="Bausteine">
+                        <div class="mk-panel-heading"><span>Bausteine</span><small>Tippen oder ziehen</small></div>
+                        <button type="button" class="mk-palette-item" draggable="true" data-mk-type="meter"><span class="mk-palette-icon meter">Z</span><span><b>Zähler</b><small>Bezug / Lieferung</small></span></button>
+                        <button type="button" class="mk-palette-item" draggable="true" data-mk-type="generation"><span class="mk-palette-icon generation">EA</span><span><b>Erzeugungsanlage</b><small>PV, KWK, Wind ...</small></span></button>
+                        <button type="button" class="mk-palette-item" draggable="true" data-mk-type="consumer"><span class="mk-palette-icon consumer">V</span><span><b>Verbraucher</b><small>Allgemeine Last</small></span></button>
+                        <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve"><span class="mk-palette-icon steuve">S</span><span><b>SteuVE</b><small>§ 14a EnWG</small></span></button>
+                        <button type="button" class="mk-palette-item" draggable="true" data-mk-type="storage"><span class="mk-palette-icon storage">↕</span><span><b>Speicher</b><small>Zusatzanlage</small></span></button>
+                        <div class="mk-palette-hint">Bausteine können später per Drag &amp; Drop zwischen den Bereichen verschoben werden. Auf Touch-Geräten genügt ein Tippen.</div>
+                    </aside>
+
+                    <section class="mk-builder-card" aria-labelledby="mk-builder-title">
+                        <div class="mk-builder-toolbar">
+                            <div>
+                                <span class="mk-panel-heading-label">Grundtopologie</span>
+                                <h2 id="mk-builder-title">Messbereich festlegen</h2>
+                            </div>
+                            <div class="mk-topology-switch" role="group" aria-label="Grundtopologie">
+                                <button type="button" class="mk-topology-btn active" data-mk-mode="single">1 Zähler</button>
+                                <button type="button" class="mk-topology-btn" data-mk-mode="cascade">Kaskade</button>
+                            </div>
+                        </div>
+                        <div id="mk-cascade-controls" class="mk-cascade-controls hidden">
+                            <label for="mk-cascade-levels">Zähler in Reihe</label>
+                            <select id="mk-cascade-levels"><option value="2">2 Zähler</option><option value="3">3 Zähler</option><option value="4">4 Zähler</option></select>
+                            <span>Die oberste Zone wird konservativ als eingeschränkter Kaskadenbereich markiert.</span>
+                        </div>
+                        <div id="mk-canvas" class="mk-canvas" aria-live="polite"></div>
+                        <div class="mk-canvas-footer"><button type="button" class="btn btn-secondary btn-sm" id="btn-mk-reset">Schema zurücksetzen</button><span id="mk-canvas-status">Bereit für Bausteine.</span></div>
+                    </section>
+
+                    <aside class="mk-summary-panel" aria-labelledby="mk-summary-title">
+                        <div class="mk-panel-heading"><span id="mk-summary-title">Prüfstatus</span><span id="mk-status-badge" class="mk-status-badge neutral">Start</span></div>
+                        <div id="mk-validation-list" class="mk-validation-list"></div>
+                        <div class="mk-summary-divider"></div>
+                        <div class="mk-panel-heading"><span>Messlogik</span></div>
+                        <div id="mk-measurement-summary" class="mk-measurement-summary"></div>
+                        <button type="button" class="btn landing-primary mk-export-button" id="btn-mk-export">Skizze als JSON speichern</button>
+                    </aside>
+                </div>
+            </main>
         </div>
 
         <!-- Dashboard Screen -->
@@ -1419,5 +1493,6 @@
     <script src="parser.js?v=304"></script>
     <script src="charts.js?v=304"></script>
     <script src="app.js?v=305"></script>
+    <script src="messkonzept.js?v=1"></script>
 </body>
 </html>

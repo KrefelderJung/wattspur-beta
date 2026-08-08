@@ -994,11 +994,12 @@ Datum;Uhrzeit;Verbrauch
                 return response.text();
             }
 
-            const [indexText, appText, exportText, uiText] = await Promise.all([
+            const [indexText, appText, exportText, uiText, messkonzeptText] = await Promise.all([
                 fetchPublishedSource('index.html?beta-copy=1'),
                 fetchPublishedSource('app.js?beta-copy=1'),
                 fetchPublishedSource('export/export.js?beta-copy=1'),
-                fetchPublishedSource('ui/ui.js?beta-copy=1')
+                fetchPublishedSource('ui/ui.js?beta-copy=1'),
+                fetchPublishedSource('messkonzept.js?beta-copy=1')
             ]);
             assert(indexText.includes('öffentliche Beta'), 'Der Einstieg muss die öffentliche Beta kennzeichnen');
             assert(indexText.includes('Dateien bleiben im Browser'), 'Der Einstieg muss die lokale Verarbeitung erklären');
@@ -1010,8 +1011,11 @@ Datum;Uhrzeit;Verbrauch
             assert(indexText.includes('Wattspur'), 'Die Startseite muss die übergeordnete Produktmarke zeigen');
             assert(indexText.includes('Messkonzept-Konfigurator'), 'Das künftige Messkonzept-Werkzeug muss als eigener Einstieg erkennbar sein');
             assert(indexText.includes('<details id="transparency"'), 'Ausführliche Hinweise müssen standardmäßig einklappbar sein');
+            assert(indexText.includes('id="messkonzept-screen"'), 'Der Messkonzept-Konfigurator muss als eigener Bildschirm vorhanden sein');
+            assert(indexText.includes('data-mk-type="generation"') && indexText.includes('data-mk-type="steuve"'), 'Bausteine für EA und SteuVE müssen auswählbar sein');
+            assert(messkonzeptText.includes('mkChangeCascadeLevels') && messkonzeptText.includes('generationMeter'), 'Kaskadenstufen und Erzeugungszähler müssen im Konfigurator modelliert sein');
 
-            const publishedCopy = [indexText, appText, exportText, uiText].join('\n');
+            const publishedCopy = [indexText, appText, exportText, uiText, messkonzeptText].join('\n');
             ['BNetzA Standard', 'Revisionssicheres Audit-Prüfprotokoll', 'gesetzlichen 10%-BNetzA-Mindestwert'].forEach(forbidden => {
                 assert(!publishedCopy.includes(forbidden), `Unzulässige öffentliche Aussage gefunden: ${forbidden}`);
             });
