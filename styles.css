@@ -1153,24 +1153,6 @@ body {
     background: rgba(56, 189, 248, 0.12);
 }
 
-.mk-drop-zone-label {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    color: var(--text-main);
-    font-size: 0.8rem;
-    font-weight: 800;
-}
-
-.mk-drop-zone-label small {
-    color: var(--text-muted);
-    font-size: 0.68rem;
-    font-weight: 500;
-    text-align: right;
-}
-
 .mk-zone-assets {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1533,16 +1515,6 @@ body {
 
     .mk-meter-node b {
         font-size: 0.7rem;
-    }
-
-    .mk-drop-zone-label {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 0.2rem;
-    }
-
-    .mk-drop-zone-label small {
-        text-align: left;
     }
 
     .mk-zone-assets {

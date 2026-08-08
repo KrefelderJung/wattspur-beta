@@ -171,8 +171,7 @@ function mkRenderDropZone(zone, index) {
     const assets = mkGetZoneAssets(zone);
     const isRestricted = mkConfiguratorState.mode === 'cascade' && index === 0;
     return `
-        <div class="mk-drop-zone ${isRestricted ? 'restricted' : ''}" data-mk-zone="${mkEscapeHtml(zone)}">
-            <div class="mk-drop-zone-label"><span>${mkEscapeHtml(mkGetZoneLabel(index))}</span><small>${isRestricted ? 'SteuVE nur nach fachlicher Prüfung' : 'Baustein hier ablegen'}</small></div>
+        <div class="mk-drop-zone ${isRestricted ? 'restricted' : ''}" data-mk-zone="${mkEscapeHtml(zone)}" aria-label="${mkEscapeHtml(mkGetZoneLabel(index))}">
             <div class="mk-zone-assets">${assets.length ? assets.map(mkRenderAsset).join('') : '<div class="mk-empty-zone">Noch leer</div>'}</div>
         </div>
     `;
