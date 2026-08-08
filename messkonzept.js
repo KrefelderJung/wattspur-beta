@@ -189,7 +189,7 @@ function mkRenderMeterNode(index) {
 
 function mkRenderHakMeterRow() {
     return `
-        <div class="mk-supply-row" aria-label="Hausanschlusskasten mit erstem Zähler">
+        <div class="mk-supply-column" aria-label="Hausanschlusskasten mit erstem Zähler">
             <div class="mk-hak-node" title="Hausanschlusskasten"><b>HAK</b></div>
             <div class="mk-supply-connector" aria-hidden="true">
                 <span class="mk-ownership-marker" title="Eigentumsgrenze"></span>

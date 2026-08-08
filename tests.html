@@ -1016,7 +1016,7 @@ Datum;Uhrzeit;Verbrauch
             assert(indexText.includes('id="messkonzept-screen"'), 'Der Messkonzept-Konfigurator muss als eigener Bildschirm vorhanden sein');
             assert(indexText.includes('data-mk-type="generation"') && indexText.includes('data-mk-type="steuve"'), 'Bausteine für EA und SteuVE müssen auswählbar sein');
             assert(messkonzeptText.includes('mkChangeCascadeLevels') && messkonzeptText.includes('generationMeter'), 'Kaskadenstufen und Erzeugungszähler müssen im Konfigurator modelliert sein');
-            assert(messkonzeptText.includes('mk-supply-row') && messkonzeptText.includes('mk-ownership-marker'), 'HAK und erster Zähler müssen durch einen Anschluss mit Eigentumsgrenze verbunden sein');
+            assert(messkonzeptText.includes('mk-supply-column') && messkonzeptText.includes('mk-ownership-marker'), 'HAK und erster Zähler müssen vertikal durch einen Anschluss mit Eigentumsgrenze verbunden sein');
             assert(!messkonzeptText.includes('<span>Netz</span>'), 'Der HAK-Baustein darf keine separate Netz-Karte mit zusätzlichem Text rendern');
             assert(logoText.includes('#fb923c'), 'Die Verlaufsspur im Wattspur-Logo muss orange markiert sein');
 
