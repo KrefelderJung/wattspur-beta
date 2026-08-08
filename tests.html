@@ -994,12 +994,13 @@ Datum;Uhrzeit;Verbrauch
                 return response.text();
             }
 
-            const [indexText, appText, exportText, uiText, messkonzeptText] = await Promise.all([
+            const [indexText, appText, exportText, uiText, messkonzeptText, logoText] = await Promise.all([
                 fetchPublishedSource('index.html?beta-copy=1'),
                 fetchPublishedSource('app.js?beta-copy=1'),
                 fetchPublishedSource('export/export.js?beta-copy=1'),
                 fetchPublishedSource('ui/ui.js?beta-copy=1'),
-                fetchPublishedSource('messkonzept.js?beta-copy=1')
+                fetchPublishedSource('messkonzept.js?beta-copy=1'),
+                fetchPublishedSource('wattspur-mark.svg?beta-copy=1')
             ]);
             assert(indexText.includes('öffentliche Beta'), 'Der Einstieg muss die öffentliche Beta kennzeichnen');
             assert(indexText.includes('Dateien bleiben im Browser'), 'Der Einstieg muss die lokale Verarbeitung erklären');
@@ -1017,6 +1018,7 @@ Datum;Uhrzeit;Verbrauch
             assert(messkonzeptText.includes('mkChangeCascadeLevels') && messkonzeptText.includes('generationMeter'), 'Kaskadenstufen und Erzeugungszähler müssen im Konfigurator modelliert sein');
             assert(messkonzeptText.includes('mk-supply-row') && messkonzeptText.includes('mk-ownership-marker'), 'HAK und erster Zähler müssen durch einen Anschluss mit Eigentumsgrenze verbunden sein');
             assert(!messkonzeptText.includes('<span>Netz</span>'), 'Der HAK-Baustein darf keine separate Netz-Karte mit zusätzlichem Text rendern');
+            assert(logoText.includes('#fb923c'), 'Die Verlaufsspur im Wattspur-Logo muss orange markiert sein');
 
             const publishedCopy = [indexText, appText, exportText, uiText, messkonzeptText].join('\n');
             ['BNetzA Standard', 'Revisionssicheres Audit-Prüfprotokoll', 'gesetzlichen 10%-BNetzA-Mindestwert'].forEach(forbidden => {
