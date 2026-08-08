@@ -1,4 +1,4 @@
-const APP_VERSION = '2026.08.08-beta.5';
+const APP_VERSION = '2026.08.08-beta.6';
 const CACHE_NAME = `lastgang-analyse-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
@@ -56,6 +56,7 @@ const ASSETS_TO_CACHE = [
     'js/export/project-export.js',
     'js/app.js',
     'manifest.json',
+    'wattspur-mark.svg',
     'icon-192.png',
     'icon-512.png',
     'lib/echarts.min.js',

@@ -134,16 +134,9 @@ body {
 .landing-brand-icon {
     width: 40px;
     height: 40px;
-    display: grid;
-    place-items: center;
+    display: block;
+    object-fit: contain;
     border-radius: 12px;
-    color: var(--secondary-color);
-    background: rgba(56, 189, 248, 0.12);
-}
-
-.landing-brand-icon svg {
-    width: 27px;
-    height: 27px;
 }
 
 .module-state {
@@ -788,12 +781,9 @@ body {
 .mk-brand-mark {
     width: 36px;
     height: 36px;
-    display: grid;
-    place-items: center;
+    display: block;
+    object-fit: contain;
     border-radius: 11px;
-    color: #082f49;
-    background: var(--primary-color);
-    font-weight: 900;
 }
 
 .mk-main {
@@ -1724,10 +1714,10 @@ body {
     color: var(--primary-color);
 }
 
-.brand svg {
+.brand img {
     width: 28px;
     height: 28px;
-    color: var(--secondary-color);
+    flex: 0 0 auto;
 }
 
 .header-center {
@@ -3441,9 +3431,10 @@ body {
     align-items: center;
 }
 
-.module-logo svg {
+.module-logo img {
     width: 28px;
     height: 28px;
+    object-fit: contain;
 }
 
 .module-nav {
@@ -3618,7 +3609,7 @@ body {
         min-width: 0;
     }
 
-    .brand svg {
+    .brand img {
         width: 21px;
         height: 21px;
         flex: 0 0 auto;

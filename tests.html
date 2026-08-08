@@ -1009,6 +1009,7 @@ Datum;Uhrzeit;Verbrauch
             assert(indexText.includes('Dateiname'), 'Der Datenschutz-Hinweis muss auch sichtbare Dateinamen berücksichtigen');
             assert(!indexText.includes('fonts.googleapis.com'), 'Die öffentliche Seite darf keine externen Google Fonts laden');
             assert(indexText.includes('Wattspur'), 'Die Startseite muss die übergeordnete Produktmarke zeigen');
+            assert(indexText.includes('wattspur-mark.svg'), 'Die Produktmarke muss ein gemeinsames SVG-Zeichen verwenden');
             assert(indexText.includes('Messkonzept-Konfigurator'), 'Das künftige Messkonzept-Werkzeug muss als eigener Einstieg erkennbar sein');
             assert(indexText.includes('<details id="transparency"'), 'Ausführliche Hinweise müssen standardmäßig einklappbar sein');
             assert(indexText.includes('id="messkonzept-screen"'), 'Der Messkonzept-Konfigurator muss als eigener Bildschirm vorhanden sein');
