@@ -1135,6 +1135,27 @@ function renderPeaks(data) {
 }
 
 // --- AgNes 2029 ECharts Render-Funktionen ---
+// Reserve a dedicated band for wrapped legends so they cannot overlap axis
+// labels or the plot area.
+const AGNES_CHART_LAYOUT = Object.freeze({
+    legendHeight: 46,
+    gridTop: 84,
+    gridBottom: 54,
+    durationLeft: 72,
+    costLeft: 84,
+    right: 24,
+    yAxisNameGap: 48,
+    xAxisNameGap: 30
+});
+
+function getAgnesChartLayout() {
+    return { ...AGNES_CHART_LAYOUT };
+}
+
+if (typeof window !== 'undefined') {
+    window.getAgnesChartLayout = getAgnesChartLayout;
+}
+
 function renderAgnesDurationCurve(data, optimalK, pMax, datasetInfos) {
     const durationEl = document.getElementById('chart-agnes-duration');
     if (!durationEl) return;
@@ -1437,12 +1458,20 @@ function renderAgnesDurationCurve(data, optimalK, pMax, datasetInfos) {
         });
     }
 
+    const chartLayout = getAgnesChartLayout();
     const option = {
         backgroundColor: 'transparent',
         legend: {
             show: true,
-            top: '0%',
-            right: 'center',
+            type: 'plain',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: chartLayout.legendHeight,
+            padding: [0, 0, 0, 0],
+            itemGap: 12,
+            itemWidth: 14,
+            itemHeight: 8,
             textStyle: {
                 color: isDarkMode ? '#94a3b8' : '#64748b',
                 fontSize: 11
@@ -1473,17 +1502,17 @@ function renderAgnesDurationCurve(data, optimalK, pMax, datasetInfos) {
             }
         },
         grid: {
-            left: 60,
-            right: 30,
-            top: 55,
-            bottom: 45,
+            left: chartLayout.durationLeft,
+            right: chartLayout.right,
+            top: chartLayout.gridTop,
+            bottom: chartLayout.gridBottom,
             containLabel: true
         },
         xAxis: {
             type: 'value',
             name: isMulti ? 'Normierte Jahresstunden (h)' : 'Stunden (h)',
             nameLocation: 'middle',
-            nameGap: 28,
+            nameGap: chartLayout.xAxisNameGap,
             splitLine: {
                 lineStyle: {
                     color: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
@@ -1493,6 +1522,9 @@ function renderAgnesDurationCurve(data, optimalK, pMax, datasetInfos) {
         yAxis: {
             type: 'value',
             name: 'Leistung (kW)',
+            nameLocation: 'middle',
+            nameRotate: 90,
+            nameGap: chartLayout.yAxisNameGap,
             splitLine: {
                 lineStyle: {
                     color: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
@@ -1540,6 +1572,7 @@ function renderAgnesCostCurve(sweepResults, optimalK) {
         }
     });
 
+    const chartLayout = getAgnesChartLayout();
     const option = {
         backgroundColor: 'transparent',
         tooltip: {
@@ -1555,6 +1588,14 @@ function renderAgnesCostCurve(sweepResults, optimalK) {
         },
         legend: {
             show: true,
+            type: 'plain',
+            left: 0,
+            right: 0,
+            height: chartLayout.legendHeight,
+            padding: [0, 0, 0, 0],
+            itemGap: 10,
+            itemWidth: 14,
+            itemHeight: 8,
             textStyle: {
                 color: isDarkMode ? '#94a3b8' : '#64748b',
                 fontSize: 11
@@ -1562,17 +1603,17 @@ function renderAgnesCostCurve(sweepResults, optimalK) {
             top: 0
         },
         grid: {
-            left: 70,
-            right: 30,
-            top: 55,
-            bottom: 45,
+            left: chartLayout.costLeft,
+            right: chartLayout.right,
+            top: chartLayout.gridTop,
+            bottom: chartLayout.gridBottom,
             containLabel: true
         },
         xAxis: {
             type: 'value',
             name: 'Gebuchte Kapazität (kW)',
             nameLocation: 'middle',
-            nameGap: 25,
+            nameGap: chartLayout.xAxisNameGap,
             splitLine: {
                 lineStyle: {
                     color: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
@@ -1661,5 +1702,8 @@ function renderAgnesCostCurve(sweepResults, optimalK) {
         ]
     };
 
+    option.yAxis.nameLocation = 'middle';
+    option.yAxis.nameRotate = 90;
+    option.yAxis.nameGap = chartLayout.yAxisNameGap;
     chartAgnesCost.setOption(option);
 }

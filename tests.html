@@ -1271,6 +1271,14 @@ Datum;Uhrzeit;Verbrauch
             assert(lightColors.length >= 16, "Helle Farbpalette muss mindestens 16 Farben enthalten");
         });
 
+        addTest('charts', 'AgNes Diagramm-Layout', 'Verifiziert reservierten Legendenbereich und getrennte Achsenbeschriftung', () => {
+            assert(typeof getAgnesChartLayout === 'function', 'AgNes Layout-Konfiguration muss verfuegbar sein');
+            const layout = getAgnesChartLayout();
+            assert(layout.legendHeight >= 40, 'Legendenbereich muss mindestens zwei kompakte Zeilen aufnehmen');
+            assert(layout.gridTop > layout.legendHeight, 'Plotbereich muss unterhalb der Legende beginnen');
+            assert(layout.yAxisNameGap >= 40, 'Y-Achsenbezeichnung muss ausreichend Abstand zur Plotflaeche haben');
+        });
+
         addTest('quality', 'Mehrkanal-Lückenprotokoll & Datenqualität', 'Verifiziert Datenqualitäts-Aggregierung über alle aktiven Lastgänge', () => {
             const datasets = [
                 { id: 0, name: 'Kanal 1', data: [{ timestamp: 1000 }, { timestamp: 2000 }] },
