@@ -13,11 +13,20 @@ const MK_ASSET_META = Object.freeze({
     storage: { label: 'Speicher', short: '↕', className: 'storage', detail: 'Speicheranlage' }
 });
 
+const MK_METER_DETAIL_FIELDS = Object.freeze([
+    { key: 'maloBezug', label: 'MaLo Bezug', type: 'text' },
+    { key: 'maloLieferung', label: 'MaLo Lieferung', type: 'text' },
+    { key: 'melo', label: 'MeLo', type: 'text' },
+    { key: 'meterNumber', label: 'Zählernummer', type: 'text' },
+    { key: 'installationDate', label: 'Einbaudatum', type: 'date' }
+]);
+
 const mkConfiguratorState = {
     mode: 'single',
     cascadeLevels: 2,
     nextId: 1,
-    assets: []
+    assets: [],
+    meterDetails: {}
 };
 
 let mkElements = {};
@@ -29,6 +38,19 @@ function mkEscapeHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function mkCreateMeterDetails() {
+    return MK_METER_DETAIL_FIELDS.reduce((details, field) => {
+        details[field.key] = '';
+        return details;
+    }, {});
+}
+
+function mkGetMeterDetails(index) {
+    const key = String(index + 1);
+    if (!mkConfiguratorState.meterDetails[key]) mkConfiguratorState.meterDetails[key] = mkCreateMeterDetails();
+    return mkConfiguratorState.meterDetails[key];
 }
 
 function mkNotify(message, type = 'info') {
@@ -80,6 +102,7 @@ function mkReset() {
     mkConfiguratorState.cascadeLevels = 2;
     mkConfiguratorState.nextId = 1;
     mkConfiguratorState.assets = [];
+    mkConfiguratorState.meterDetails = {};
     mkRender();
 }
 
@@ -122,11 +145,6 @@ function mkGetZoneLabel(index) {
     if (index === 0) return 'Zwischen Z1 und Z2 · eingeschränkter Kaskadenbereich';
     if (index === mkConfiguratorState.cascadeLevels - 1) return `Hinter Z${index + 1} · Verbraucher- und Anlagenbereich`;
     return `Zwischen Z${index + 1} und Z${index + 2} · Kaskadenstufe`;
-}
-
-function mkRenderMeterLabel(index) {
-    if (mkConfiguratorState.mode !== 'cascade') return 'Z1 · Bezug und Lieferung';
-    return index === 0 ? 'Z1 · Bezug und Lieferung' : `Z${index + 1} · Lieferung / Differenzmessung`;
 }
 
 function mkRenderAsset(asset) {
@@ -176,11 +194,44 @@ function mkRenderDropZone(zone, index) {
     `;
 }
 
+function mkRenderMeterDetailsSummary(index) {
+    const details = mkGetMeterDetails(index);
+    return MK_METER_DETAIL_FIELDS
+        .filter(field => String(details[field.key] || '').trim())
+        .map(field => `<div class="mk-meter-detail-value"><span>${mkEscapeHtml(field.label)}</span><b>${mkEscapeHtml(details[field.key])}</b></div>`)
+        .join('');
+}
+
+function mkRenderMeterDetailsSlide(index) {
+    const details = mkGetMeterDetails(index);
+    const fields = MK_METER_DETAIL_FIELDS.map(field => `
+        <label>${mkEscapeHtml(field.label)}<input type="${field.type}" data-mk-meter-field="${mkEscapeHtml(field.key)}" data-mk-meter-index="${index}" value="${mkEscapeHtml(details[field.key])}"></label>
+    `).join('');
+    return `
+        <div class="mk-meter-details-slide">
+            <details class="mk-meter-details">
+                <summary>Details bearbeiten</summary>
+                <div class="mk-meter-form">${fields}</div>
+            </details>
+            <div class="mk-meter-details-summary" data-mk-meter-summary>${mkRenderMeterDetailsSummary(index)}</div>
+        </div>
+    `;
+}
+
 function mkRenderMeterNode(index) {
     return `
-        <div class="mk-meter-node">
+        <div class="mk-meter-node" aria-label="Z${index + 1}">
             <span class="mk-meter-symbol">Z${index + 1}</span>
-            <b>${mkRenderMeterLabel(index)}</b>
+        </div>
+    `;
+}
+
+function mkRenderMeterLayout(index) {
+    return `
+        <div class="mk-meter-layout" data-mk-meter-layout="${index}">
+            ${mkRenderMeterDetailsSlide(index)}
+            ${mkRenderMeterNode(index)}
+            <div class="mk-connection-line" aria-hidden="true"></div>
         </div>
     `;
 }
@@ -194,9 +245,8 @@ function mkRenderHakMeterRow() {
                 <span class="mk-ownership-label">Eigentumsgrenze</span>
                 <i class="mk-supply-line"></i>
             </div>
-            ${mkRenderMeterNode(0)}
+            ${mkRenderMeterLayout(0)}
         </div>
-        <div class="mk-connection-line" aria-hidden="true"></div>
     `;
 }
 
@@ -214,7 +264,7 @@ function mkRenderCanvas() {
     for (let i = 0; i < mkConfiguratorState.cascadeLevels; i += 1) {
         const meterMarkup = i === 0
             ? mkRenderHakMeterRow()
-            : `<div class="mk-cascade-meter-node">${mkRenderMeterNode(i)}<div class="mk-connection-line" aria-hidden="true"></div></div>`;
+            : `<div class="mk-cascade-meter-node">${mkRenderMeterLayout(i)}</div>`;
         levels.push(`
             <div class="mk-cascade-level">
                 ${meterMarkup}
@@ -360,6 +410,17 @@ function mkUpdateAssetField(event) {
     mkRefreshInlineStatus();
 }
 
+function mkUpdateMeterDetailField(event) {
+    const field = event.target.dataset.mkMeterField;
+    if (!field) return;
+    const index = Number(event.target.dataset.mkMeterIndex) || 0;
+    const details = mkGetMeterDetails(index);
+    details[field] = event.target.value;
+    const layout = event.target.closest('[data-mk-meter-layout]');
+    const summary = layout?.querySelector('[data-mk-meter-summary]');
+    if (summary) summary.innerHTML = mkRenderMeterDetailsSummary(index);
+}
+
 function mkDownloadJson() {
     const exportPayload = {
         tool: 'Wattspur Messkonzept-Konfigurator',
@@ -367,6 +428,7 @@ function mkDownloadJson() {
         generatedAt: new Date().toISOString(),
         mode: mkConfiguratorState.mode,
         cascadeLevels: mkConfiguratorState.cascadeLevels,
+        meterDetails: mkConfiguratorState.meterDetails,
         assets: mkConfiguratorState.assets
     };
     const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json;charset=utf-8' });
@@ -461,6 +523,8 @@ function mkInitialize() {
     });
     mkElements.canvas.addEventListener('input', mkUpdateAssetField);
     mkElements.canvas.addEventListener('change', mkUpdateAssetField);
+    mkElements.canvas.addEventListener('input', mkUpdateMeterDetailField);
+    mkElements.canvas.addEventListener('change', mkUpdateMeterDetailField);
     mkReset();
 }
 
