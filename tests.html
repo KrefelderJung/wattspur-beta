@@ -1007,6 +1007,9 @@ Datum;Uhrzeit;Verbrauch
             assert(indexText.includes('Vor einer Weitergabe prüfen'), 'Der Einstieg muss auf die Grenzen einer vollständigen Anonymisierung hinweisen');
             assert(indexText.includes('Dateiname'), 'Der Datenschutz-Hinweis muss auch sichtbare Dateinamen berücksichtigen');
             assert(!indexText.includes('fonts.googleapis.com'), 'Die öffentliche Seite darf keine externen Google Fonts laden');
+            assert(indexText.includes('Wattspur'), 'Die Startseite muss die übergeordnete Produktmarke zeigen');
+            assert(indexText.includes('Messkonzept-Konfigurator'), 'Das künftige Messkonzept-Werkzeug muss als eigener Einstieg erkennbar sein');
+            assert(indexText.includes('<details id="transparency"'), 'Ausführliche Hinweise müssen standardmäßig einklappbar sein');
 
             const publishedCopy = [indexText, appText, exportText, uiText].join('\n');
             ['BNetzA Standard', 'Revisionssicheres Audit-Prüfprotokoll', 'gesetzlichen 10%-BNetzA-Mindestwert'].forEach(forbidden => {

@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lastgang Analyse | Web-App</title>
+    <title>Wattspur | Energiewerkzeuge im Browser</title>
     <!-- ECharts -->
     <script src="lib/echarts.min.js"></script>
     <!-- PapaParse -->
     <script src="lib/papaparse.min.js"></script>
     
-    <link rel="stylesheet" href="styles.css?v=109">
+    <link rel="stylesheet" href="styles.css?v=110">
     <!-- PWA Meta tags -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -22,13 +22,12 @@
             <header class="landing-header" aria-label="Seitennavigation">
                 <a class="landing-brand" href="#top" aria-label="Zur Startseite">
                     <span class="landing-brand-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h5l3-10 5 15 3-8h8"/><circle cx="4" cy="19" r="1.4" fill="currentColor" stroke="none"/></svg>
                     </span>
-                    <span>Lastgang Analyse</span>
-                    <span class="beta-badge">Beta</span>
+                    <span class="landing-brand-copy"><strong>Wattspur</strong><small>Energiewerkzeuge</small></span>
                 </a>
                 <nav class="landing-links" aria-label="Bereiche">
-                    <a href="#modules">Funktionen</a>
+                    <a href="#modules">Werkzeuge</a>
                     <a href="#import">Datei einlesen</a>
                     <a href="#transparency">Hinweise</a>
                     <a href="#feedback">Feedback</a>
@@ -37,68 +36,84 @@
 
             <main id="top" class="landing-main">
                 <section class="landing-hero" aria-labelledby="landing-title">
-                    <div>
+                    <div class="hero-copy">
                         <span class="landing-kicker">Browserbasiertes Energie-Werkzeug · öffentliche Beta</span>
-                        <h1 id="landing-title">Energiedaten schnell verstehen – ohne Upload in eine Cloud.</h1>
-                        <p>CSV- oder MSCONS-Lastgänge per Drag & Drop einlesen, Datenqualität prüfen und Lastverläufe unmittelbar grafisch auswerten. Ohne Konto, ohne EDM-Anbindung und ohne automatische Datenübertragung.</p>
+                        <h1 id="landing-title"><span class="hero-title-wordmark">Wattspur</span><br>Energie klarer sehen.</h1>
+                        <p>Lokale Werkzeuge für Lastgänge und Messkonzepte – ohne Konto und ohne Upload in eine Cloud.</p>
                         <div class="landing-actions">
                             <a class="btn landing-primary" href="#import">Lastgang analysieren</a>
-                            <a class="btn landing-secondary" href="#format-example">CSV-Beispiel ansehen</a>
+                            <a class="btn landing-secondary" href="#modules">Werkzeuge ansehen</a>
                         </div>
                         <ul class="trust-list" aria-label="Datenschutz- und Nutzungshinweise">
                             <li>Dateien bleiben im Browser</li>
+                            <li>CSV &amp; MSCONS</li>
                             <li>Keine Registrierung</li>
-                            <li>Keine Schnittstelle zu EDM oder Abrechnung</li>
                         </ul>
                     </div>
-                    <aside class="hero-preview" aria-label="Vorschau des Analyseablaufs">
-                        <div class="preview-topline"><span>Analyseablauf</span><span class="status-dot">lokal</span></div>
-                        <ol>
-                            <li><strong>1</strong><span><b>Datei einlesen</b><small>CSV oder MSCONS</small></span></li>
-                            <li><strong>2</strong><span><b>Daten prüfen</b><small>Lücken, Dubletten, Einheiten</small></span></li>
-                            <li><strong>3</strong><span><b>Verlauf verstehen</b><small>Diagramme, Profile, Kennzahlen</small></span></li>
-                        </ol>
+                    <aside class="hero-preview" aria-label="Werkzeugauswahl">
+                        <div class="preview-topline"><span>Werkzeuge</span><span class="status-dot">im Browser</span></div>
+                        <a class="tool-choice active" href="#import">
+                            <span class="tool-choice-icon">01</span>
+                            <span class="tool-choice-body"><b>Lastgänge analysieren</b><small>CSV oder MSCONS · jetzt verfügbar</small></span>
+                            <span class="tool-choice-arrow" aria-hidden="true">→</span>
+                        </a>
+                        <div class="tool-choice upcoming" aria-label="Messkonzept-Konfigurator in Aufbau">
+                            <span class="tool-choice-icon">02</span>
+                            <span class="tool-choice-body"><b>Messkonzept konfigurieren</b><small>Assets, Zähler und Zeitscheiben · im Aufbau</small></span>
+                            <span class="module-state planned">In Aufbau</span>
+                        </div>
                     </aside>
                 </section>
 
                 <section id="modules" class="landing-section" aria-labelledby="modules-title">
                     <div class="section-heading">
-                        <span class="landing-kicker">Modular erweiterbar</span>
-                        <h2 id="modules-title">Ein schlanker Einstieg – mit Platz für weitere Energiewerkzeuge</h2>
+                        <span class="landing-kicker">Werkzeuge</span>
+                        <h2 id="modules-title">Wähle den passenden Einstieg.</h2>
                     </div>
                     <div class="module-card-grid">
                         <article class="landing-module-card featured">
-                            <span class="module-state ready">Verfügbar</span>
-                            <h3>Lastgang-Schnellanalyse</h3>
-                            <p>Zeitverlauf, Tagesprofile, Kennzahlen, Spitzenlasten und Datenqualität für CSV- und MSCONS-Dateien.</p>
+                            <span class="module-state ready">Jetzt verfügbar</span>
+                            <h3>Lastganganalyse</h3>
+                            <p>CSV- und MSCONS-Dateien lokal prüfen, visualisieren und vergleichen.</p>
                             <a href="#import">Analyse starten →</a>
                         </article>
                         <article class="landing-module-card">
-                            <span class="module-state beta">Beta-Szenario</span>
-                            <h3>Kapazitätsbestellung</h3>
-                            <p>Experimentelle Szenariorechnung für Bestellleistung und Kosten – keine Abrechnungsempfehlung und kein verbindliches AgNes-Modell.</p>
+                            <span class="module-state planned">In Aufbau</span>
+                            <h3>Messkonzept-Konfigurator</h3>
+                            <p>Anlagen, Zähler und historische Zeitscheiben strukturiert erfassen.</p>
+                            <details class="module-more">
+                                <summary>Was ist geplant?</summary>
+                                <p>Geführte Topologien, Prüfhinweise und ein nachvollziehbares Ergebnisdokument.</p>
+                            </details>
                         </article>
                         <article class="landing-module-card muted">
-                            <span class="module-state planned">In Planung</span>
-                            <h3>Weitere Energiemodule</h3>
-                            <p>Die Plattform bleibt offen für Funktionen, die auch ohne Lastgangdatei genutzt werden können.</p>
+                            <span class="module-state experimental">Experimentell</span>
+                            <h3>Kapazitätsbestellung</h3>
+                            <p>Szenariowerte für Leistungsbuchung und Kosten – nicht für Abrechnung oder verbindliche Entscheidungen.</p>
+                            <details class="module-more">
+                                <summary>Mehr zur Einordnung</summary>
+                                <p>Die Berechnung ist ein transparentes Szenariomodell und ersetzt keine fachliche Prüfung.</p>
+                            </details>
                         </article>
                     </div>
                 </section>
 
                 <section id="import" class="landing-section import-section" aria-labelledby="import-title">
                     <div class="import-copy">
-                        <span class="landing-kicker">Direkt ausprobieren</span>
-                        <h2 id="import-title">Lastgang lokal einlesen</h2>
-                        <p>Die Analyse läuft auf diesem Gerät. Der Browser überträgt den Inhalt der ausgewählten Lastgangdateien nicht an einen Anwendungsserver.</p>
+                        <span class="landing-kicker">Werkzeug 01 · lokal</span>
+                        <h2 id="import-title">Lastganganalyse starten</h2>
+                        <p>Die Analyse läuft auf diesem Gerät. Deine Dateien werden nicht an einen Anwendungsserver übertragen.</p>
                         <ul class="plain-check-list">
-                            <li>Mehrere Lastgänge gleichzeitig einlesbar</li>
-                            <li>CSV mit Datum, Uhrzeit und Messwert</li>
-                            <li>MSCONS-Erkennung ohne EDM-Schnittstelle</li>
+                            <li>Mehrere Dateien gleichzeitig</li>
+                            <li>CSV und MSCONS</li>
+                            <li>Keine EDM-Schnittstelle</li>
                         </ul>
-                        <div class="privacy-note" role="note">
-                            <strong>Vor einer Weitergabe prüfen:</strong> Zählpunkt-/Marktlokationsnummer, Standort, Firmenname, Dateiname und sonstige Kopfzeilen entfernen. Auch ein Lastprofil kann durch Zeitraum und Verlauf Rückschlüsse auf einen Betrieb zulassen. Die Datei wird hier lokal verarbeitet, aber Exporte und Screenshots können sichtbare Bezeichnungen enthalten.
-                        </div>
+                        <details class="inline-help">
+                            <summary>Hinweis zur Weitergabe</summary>
+                            <div class="privacy-note" role="note">
+                                <strong>Vor einer Weitergabe prüfen:</strong> Zählpunkt-/Marktlokationsnummer, Standort, Firmenname, Dateiname und sonstige Kopfzeilen entfernen. Auch ein Lastprofil kann durch Zeitraum und Verlauf Rückschlüsse auf einen Betrieb zulassen. Die Datei wird hier lokal verarbeitet, aber Exporte und Screenshots können sichtbare Bezeichnungen enthalten.
+                            </div>
+                        </details>
                     </div>
                     <div class="upload-container">
                         <div id="drop-zone" class="drop-zone">
@@ -118,10 +133,10 @@
                     </div>
                 </section>
                 <details id="format-example" class="format-example">
-                    <summary><span aria-hidden="true">ⓘ</span> So kann eine CSV-Datei aussehen</summary>
+                    <summary><span aria-hidden="true">ⓘ</span> CSV-Format anzeigen</summary>
                     <div class="format-example-body">
                         <div>
-                            <p>Ein einfaches, unterstütztes Format ist eine semikolongetrennte Datei mit deutscher Dezimalschreibweise:</p>
+                            <p>Ein einfaches, unterstütztes Format:</p>
                             <pre><code>Datum;Uhrzeit;Wert
 01.01.2026;00:15;125,40
 01.01.2026;00:30;127,10
@@ -136,35 +151,36 @@
                     </div>
                 </details>
 
-                <section id="transparency" class="landing-section transparency-panel" aria-labelledby="transparency-title">
-                    <div>
-                        <span class="landing-kicker">Transparent statt überversprochen</span>
-                        <h2 id="transparency-title">Was diese Beta leistet – und was nicht</h2>
-                    </div>
-                    <div class="transparency-columns">
-                        <div>
-                            <h3>Das Tool unterstützt</h3>
-                            <ul class="plain-check-list">
-                                <li>Visuelle und rechnerische Orientierung</li>
-                                <li>Lokale Prüfung eigener Lastgangdateien</li>
-                                <li>Vergleich und Export von Analyseergebnissen</li>
-                            </ul>
+                <details id="transparency" class="landing-section transparency-panel landing-details">
+                    <summary>
+                        <span><span class="landing-kicker">Hinweise</span><h2 id="transparency-title">Was du wissen solltest</h2></span>
+                    </summary>
+                    <div class="transparency-content">
+                        <div class="transparency-columns">
+                            <div>
+                                <h3>Das Tool unterstützt</h3>
+                                <ul class="plain-check-list">
+                                    <li>Visuelle und rechnerische Orientierung</li>
+                                    <li>Lokale Prüfung eigener Lastgangdateien</li>
+                                    <li>Vergleich und Export von Analyseergebnissen</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h3>Nicht Bestandteil</h3>
+                                <ul class="plain-x-list">
+                                    <li>Keine EDM- oder Abrechnungsschnittstelle</li>
+                                    <li>Keine Rechts-, Tarif- oder Investitionsberatung</li>
+                                    <li>Keine Garantie für Vollständigkeit oder Fehlerfreiheit</li>
+                                </ul>
+                            </div>
                         </div>
-                        <div>
-                            <h3>Nicht Bestandteil</h3>
-                            <ul class="plain-x-list">
-                                <li>Keine EDM- oder Abrechnungsschnittstelle</li>
-                                <li>Keine Rechts-, Tarif- oder Investitionsberatung</li>
-                                <li>Keine Garantie für Vollständigkeit oder Fehlerfreiheit</li>
-                            </ul>
-                        </div>
+                        <p class="beta-disclaimer"><strong>Hinweis:</strong> Ergebnisse sind unverbindliche Analyse- und Szenariowerte. Vor betrieblichen, vertraglichen oder wirtschaftlichen Entscheidungen müssen Eingangsdaten, Annahmen und Ergebnisse fachlich geprüft werden. Für Entscheidungen allein auf Grundlage dieser Auswertung wird keine Haftung übernommen.</p>
                     </div>
-                    <p class="beta-disclaimer"><strong>Beta-Hinweis:</strong> Ergebnisse sind unverbindliche Analyse- und Szenariowerte. Vor betrieblichen, vertraglichen oder wirtschaftlichen Entscheidungen müssen Eingangsdaten, Annahmen und Ergebnisse fachlich geprüft werden. Für Entscheidungen allein auf Grundlage dieser Beta-Auswertung wird keine Haftung übernommen.</p>
-                </section>
+                </details>
 
                 <section id="feedback" class="landing-section feedback-panel" aria-labelledby="feedback-title">
                     <div>
-                        <span class="landing-kicker">Beta mitgestalten</span>
+                        <span class="landing-kicker">Mitgestalten</span>
                         <h2 id="feedback-title">Was hilft dir – und was fehlt?</h2>
                         <p>Hilfreich sind insbesondere Hinweise zu Importproblemen, unverständlichen Kennzahlen und Funktionen, die im Arbeitsalltag tatsächlich Zeit sparen würden.</p>
                     </div>
@@ -173,7 +189,7 @@
             </main>
 
             <footer class="landing-footer">
-                <span>Lastgang Analyse · Beta</span>
+                <span>Wattspur · Energiewerkzeuge</span>
                 <span>Lokale Verarbeitung · keine EDM-Anbindung · unverbindliche Ergebnisse</span>
             </footer>
         </div>
@@ -182,7 +198,7 @@
         <div id="dashboard-screen" class="screen hidden">
             <!-- Neue linksbündige Primärnavigation (Sidebar-Navigation) -->
             <aside class="module-sidebar">
-                <div class="module-logo" title="Lastgang Analyse">
+                <div class="module-logo" title="Wattspur">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                     </svg>
@@ -208,7 +224,7 @@
                 <header class="dashboard-header">
                     <div class="brand">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                        <h2>Lastgang Analyse</h2>
+                        <h2>Wattspur <span class="dashboard-product-label">· Lastganganalyse</span></h2>
                     </div>
                     
                     <div class="header-center">
