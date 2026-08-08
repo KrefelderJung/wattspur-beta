@@ -178,13 +178,34 @@ function mkRenderDropZone(zone, index) {
     `;
 }
 
+function mkRenderMeterNode(index) {
+    return `
+        <div class="mk-meter-node">
+            <span class="mk-meter-symbol">Z${index + 1}</span>
+            <b>${mkRenderMeterLabel(index)}</b>
+        </div>
+    `;
+}
+
+function mkRenderHakMeterRow() {
+    return `
+        <div class="mk-supply-row" aria-label="Hausanschlusskasten mit erstem Zähler">
+            <div class="mk-hak-node" title="Hausanschlusskasten"><b>HAK</b></div>
+            <div class="mk-supply-connector" aria-hidden="true">
+                <span class="mk-ownership-marker" title="Eigentumsgrenze"></span>
+                <i class="mk-supply-line"></i>
+            </div>
+            ${mkRenderMeterNode(0)}
+        </div>
+        <div class="mk-connection-line" aria-hidden="true"></div>
+    `;
+}
+
 function mkRenderCanvas() {
     if (!mkElements.canvas) return;
     if (mkConfiguratorState.mode === 'single') {
         mkElements.canvas.innerHTML = `
-            <div class="mk-hak-node"><span>Netz</span><i></i><b>HAK</b><small>Eigentumsgrenze</small></div>
-            <div class="mk-meter-node"><span class="mk-meter-symbol">Z1</span><b>${mkRenderMeterLabel(0)}</b></div>
-            <div class="mk-connection-line"></div>
+            ${mkRenderHakMeterRow()}
             ${mkRenderDropZone('single-main', 0)}
         `;
         return;
@@ -192,9 +213,12 @@ function mkRenderCanvas() {
 
     const levels = [];
     for (let i = 0; i < mkConfiguratorState.cascadeLevels; i += 1) {
+        const meterMarkup = i === 0
+            ? mkRenderHakMeterRow()
+            : `<div class="mk-cascade-meter-node">${mkRenderMeterNode(i)}<div class="mk-connection-line" aria-hidden="true"></div></div>`;
         levels.push(`
             <div class="mk-cascade-level">
-                <div class="mk-hak-node ${i > 0 ? 'compact' : ''}"><span>${i === 0 ? 'Netz' : 'Kaskade'}</span><i></i><b>Z${i + 1}</b><small>${i === 0 ? 'HAK / Bezug und Lieferung' : 'Differenzmessung'}</small></div>
+                ${meterMarkup}
                 ${mkRenderDropZone(`cascade-${i}`, i)}
             </div>
         `);
