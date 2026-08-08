@@ -1021,6 +1021,8 @@ Datum;Uhrzeit;Verbrauch
             assert(!messkonzeptText.includes('mk-drop-zone-label'), 'Die Drop-Zone darf keine zusätzliche sichtbare Bereichsüberschrift rendern');
             assert(messkonzeptText.includes('mk-ownership-marker') && (await fetchPublishedSource('styles.css?beta-copy=1')).includes('width: 4.5rem'), 'Die Eigentumsgrenze muss als langer, gut erkennbarer Marker gestaltet sein');
             assert(messkonzeptText.includes('HAK = Hausanschlusskasten') && messkonzeptText.includes('mk-ownership-label'), 'HAK und Eigentumsgrenze müssen verständlich beschriftet sein');
+            assert(messkonzeptText.includes('draggable="true"') && messkonzeptText.includes('data-mk-drag-asset'), 'Bausteinkarten müssen direkt ziehbar sein');
+            assert(!messkonzeptText.includes('mk-drag-handle') && !(await fetchPublishedSource('styles.css?beta-copy=1')).includes('mk-drag-handle'), 'Ein separates Pfeil-Drag-Icon darf nicht mehr gerendert werden');
             assert(logoText.includes('#fb923c'), 'Die Verlaufsspur im Wattspur-Logo muss orange markiert sein');
 
             const publishedCopy = [indexText, appText, exportText, uiText, messkonzeptText].join('\n');

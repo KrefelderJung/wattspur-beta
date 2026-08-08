@@ -148,9 +148,8 @@ function mkRenderAsset(asset) {
     ` : '';
 
     return `
-        <article class="mk-asset-card" data-mk-asset-id="${mkEscapeHtml(asset.id)}">
+        <article class="mk-asset-card" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" role="group" aria-label="${mkEscapeHtml(asset.name)} verschieben">
             <div class="mk-asset-head">
-                <button type="button" class="mk-drag-handle" draggable="true" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" title="Baustein verschieben" aria-label="${mkEscapeHtml(asset.name)} verschieben">↕</button>
                 <span class="mk-asset-icon ${meta.className}">${meta.short}</span>
                 <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b><small>${meta.detail}</small></span>
                 <button type="button" class="mk-remove-asset" data-mk-remove-asset="${mkEscapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${mkEscapeHtml(asset.name)} entfernen">×</button>

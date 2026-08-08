@@ -1215,6 +1215,11 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: var(--surface-color);
+    cursor: grab;
+}
+
+.mk-asset-card:active {
+    cursor: grabbing;
 }
 
 .mk-asset-head {
@@ -1225,7 +1230,6 @@ body {
     padding: 0.55rem;
 }
 
-.mk-drag-handle,
 .mk-remove-asset {
     width: 25px;
     height: 25px;
@@ -1236,7 +1240,6 @@ body {
     border-radius: var(--radius-sm);
     color: var(--text-muted);
     background: var(--surface-hover);
-    cursor: grab;
 }
 
 .mk-remove-asset {
