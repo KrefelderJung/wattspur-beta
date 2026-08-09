@@ -770,7 +770,6 @@ function mkInitialize() {
 
     document.querySelectorAll('.mk-palette-item').forEach(button => {
         if (button.dataset.mkLegendOnly === 'true') return;
-        button.addEventListener('click', () => mkAddAsset(button.dataset.mkType));
         button.addEventListener('dragstart', event => {
             event.dataTransfer.effectAllowed = 'copy';
             event.dataTransfer.setData('application/json', JSON.stringify({ source: 'palette', type: button.dataset.mkType }));
