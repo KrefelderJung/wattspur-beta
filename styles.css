@@ -1190,11 +1190,10 @@ body {
 }
 
 .mk-meter-layout.detail-mode {
-    grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
-    column-gap: 0.75rem;
-    row-gap: 0.45rem;
-    align-items: start;
-    justify-items: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
 }
 
 .mk-asset-detail-slide {
@@ -1208,21 +1207,17 @@ body {
 }
 
 .mk-meter-layout.detail-mode > .mk-meter-detail-card {
-    grid-column: 3;
-    grid-row: 1 / span 2;
     width: min(300px, 100%);
-    justify-self: start;
     box-sizing: border-box;
 }
 
-.mk-meter-layout.detail-mode > .mk-meter-node {
-    grid-column: 2;
-    grid-row: 1;
-}
-
-.mk-meter-layout.detail-mode > .mk-connection-line {
-    grid-column: 2;
-    grid-row: 2;
+.mk-meter-detail-connection {
+    width: 3px;
+    height: 3.2rem;
+    margin-top: 0.2rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--primary-color), var(--text-muted));
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.08);
 }
 
 .mk-meter-detail-card .mk-asset-detail-slide {
@@ -1952,23 +1947,9 @@ body.mk-modal-open {
         width: 100%;
     }
 
-    .mk-meter-layout.detail-mode {
-        grid-template-columns: 1fr;
-    }
-    .mk-meter-layout.detail-mode > .mk-meter-node,
-    .mk-meter-layout.detail-mode > .mk-connection-line {
-        grid-column: auto;
-        grid-row: auto;
-    }
-
     .mk-meter-layout.detail-mode > .mk-meter-detail-card {
-        position: static;
         width: 100%;
         max-width: none;
-        grid-column: auto;
-        grid-row: auto;
-        justify-self: stretch;
-        margin-top: 0.35rem;
     }
 
     .mk-zone-assets {
