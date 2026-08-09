@@ -242,14 +242,19 @@
                                 <h2 id="mk-builder-title">Messbereich festlegen</h2>
                             </div>
                             <div class="mk-toolbar-controls">
-                                <div class="mk-view-switch" role="group" aria-label="Darstellung">
-                                    <span class="mk-switch-label">Darstellung</span>
-                                    <button type="button" class="mk-topology-btn active" data-mk-view="simple" aria-pressed="true" title="Nur Objekte und Verbindungslinien anzeigen">Einfach</button>
-                                    <button type="button" class="mk-topology-btn" data-mk-view="detail" aria-pressed="false" title="Alle erfassten Angaben direkt in der Skizze anzeigen">Detailansicht</button>
+                                <div class="mk-control-group">
+                                    <span class="mk-control-label">Darstellung</span>
+                                    <div class="mk-view-switch" role="group" aria-label="Darstellung">
+                                        <button type="button" class="mk-topology-btn active" data-mk-view="simple" aria-pressed="true" title="Nur Objekte und Verbindungslinien anzeigen">Einfach</button>
+                                        <button type="button" class="mk-topology-btn" data-mk-view="detail" aria-pressed="false" title="Alle erfassten Angaben direkt in der Skizze anzeigen">Detailansicht</button>
+                                    </div>
                                 </div>
-                                <div class="mk-topology-switch" role="group" aria-label="Grundtopologie">
-                                    <button type="button" class="mk-topology-btn active" data-mk-mode="single">1 Zähler</button>
-                                    <button type="button" class="mk-topology-btn" data-mk-mode="cascade">Kaskade</button>
+                                <div class="mk-control-group">
+                                    <span class="mk-control-label">Messkonzept</span>
+                                    <div class="mk-topology-switch" role="group" aria-label="Messkonzept">
+                                        <button type="button" class="mk-topology-btn active" data-mk-mode="single" title="Ein Messzähler für den Messbereich">Einzähler</button>
+                                        <button type="button" class="mk-topology-btn" data-mk-mode="cascade" title="Zwei oder mehr Zähler in Reihe">Mehrzähler</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

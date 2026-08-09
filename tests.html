@@ -1015,7 +1015,8 @@ Datum;Uhrzeit;Verbrauch
             assert(indexText.includes('<details id="transparency"'), 'Ausführliche Hinweise müssen standardmäßig einklappbar sein');
             assert(indexText.includes('id="messkonzept-screen"'), 'Der Messkonzept-Konfigurator muss als eigener Bildschirm vorhanden sein');
             assert(indexText.includes('data-mk-type="generation"') && indexText.includes('data-mk-type="steuve"'), 'Bausteine für EA und SteuVE müssen auswählbar sein');
-            assert(indexText.includes('data-mk-view="simple"') && indexText.includes('data-mk-view="detail"'), 'Die Darstellung muss zwischen Einfach- und Detailansicht umschaltbar sein');
+            assert(indexText.includes('data-mk-view="simple"') && indexText.includes('data-mk-view="detail"') && indexText.includes('mk-control-label'), 'Die Darstellung muss zwischen Einfach- und Detailansicht umschaltbar sein');
+            assert(indexText.includes('Darstellung') && indexText.includes('Messkonzept') && indexText.includes('Einzähler') && indexText.includes('Mehrzähler'), 'Die Auswahlgruppen müssen verständlich beschriftet sein');
             assert(indexText.includes('mk-object-modal') && indexText.includes('btn-mk-modal-done'), 'Objektdetails müssen in einem separaten Fenster erfasst werden können');
             assert(indexText.includes('btn-mk-export-pdf') && indexText.includes('Technischer Export'), 'Der verständliche PDF-Export muss sichtbar und der JSON-Export technisch eingeordnet sein');
             assert(messkonzeptText.includes('mkChangeCascadeLevels') && messkonzeptText.includes('generationMeter'), 'Kaskadenstufen und Erzeugungszähler müssen im Konfigurator modelliert sein');

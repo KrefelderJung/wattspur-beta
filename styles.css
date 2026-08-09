@@ -974,21 +974,30 @@ body {
     gap: 0.55rem;
 }
 
+.mk-control-group {
+    display: grid;
+    justify-items: stretch;
+    gap: 0.2rem;
+}
+
+.mk-control-label {
+    padding-left: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
 .mk-view-switch {
     display: flex;
     align-items: center;
     gap: 0.2rem;
-    padding: 0.25rem;
+    padding: 0.2rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: var(--bg-color);
-}
-
-.mk-switch-label {
-    padding: 0 0.35rem;
-    color: var(--text-muted);
-    font-size: 0.68rem;
-    font-weight: 700;
 }
 
 .mk-panel-heading-label {
@@ -1007,15 +1016,15 @@ body {
 .mk-topology-switch {
     display: flex;
     gap: 0.25rem;
-    padding: 0.25rem;
+    padding: 0.2rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: var(--bg-color);
 }
 
 .mk-topology-btn {
-    min-height: 34px;
-    padding: 0.35rem 0.7rem;
+    min-height: 32px;
+    padding: 0.3rem 0.65rem;
     border: 0;
     border-radius: var(--radius-sm);
     color: var(--text-muted);
@@ -1769,10 +1778,6 @@ body.mk-modal-open {
     .mk-toolbar-controls {
         align-items: stretch;
         flex-direction: column;
-    }
-
-    .mk-switch-label {
-        flex: 0 0 auto;
     }
 
     .mk-topology-switch {
