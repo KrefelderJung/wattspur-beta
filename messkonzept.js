@@ -8,9 +8,9 @@
 const MK_ASSET_META = Object.freeze({
     meter: { label: 'Zähler', short: 'Z', className: 'meter', detail: 'Zusätzlicher Messpunkt' },
     generation: { label: 'Erzeugungsanlage', short: 'EA', className: 'generation', detail: 'PV, KWK, Wind ...' },
-    consumer: { label: 'Verbraucher', short: 'V', className: 'consumer', detail: 'Allgemeine Last' },
+    consumer: { label: 'Verbraucher', short: '⌁', className: 'consumer', detail: 'Allgemeine Last' },
     steuve: { label: 'SteuVE', short: 'SteuVE', className: 'steuve', detail: 'Steuerbare Verbrauchseinrichtung' },
-    storage: { label: 'Speicher', short: '↕', className: 'storage', detail: 'Speicheranlage' }
+    storage: { label: 'Speicher', short: '▤', className: 'storage', detail: 'Speicheranlage' }
 });
 
 const MK_ASSET_TYPE_OPTIONS = Object.freeze({
@@ -408,6 +408,7 @@ function mkValidation() {
     const generations = assets.filter(asset => asset.type === 'generation');
     const consumers = assets.filter(asset => asset.type === 'consumer');
     const steuves = assets.filter(asset => asset.type === 'steuve');
+    const storages = assets.filter(asset => asset.type === 'storage');
     const extraMeters = assets.filter(asset => asset.type === 'meter');
     const checks = [];
 
@@ -419,6 +420,10 @@ function mkValidation() {
 
     if (extraMeters.length) {
         checks.push({ level: 'warning', text: 'Zusätzliche Zähler sind angelegt. Prüfe, ob dafür die Kaskaden-Topologie verwendet werden sollte.' });
+    }
+
+    if (storages.length) {
+        checks.push({ level: 'warning', text: 'Speicher bleibt vorerst ein eigenes Objekt. Betriebsrolle (Erzeugung, Bezug und ggf. SteuVE) fachlich festlegen.' });
     }
 
     if (mkConfiguratorState.mode === 'single') {
@@ -435,8 +440,8 @@ function mkValidation() {
 
     if (mkConfiguratorState.mode === 'cascade') {
         const upper = mkGetZoneAssets('cascade-0');
-        if (upper.some(asset => ['consumer', 'storage'].includes(asset.type))) {
-            checks.push({ level: 'error', text: 'Im oberen Kaskadenbereich liegt ein Verbraucher oder Speicher. Dieser Bereich ist in vielen Konzepten eingeschränkt.' });
+        if (upper.some(asset => asset.type === 'consumer')) {
+            checks.push({ level: 'error', text: 'Im oberen Kaskadenbereich liegt ein Verbraucher. Dieser Bereich ist in vielen Konzepten eingeschränkt.' });
         }
         if (upper.some(asset => asset.type === 'generation')) {
             checks.push({ level: 'warning', text: 'Eine EA liegt zwischen den ersten Zählern. Erzeugungsmessung und Differenzbildung müssen konkret abgestimmt werden.' });
