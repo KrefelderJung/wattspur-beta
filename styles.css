@@ -791,10 +791,6 @@ body {
 }
 
 .mk-intro {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 2rem;
     margin-bottom: 1.6rem;
 }
 
@@ -806,38 +802,20 @@ body {
 }
 
 .mk-intro p {
-    max-width: 700px;
+    max-width: 980px;
     margin-top: 0.8rem;
     color: var(--text-muted);
 }
 
-.mk-reference {
-    width: min(330px, 100%);
-    flex: 0 0 330px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--surface-color);
-}
-
-.mk-reference summary {
-    padding: 0.75rem 0.9rem;
-    cursor: pointer;
+.mk-reference-link {
     color: var(--primary-color);
-    font-weight: 700;
-}
-
-.mk-reference p,
-.mk-reference a {
-    display: block;
-    margin: 0;
-    padding: 0 0.9rem 0.8rem;
-    color: var(--text-muted);
-    font-size: 0.78rem;
-}
-
-.mk-reference a {
-    color: var(--primary-color);
+    white-space: nowrap;
     text-decoration: none;
+}
+
+.mk-reference-link:hover,
+.mk-reference-link:focus-visible {
+    text-decoration: underline;
 }
 
 .mk-layout {
@@ -1828,15 +1806,9 @@ body.mk-modal-open {
         width: min(100% - 1.5rem, 1320px);
     }
 
-    .mk-intro,
     .messkonzept-teaser {
         align-items: stretch;
         flex-direction: column;
-    }
-
-    .mk-reference {
-        width: 100%;
-        flex-basis: auto;
     }
 
     .mk-layout {
