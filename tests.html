@@ -1026,6 +1026,7 @@ Datum;Uhrzeit;Verbrauch
             assert((await fetchPublishedSource('styles.css?beta-copy=1')).includes('position: absolute') && (await fetchPublishedSource('styles.css?beta-copy=1')).includes('background: transparent'), 'Das Löschen-Icon muss dezent oben rechts ohne graue Box erscheinen');
             assert(messkonzeptText.includes('mk-meter-details-slide') && messkonzeptText.includes('maloBezug') && messkonzeptText.includes('maloLieferung') && messkonzeptText.includes('meterNumber') && messkonzeptText.includes('installationDate'), 'Zählerdetails müssen im linken Details-Slide erfasst werden können');
             assert(messkonzeptText.includes('meterDetails') && messkonzeptText.includes('mk-meter-details-summary') && !messkonzeptText.includes('Z1 · Bezug und Lieferung'), 'Z1 muss als farbiges Objekt ohne weißen Zusatzschriftzug dargestellt werden und Details zusammenfassen');
+            assert((await fetchPublishedSource('styles.css?beta-copy=1')).includes('width: 32px') && (await fetchPublishedSource('styles.css?beta-copy=1')).includes('background: #bae6fd'), 'Das Zählerobjekt muss die kompakte Farbe und Größe des Zähler-Icons aus der Legende verwenden');
             assert(logoText.includes('#fb923c'), 'Die Verlaufsspur im Wattspur-Logo muss orange markiert sein');
 
             const publishedCopy = [indexText, appText, exportText, uiText, messkonzeptText].join('\n');

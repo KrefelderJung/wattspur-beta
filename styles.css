@@ -1223,28 +1223,28 @@ body {
 }
 
 .mk-meter-node {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     grid-column: 2;
     grid-row: 1;
-    width: 100%;
-    box-sizing: border-box;
-    min-width: 0;
+    width: 32px;
+    height: 32px;
+    justify-self: center;
     margin: 0;
-    padding: 0.7rem;
-    border: 1px solid #7dd3fc;
-    border-radius: var(--radius-md);
     color: #0c4a6e;
-    background: #bae6fd;
 }
 
 .mk-meter-symbol {
-    padding: 0.25rem 0.45rem;
-    border: 1px solid currentColor;
-    border-radius: var(--radius-sm);
-    color: inherit;
-    background: rgba(255, 255, 255, 0.42);
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+    color: #0c4a6e;
+    background: #bae6fd;
+    font-size: 0.7rem;
     font-weight: 900;
 }
 
@@ -1664,7 +1664,7 @@ body {
     }
 
     .mk-meter-node {
-        padding: 0.45rem 0.4rem;
+        padding: 0;
     }
 
     .mk-zone-assets {
