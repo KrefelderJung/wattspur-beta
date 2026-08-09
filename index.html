@@ -9,7 +9,7 @@
     <!-- PapaParse -->
     <script src="lib/papaparse.min.js"></script>
     
-    <link rel="stylesheet" href="styles.css?v=111">
+    <link rel="stylesheet" href="styles.css?v=112">
     <link rel="icon" type="image/svg+xml" href="wattspur-mark.svg">
     <!-- PWA Meta tags -->
     <link rel="manifest" href="manifest.json">
@@ -232,7 +232,7 @@
                         <button type="button" class="mk-palette-item" draggable="true" data-mk-type="consumer"><span class="mk-palette-icon consumer">V</span><span><b>Verbraucher</b><small>Allgemeine Last</small></span></button>
                         <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve"><span class="mk-palette-icon steuve">S</span><span><b>SteuVE</b><small>§ 14a EnWG</small></span></button>
                         <button type="button" class="mk-palette-item" draggable="true" data-mk-type="storage"><span class="mk-palette-icon storage">↕</span><span><b>Speicher</b><small>Zusatzanlage</small></span></button>
-                        <div class="mk-palette-hint">Bausteine können später per Drag &amp; Drop zwischen den Bereichen verschoben werden. Auf Touch-Geräten genügt ein Tippen.</div>
+                        <div class="mk-palette-hint">Bausteine können später per Drag &amp; Drop zwischen den Bereichen verschoben werden. Auf Touch-Geräten genügt ein Tippen. Für Angaben ein Objekt antippen.</div>
                     </aside>
 
                     <section class="mk-builder-card" aria-labelledby="mk-builder-title">
@@ -241,9 +241,16 @@
                                 <span class="mk-panel-heading-label">Grundtopologie</span>
                                 <h2 id="mk-builder-title">Messbereich festlegen</h2>
                             </div>
-                            <div class="mk-topology-switch" role="group" aria-label="Grundtopologie">
-                                <button type="button" class="mk-topology-btn active" data-mk-mode="single">1 Zähler</button>
-                                <button type="button" class="mk-topology-btn" data-mk-mode="cascade">Kaskade</button>
+                            <div class="mk-toolbar-controls">
+                                <div class="mk-view-switch" role="group" aria-label="Darstellung">
+                                    <span class="mk-switch-label">Darstellung</span>
+                                    <button type="button" class="mk-topology-btn active" data-mk-view="simple" aria-pressed="true" title="Nur Objekte und Verbindungslinien anzeigen">Einfach</button>
+                                    <button type="button" class="mk-topology-btn" data-mk-view="detail" aria-pressed="false" title="Alle erfassten Angaben direkt in der Skizze anzeigen">Detailansicht</button>
+                                </div>
+                                <div class="mk-topology-switch" role="group" aria-label="Grundtopologie">
+                                    <button type="button" class="mk-topology-btn active" data-mk-mode="single">1 Zähler</button>
+                                    <button type="button" class="mk-topology-btn" data-mk-mode="cascade">Kaskade</button>
+                                </div>
                             </div>
                         </div>
                         <div id="mk-cascade-controls" class="mk-cascade-controls hidden">
@@ -261,10 +268,22 @@
                         <div class="mk-summary-divider"></div>
                         <div class="mk-panel-heading"><span>Messlogik</span></div>
                         <div id="mk-measurement-summary" class="mk-measurement-summary"></div>
-                        <button type="button" class="btn landing-primary mk-export-button" id="btn-mk-export">Skizze als JSON speichern</button>
+                        <button type="button" class="btn landing-primary mk-export-button" id="btn-mk-export-pdf">Messkonzept als PDF ausgeben</button>
+                        <details class="mk-technical-export">
+                            <summary>Technischer Export</summary>
+                            <p>JSON dient nur als strukturierter Backup-/Importstand für die Weiterentwicklung.</p>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-mk-export-json">JSON-Backup speichern</button>
+                        </details>
                     </aside>
                 </div>
             </main>
+            <div id="mk-object-modal" class="mk-object-modal hidden" aria-hidden="true">
+                <div class="mk-object-dialog" role="dialog" aria-modal="true" aria-labelledby="mk-object-modal-title">
+                    <div class="mk-object-dialog-header"><div><span class="landing-kicker">Objektangaben</span><h2 id="mk-object-modal-title">Angaben erfassen</h2></div><button type="button" class="mk-modal-close" id="btn-mk-modal-close" title="Fenster schließen" aria-label="Fenster schließen">×</button></div>
+                    <div id="mk-object-modal-content" class="mk-object-dialog-content"></div>
+                    <div class="mk-object-dialog-footer"><span>Änderungen werden lokal im Browser gehalten.</span><button type="button" class="btn landing-primary" id="btn-mk-modal-done">Schließen</button></div>
+                </div>
+            </div>
         </div>
 
         <!-- Dashboard Screen -->
@@ -1490,6 +1509,6 @@
     <script src="parser.js?v=304"></script>
     <script src="charts.js?v=304"></script>
     <script src="app.js?v=305"></script>
-    <script src="messkonzept.js?v=1"></script>
+    <script src="messkonzept.js?v=2"></script>
 </body>
 </html>

@@ -966,6 +966,31 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+.mk-toolbar-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.55rem;
+}
+
+.mk-view-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.25rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-color);
+}
+
+.mk-switch-label {
+    padding: 0 0.35rem;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
 .mk-panel-heading-label {
     color: var(--secondary-color);
     font-size: 0.7rem;
@@ -1043,18 +1068,18 @@ body {
 
 .mk-supply-column {
     display: grid;
-    grid-template-columns: minmax(180px, 1fr) minmax(180px, 340px);
-    column-gap: 0.65rem;
-    row-gap: 0.5rem;
-    align-items: start;
-    width: min(620px, 100%);
+    justify-items: center;
+    gap: 0.5rem;
+    width: min(340px, 100%);
     margin: 0 auto 0.85rem;
+}
+
+.mk-supply-column.has-details {
+    width: min(700px, 100%);
 }
 
 .mk-hak-node {
     position: relative;
-    grid-column: 2;
-    justify-self: center;
     width: auto;
     margin: 0;
     padding: 0.55rem 0.7rem;
@@ -1103,8 +1128,6 @@ body {
 
 .mk-supply-connector {
     position: relative;
-    grid-column: 2;
-    justify-self: center;
     width: 2rem;
     height: 2rem;
     display: flex;
@@ -1144,32 +1167,37 @@ body {
 }
 
 .mk-meter-layout {
-    grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: minmax(180px, 1fr) minmax(180px, 340px);
-    column-gap: 0.65rem;
-    row-gap: 0.5rem;
-    align-items: start;
+    justify-items: center;
+    gap: 0.5rem;
     width: 100%;
 }
 
-.mk-meter-details-slide {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-    min-width: 0;
-    padding: 0.55rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: rgba(15, 23, 42, 0.22);
+.mk-meter-layout.detail-mode {
+    position: relative;
+    min-height: 190px;
 }
 
-.mk-meter-details summary {
-    padding: 0.1rem 0;
-    cursor: pointer;
-    color: var(--primary-color);
-    font-size: 0.7rem;
-    font-weight: 800;
-    list-style-position: inside;
+.mk-meter-detail-slide,
+.mk-asset-detail-slide {
+    min-width: 0;
+    padding: 0.55rem;
+    border: 1px solid rgba(56, 189, 248, 0.32);
+    border-radius: var(--radius-md);
+    background: rgba(15, 23, 42, 0.28);
+}
+
+.mk-meter-layout.detail-mode .mk-meter-detail-slide {
+    position: absolute;
+    top: 0;
+    left: calc(50% + 1.75rem);
+    width: min(300px, calc(50% - 2rem));
+    box-sizing: border-box;
+}
+
+.mk-asset-detail-slide {
+    margin: 0 0.55rem 0.55rem;
+    border-top-color: rgba(148, 163, 184, 0.2);
 }
 
 .mk-meter-form {
@@ -1182,26 +1210,41 @@ body {
     display: grid;
     gap: 0.2rem;
     color: var(--text-muted);
-    font-size: 0.64rem;
+    font-size: 0.72rem;
 }
 
 .mk-meter-form input {
     width: 100%;
-    min-height: 28px;
+    min-height: 32px;
     box-sizing: border-box;
-    padding: 0.25rem 0.35rem;
+    padding: 0.3rem 0.4rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     color: var(--text-main);
     background: var(--bg-color);
     font: inherit;
-    font-size: 0.68rem;
+    font-size: 0.78rem;
 }
 
-.mk-meter-details-summary {
+.mk-object-editor-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+}
+
+.mk-object-editor-head > span:last-child {
     display: grid;
-    gap: 0.35rem;
-    margin-top: 0.45rem;
+    gap: 0.12rem;
+}
+
+.mk-object-editor-head small {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+}
+
+.mk-object-editor-form {
+    min-width: 0;
 }
 
 .mk-meter-detail-value {
@@ -1225,13 +1268,12 @@ body {
 .mk-meter-node {
     display: grid;
     place-items: center;
-    grid-column: 2;
-    grid-row: 1;
     width: 32px;
     height: 32px;
     justify-self: center;
     margin: 0;
     color: #0c4a6e;
+    cursor: pointer;
 }
 
 .mk-meter-symbol {
@@ -1248,14 +1290,92 @@ body {
     font-weight: 900;
 }
 
+.mk-meter-node.selected .mk-meter-symbol,
+.mk-asset-card.selected {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
 .mk-connection-line {
-    grid-column: 2;
-    grid-row: 2;
-    justify-self: center;
     width: 1px;
     height: 1.2rem;
     margin: 0 auto;
     background: var(--text-muted);
+}
+
+/* Modal editing keeps the canvas free of form controls. */
+.mk-object-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgba(2, 6, 23, 0.72);
+}
+
+.mk-object-dialog {
+    width: min(100%, 520px);
+    max-height: min(720px, calc(100vh - 2rem));
+    overflow: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+    box-shadow: 0 24px 70px rgba(2, 6, 23, 0.5);
+}
+
+.mk-object-dialog-header,
+.mk-object-dialog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+}
+
+.mk-object-dialog-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mk-object-dialog-header h2 {
+    margin: 0.1rem 0 0;
+    font-size: 1.05rem;
+}
+
+.mk-object-dialog-content {
+    padding: 1rem;
+}
+
+.mk-object-dialog-footer {
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+.mk-modal-close {
+    width: 1.8rem;
+    height: 1.8rem;
+    border: 0;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    background: transparent;
+    cursor: pointer;
+    font-size: 1.25rem;
+}
+
+.mk-modal-close:hover,
+.mk-modal-close:focus-visible {
+    color: var(--text-main);
+    background: var(--surface-hover);
+}
+
+body.mk-modal-open {
+    overflow: hidden;
+}
+
+.mk-empty-editor,
+.mk-print-muted {
+    color: var(--text-muted);
 }
 
 .mk-cascade-meter-node {
@@ -1305,6 +1425,15 @@ body {
     cursor: grab;
 }
 
+.mk-asset-card:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.mk-asset-card.detail-mode {
+    cursor: pointer;
+}
+
 .mk-asset-card:active {
     cursor: grabbing;
 }
@@ -1342,19 +1471,6 @@ body {
     color: var(--warning-color);
     background: rgba(245, 158, 11, 0.12);
     opacity: 1;
-}
-
-.mk-asset-details {
-    border-top: 1px solid var(--border-color);
-}
-
-.mk-asset-details summary {
-    padding: 0.45rem 0.6rem;
-    cursor: pointer;
-    color: var(--primary-color);
-    font-size: 0.7rem;
-    font-weight: 700;
-    list-style-position: inside;
 }
 
 .mk-asset-form {
@@ -1502,6 +1618,27 @@ body {
     cursor: pointer;
 }
 
+.mk-technical-export {
+    margin-top: 0.8rem;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+}
+
+.mk-technical-export summary {
+    cursor: pointer;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.mk-technical-export p {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
+.mk-technical-export .btn {
+    width: 100%;
+}
+
 .messkonzept-teaser {
     display: flex;
     align-items: center;
@@ -1624,6 +1761,20 @@ body {
         flex-direction: column;
     }
 
+    .mk-toolbar-controls,
+    .mk-view-switch {
+        width: 100%;
+    }
+
+    .mk-toolbar-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .mk-switch-label {
+        flex: 0 0 auto;
+    }
+
     .mk-topology-switch {
         width: 100%;
     }
@@ -1640,12 +1791,6 @@ body {
     .mk-canvas {
         min-height: 400px;
         padding: 0.75rem;
-    }
-
-    .mk-supply-column,
-    .mk-meter-layout {
-        grid-template-columns: minmax(130px, 1fr) minmax(135px, 1.1fr);
-        column-gap: 0.4rem;
     }
 
     .mk-ownership-label {
@@ -1665,6 +1810,21 @@ body {
 
     .mk-meter-node {
         padding: 0;
+    }
+
+    .mk-supply-column.has-details {
+        width: 100%;
+    }
+
+    .mk-meter-layout.detail-mode {
+        min-height: 0;
+        grid-template-columns: 1fr;
+    }
+
+    .mk-meter-layout.detail-mode .mk-meter-detail-slide {
+        position: static;
+        width: 100%;
+        margin-top: 0.35rem;
     }
 
     .mk-zone-assets {
@@ -3561,6 +3721,146 @@ body {
     .chart-card div[_echarts_instance_],
     .chart-card div[_echarts_instance_] canvas {
         max-width: 100% !important;
+    }
+}
+
+/* Messkonzept PDF-Ausgabe. Im Browser wird der native Druckdialog genutzt;
+   damit bleibt der PDF-Export ohne zusätzliche externe Bibliothek möglich. */
+.mk-print-sheet {
+    display: none;
+}
+
+body.mk-printing .mk-print-sheet {
+    display: block;
+}
+
+@media print {
+    body.mk-printing > *:not(.mk-print-sheet) {
+        display: none !important;
+    }
+
+    body.mk-printing .mk-print-sheet {
+        display: block !important;
+        width: 100%;
+        color: #111827;
+        background: #ffffff;
+        font-family: Arial, sans-serif;
+        font-size: 10pt;
+    }
+
+    body.mk-printing .mk-print-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 2px solid #0ea5e9;
+    }
+
+    body.mk-printing .mk-print-kicker {
+        color: #0369a1;
+        font-size: 8pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    body.mk-printing .mk-print-header h1 {
+        margin: 0.15rem 0 0;
+        font-size: 20pt;
+    }
+
+    body.mk-printing .mk-print-meta {
+        display: grid;
+        gap: 0.1rem;
+        color: #475569;
+        text-align: right;
+    }
+
+    body.mk-printing .mk-print-notice {
+        margin: 0.8rem 0;
+        padding: 0.55rem 0.7rem;
+        border-left: 3px solid #f59e0b;
+        background: #fffbeb;
+        color: #713f12;
+    }
+
+    body.mk-printing .mk-print-topology,
+    body.mk-printing .mk-print-status,
+    body.mk-printing .mk-print-details {
+        margin-top: 0.9rem;
+        page-break-inside: avoid;
+    }
+
+    body.mk-printing .mk-print-topology h2,
+    body.mk-printing .mk-print-status h3,
+    body.mk-printing .mk-print-details h3 {
+        margin: 0 0 0.45rem;
+        color: #0f172a;
+    }
+
+    body.mk-printing .mk-print-topology > div {
+        padding: 0.8rem;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+    }
+
+    body.mk-printing .mk-print-topology .mk-drop-zone {
+        min-height: 0;
+        padding: 0.6rem;
+        border-color: #cbd5e1;
+        background: #ffffff;
+    }
+
+    body.mk-printing .mk-print-topology .mk-empty-zone {
+        padding: 0.35rem;
+    }
+
+    body.mk-printing .mk-print-status {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 1rem;
+    }
+
+    body.mk-printing .mk-print-status ul {
+        margin: 0;
+        padding-left: 1rem;
+    }
+
+    body.mk-printing .mk-print-status li.ok { color: #047857; }
+    body.mk-printing .mk-print-status li.warning { color: #a16207; }
+    body.mk-printing .mk-print-status li.error { color: #b91c1c; }
+
+    body.mk-printing .mk-print-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.55rem;
+    }
+
+    body.mk-printing .mk-print-detail-block {
+        padding: 0.55rem;
+        border: 1px solid #cbd5e1;
+        page-break-inside: avoid;
+    }
+
+    body.mk-printing .mk-print-detail-block h4 {
+        margin: 0 0 0.35rem;
+        color: #0f172a;
+    }
+
+    body.mk-printing .mk-meter-detail-value {
+        border-top-color: #e2e8f0;
+    }
+
+    body.mk-printing .mk-meter-detail-value span { color: #64748b; }
+    body.mk-printing .mk-meter-detail-value b { color: #0f172a; }
+
+    body.mk-printing .mk-print-footer {
+        margin-top: 1rem;
+        padding-top: 0.45rem;
+        border-top: 1px solid #cbd5e1;
+        color: #64748b;
+        font-size: 8pt;
     }
 }
 

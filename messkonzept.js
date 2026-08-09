@@ -23,10 +23,12 @@ const MK_METER_DETAIL_FIELDS = Object.freeze([
 
 const mkConfiguratorState = {
     mode: 'single',
+    viewMode: 'simple',
     cascadeLevels: 2,
     nextId: 1,
     assets: [],
-    meterDetails: {}
+    meterDetails: {},
+    selectedObject: null
 };
 
 let mkElements = {};
@@ -93,16 +95,26 @@ function mkDefaultZone() {
 
 function mkAddAsset(type, zone = mkDefaultZone()) {
     if (!MK_ASSET_META[type]) return;
-    mkConfiguratorState.assets.push(mkCreateAsset(type, zone));
+    const asset = mkCreateAsset(type, zone);
+    mkConfiguratorState.assets.push(asset);
+    mkConfiguratorState.selectedObject = { kind: 'asset', id: asset.id };
     mkRender();
 }
 
 function mkReset() {
     mkConfiguratorState.mode = 'single';
+    mkConfiguratorState.viewMode = 'simple';
     mkConfiguratorState.cascadeLevels = 2;
     mkConfiguratorState.nextId = 1;
     mkConfiguratorState.assets = [];
     mkConfiguratorState.meterDetails = {};
+    mkConfiguratorState.selectedObject = null;
+    mkRender();
+}
+
+function mkChangeViewMode(viewMode) {
+    if (!['simple', 'detail'].includes(viewMode) || viewMode === mkConfiguratorState.viewMode) return;
+    mkConfiguratorState.viewMode = viewMode;
     mkRender();
 }
 
@@ -149,6 +161,64 @@ function mkGetZoneLabel(index) {
 
 function mkRenderAsset(asset) {
     const meta = MK_ASSET_META[asset.type];
+    const isSelected = mkConfiguratorState.selectedObject?.kind === 'asset' && mkConfiguratorState.selectedObject.id === asset.id;
+    const detailMarkup = mkConfiguratorState.viewMode === 'detail'
+        ? `<div class="mk-asset-detail-slide" aria-label="Details zu ${mkEscapeHtml(asset.name)}">${mkRenderAssetSummary(asset, true)}</div>`
+        : '';
+
+    return `
+        <article class="mk-asset-card ${isSelected ? 'selected' : ''} ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : ''}" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" data-mk-select-asset="${mkEscapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${mkEscapeHtml(asset.name)} auswählen und verschieben">
+            <div class="mk-asset-head">
+                <span class="mk-asset-icon ${meta.className}">${meta.short}</span>
+                <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b></span>
+                <button type="button" class="mk-remove-asset" data-mk-remove-asset="${mkEscapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${mkEscapeHtml(asset.name)} entfernen">×</button>
+            </div>
+            ${detailMarkup}
+        </article>
+    `;
+}
+
+function mkRenderDropZone(zone, index) {
+    const assets = mkGetZoneAssets(zone);
+    const isRestricted = mkConfiguratorState.mode === 'cascade' && index === 0;
+    return `
+        <div class="mk-drop-zone ${isRestricted ? 'restricted' : ''}" data-mk-zone="${mkEscapeHtml(zone)}" aria-label="${mkEscapeHtml(mkGetZoneLabel(index))}">
+            <div class="mk-zone-assets">${assets.length ? assets.map(mkRenderAsset).join('') : '<div class="mk-empty-zone">Noch leer</div>'}</div>
+        </div>
+    `;
+}
+
+function mkRenderMeterDetailsSummary(index, includeEmpty = false) {
+    const details = mkGetMeterDetails(index);
+    return MK_METER_DETAIL_FIELDS
+        .filter(field => includeEmpty || String(details[field.key] || '').trim())
+        .map(field => `<div class="mk-meter-detail-value"><span>${mkEscapeHtml(field.label)}</span><b>${mkEscapeHtml(String(details[field.key] || '—'))}</b></div>`)
+        .join('');
+}
+
+function mkRenderMeterNode(index) {
+    const isSelected = mkConfiguratorState.selectedObject?.kind === 'meter' && mkConfiguratorState.selectedObject.index === index;
+    return `
+        <div class="mk-meter-node ${isSelected ? 'selected' : ''}" data-mk-select-meter="${index}" role="button" tabindex="0" aria-label="Z${index + 1} auswählen">
+            <span class="mk-meter-symbol">Z${index + 1}</span>
+        </div>
+    `;
+}
+
+function mkRenderMeterLayout(index) {
+    const detailMarkup = mkConfiguratorState.viewMode === 'detail'
+        ? `<div class="mk-meter-detail-slide" aria-label="Details zu Z${index + 1}">${mkRenderMeterDetailsSummary(index, true)}</div>`
+        : '';
+    return `
+        <div class="mk-meter-layout ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : ''}">
+            ${mkRenderMeterNode(index)}
+            <div class="mk-connection-line" aria-hidden="true"></div>
+            ${detailMarkup}
+        </div>
+    `;
+}
+
+function mkRenderAssetEditorFields(asset) {
     const meterFields = asset.type === 'meter' ? `
         <label>Zählerfunktion<select data-mk-field="meterRole">
             <option value="Bezug / Lieferung" ${asset.meterRole === 'Bezug / Lieferung' ? 'selected' : ''}>Bezug / Lieferung</option>
@@ -164,81 +234,91 @@ function mkRenderAsset(asset) {
         </div>
         <label class="mk-check-row"><input type="checkbox" data-mk-field="generationMeter" ${asset.generationMeter ? 'checked' : ''}> Eigener Erzeugungszähler für diese EA</label>
     ` : '';
-
     return `
-        <article class="mk-asset-card" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" role="group" aria-label="${mkEscapeHtml(asset.name)} verschieben">
-            <div class="mk-asset-head">
-                <span class="mk-asset-icon ${meta.className}">${meta.short}</span>
-                <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b><small>${meta.detail}</small></span>
-                <button type="button" class="mk-remove-asset" data-mk-remove-asset="${mkEscapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${mkEscapeHtml(asset.name)} entfernen">×</button>
+        <div class="mk-object-editor-form" data-mk-asset-id="${mkEscapeHtml(asset.id)}">
+            <div class="mk-asset-form">
+                <label>Bezeichnung<input type="text" data-mk-field="name" value="${mkEscapeHtml(asset.name)}"></label>
+                ${meterFields}
+                ${generationFields}
             </div>
-            <details class="mk-asset-details" ${asset.type === 'generation' && asset.generationMeter ? 'open' : ''}>
-                <summary>Details bearbeiten</summary>
-                <div class="mk-asset-form">
-                    <label>Bezeichnung<input type="text" data-mk-field="name" value="${mkEscapeHtml(asset.name)}"></label>
-                    ${meterFields}
-                    ${generationFields}
-                </div>
-            </details>
-        </article>
-    `;
-}
-
-function mkRenderDropZone(zone, index) {
-    const assets = mkGetZoneAssets(zone);
-    const isRestricted = mkConfiguratorState.mode === 'cascade' && index === 0;
-    return `
-        <div class="mk-drop-zone ${isRestricted ? 'restricted' : ''}" data-mk-zone="${mkEscapeHtml(zone)}" aria-label="${mkEscapeHtml(mkGetZoneLabel(index))}">
-            <div class="mk-zone-assets">${assets.length ? assets.map(mkRenderAsset).join('') : '<div class="mk-empty-zone">Noch leer</div>'}</div>
         </div>
     `;
 }
 
-function mkRenderMeterDetailsSummary(index) {
-    const details = mkGetMeterDetails(index);
-    return MK_METER_DETAIL_FIELDS
-        .filter(field => String(details[field.key] || '').trim())
-        .map(field => `<div class="mk-meter-detail-value"><span>${mkEscapeHtml(field.label)}</span><b>${mkEscapeHtml(details[field.key])}</b></div>`)
-        .join('');
+function mkRenderAssetSummary(asset, includeEmpty = false) {
+    const entries = [
+        { label: 'Bezeichnung', value: asset.name },
+        asset.type === 'meter' ? { label: 'Zählerfunktion', value: asset.meterRole } : null,
+        asset.type === 'generation' ? { label: 'Energieträger', value: asset.energyCarrier } : null,
+        asset.type === 'generation' ? { label: 'Leistung', value: asset.power } : null,
+        asset.type === 'generation' ? { label: 'Inbetriebnahme', value: asset.commissioningDate } : null,
+        asset.type === 'generation' ? { label: 'Erzeugungszähler', value: asset.generationMeter ? 'Ja' : (includeEmpty ? 'Nein' : '') } : null
+    ].filter(Boolean).filter(entry => includeEmpty || String(entry.value || '').trim());
+    return entries.map(entry => `<div class="mk-meter-detail-value"><span>${mkEscapeHtml(entry.label)}</span><b>${mkEscapeHtml(String(entry.value || '—'))}</b></div>`).join('');
 }
 
-function mkRenderMeterDetailsSlide(index) {
+function mkRenderMeterEditorFields(index) {
     const details = mkGetMeterDetails(index);
     const fields = MK_METER_DETAIL_FIELDS.map(field => `
         <label>${mkEscapeHtml(field.label)}<input type="${field.type}" data-mk-meter-field="${mkEscapeHtml(field.key)}" data-mk-meter-index="${index}" value="${mkEscapeHtml(details[field.key])}"></label>
     `).join('');
     return `
-        <div class="mk-meter-details-slide">
-            <details class="mk-meter-details">
-                <summary>Details bearbeiten</summary>
-                <div class="mk-meter-form">${fields}</div>
-            </details>
-            <div class="mk-meter-details-summary" data-mk-meter-summary>${mkRenderMeterDetailsSummary(index)}</div>
+        <div class="mk-object-editor-head">
+            <span class="mk-asset-icon meter">Z${index + 1}</span>
+            <span><b>Z${index + 1}</b><small>Zählerobjekt</small></span>
         </div>
+        <div class="mk-object-editor-form"><div class="mk-meter-form">${fields}</div></div>
     `;
 }
 
-function mkRenderMeterNode(index) {
+function mkRenderObjectEditor(selection) {
+    if (selection?.kind === 'meter') {
+        return `
+        ${mkRenderMeterEditorFields(selection.index)}`;
+    }
+
+    const asset = mkConfiguratorState.assets.find(item => item.id === selection?.id);
+    if (!asset) return '<p class="mk-empty-editor">Objekt nicht mehr vorhanden.</p>';
     return `
-        <div class="mk-meter-node" aria-label="Z${index + 1}">
-            <span class="mk-meter-symbol">Z${index + 1}</span>
+        <div class="mk-object-editor-head">
+            <span class="mk-asset-icon ${MK_ASSET_META[asset.type].className}">${MK_ASSET_META[asset.type].short}</span>
+            <span><b>${mkEscapeHtml(asset.name)}</b><small>${mkEscapeHtml(MK_ASSET_META[asset.type].label)}</small></span>
         </div>
+        ${mkRenderAssetEditorFields(asset)}
     `;
 }
 
-function mkRenderMeterLayout(index) {
-    return `
-        <div class="mk-meter-layout" data-mk-meter-layout="${index}">
-            ${mkRenderMeterDetailsSlide(index)}
-            ${mkRenderMeterNode(index)}
-            <div class="mk-connection-line" aria-hidden="true"></div>
-        </div>
-    `;
+function mkOpenObjectModal(selection) {
+    mkConfiguratorState.selectedObject = selection;
+    const modal = mkElements.objectModal;
+    const content = mkElements.objectModalContent;
+    if (!modal || !content) return;
+    if (mkElements.objectModalTitle) {
+        const label = selection?.kind === 'meter'
+            ? `Z${selection.index + 1} · Zähler`
+            : mkConfiguratorState.assets.find(item => item.id === selection?.id)?.name || 'Objekt';
+        mkElements.objectModalTitle.textContent = `${label} · Angaben`;
+    }
+    content.innerHTML = mkRenderObjectEditor(selection);
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('mk-modal-open');
+    window.requestAnimationFrame(() => content.querySelector('input, select')?.focus());
+}
+
+function mkCloseObjectModal() {
+    const modal = mkElements.objectModal;
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('mk-modal-open');
+    mkConfiguratorState.selectedObject = null;
+    mkRender();
 }
 
 function mkRenderHakMeterRow() {
     return `
-        <div class="mk-supply-column" aria-label="Hausanschlusskasten mit erstem Zähler">
+        <div class="mk-supply-column ${mkConfiguratorState.viewMode === 'detail' ? 'has-details' : ''}" aria-label="Hausanschlusskasten mit erstem Zähler">
             <div class="mk-hak-node" title="Hausanschlusskasten" data-tooltip="HAK = Hausanschlusskasten" role="img" tabindex="0" aria-label="HAK = Hausanschlusskasten"><b>HAK</b></div>
             <div class="mk-supply-connector" aria-label="Eigentumsgrenze">
                 <span class="mk-ownership-marker" title="Eigentumsgrenze"></span>
@@ -369,6 +449,11 @@ function mkRefreshInlineStatus() {
 function mkRender() {
     if (!mkElements.canvas) return;
     document.querySelectorAll('[data-mk-mode]').forEach(button => button.classList.toggle('active', button.dataset.mkMode === mkConfiguratorState.mode));
+    document.querySelectorAll('[data-mk-view]').forEach(button => {
+        const active = button.dataset.mkView === mkConfiguratorState.viewMode;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+    });
     if (mkElements.cascadeControls) mkElements.cascadeControls.classList.toggle('hidden', mkConfiguratorState.mode !== 'cascade');
     if (mkElements.cascadeLevels) mkElements.cascadeLevels.value = String(mkConfiguratorState.cascadeLevels);
     mkRenderCanvas();
@@ -416,9 +501,69 @@ function mkUpdateMeterDetailField(event) {
     const index = Number(event.target.dataset.mkMeterIndex) || 0;
     const details = mkGetMeterDetails(index);
     details[field] = event.target.value;
-    const layout = event.target.closest('[data-mk-meter-layout]');
-    const summary = layout?.querySelector('[data-mk-meter-summary]');
-    if (summary) summary.innerHTML = mkRenderMeterDetailsSummary(index);
+}
+
+function mkGetExportStand() {
+    const date = new Date();
+    return {
+        iso: date.toISOString(),
+        label: new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+    };
+}
+
+function mkRenderExportDetails() {
+    const meterBlocks = [];
+    const meterCount = mkConfiguratorState.mode === 'cascade' ? mkConfiguratorState.cascadeLevels : 1;
+    for (let index = 0; index < meterCount; index += 1) {
+        meterBlocks.push(`<article class="mk-print-detail-block"><h4>Z${index + 1} · Zähler</h4>${mkRenderMeterDetailsSummary(index, true)}</article>`);
+    }
+    const assets = mkConfiguratorState.assets.length
+        ? mkConfiguratorState.assets.map(asset => `<article class="mk-print-detail-block"><h4>${mkEscapeHtml(asset.name)} · ${mkEscapeHtml(MK_ASSET_META[asset.type].label)}</h4>${mkRenderAssetSummary(asset, true)}</article>`).join('')
+        : '<p class="mk-print-muted">Keine zusätzlichen Bausteine angelegt.</p>';
+    return `<section class="mk-print-details"><h3>Objektdetails</h3><div class="mk-print-detail-grid">${meterBlocks.join('')}${assets}</div></section>`;
+}
+
+function mkRenderPrintSheet(stand) {
+    const topology = mkElements.canvas?.innerHTML || '<p class="mk-print-muted">Keine Skizze vorhanden.</p>';
+    const checks = mkValidation().map(check => `<li class="${check.level}">${mkEscapeHtml(check.text)}</li>`).join('');
+    const logic = mkElements.measurementSummary?.innerHTML || '';
+    return `
+        <section class="mk-print-sheet" aria-label="Messkonzept-Export">
+            <header class="mk-print-header">
+                <div><span class="mk-print-kicker">Wattspur · Messkonzept-Konfigurator</span><h1>Messkonzept</h1></div>
+                <div class="mk-print-meta"><b>Exportstand</b><span>${mkEscapeHtml(stand.label)}</span><span>${mkConfiguratorState.mode === 'cascade' ? `Kaskade · ${mkConfiguratorState.cascadeLevels} Zähler` : '1 Zähler'}</span></div>
+            </header>
+            <p class="mk-print-notice">Dieser Export dokumentiert den zum Ausgabezeitpunkt erfassten Stand. Spätere Änderungen am Konzept sind in dieser Datei nicht enthalten. Die Skizze ist eine unverbindliche Orientierung und ersetzt keine fachliche Prüfung.</p>
+            <section class="mk-print-topology"><h2>Messskizze</h2>${topology}</section>
+            <section class="mk-print-status"><div><h3>Prüfstatus</h3><ul>${checks}</ul></div><div><h3>Messlogik</h3>${logic}</div></section>
+            ${mkRenderExportDetails()}
+            <footer class="mk-print-footer">Wattspur Beta · lokal im Browser erstellt · Stand ${mkEscapeHtml(stand.label)}</footer>
+        </section>
+    `;
+}
+
+function mkDownloadPdf() {
+    const stand = mkGetExportStand();
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = mkRenderPrintSheet(stand);
+    const printSheet = wrapper.firstElementChild;
+    document.body.appendChild(printSheet);
+    const previousTitle = document.title;
+    document.title = `Wattspur-Messkonzept-${stand.iso.slice(0, 10)}`;
+    const cleanup = () => {
+        printSheet.remove();
+        document.title = previousTitle;
+        document.body.classList.remove('mk-printing');
+    };
+    window.addEventListener('afterprint', cleanup, { once: true });
+    document.body.classList.add('mk-printing');
+    window.setTimeout(() => {
+        window.print();
+        window.setTimeout(() => {
+            if (document.body.contains(printSheet)) cleanup();
+        }, 250);
+    }, 40);
+    mkNotify('Druckdialog geöffnet. Wähle dort „Als PDF speichern“.', 'info');
 }
 
 function mkDownloadJson() {
@@ -426,7 +571,9 @@ function mkDownloadJson() {
         tool: 'Wattspur Messkonzept-Konfigurator',
         version: 1,
         generatedAt: new Date().toISOString(),
+        exportType: 'technical-backup',
         mode: mkConfiguratorState.mode,
+        viewMode: mkConfiguratorState.viewMode,
         cascadeLevels: mkConfiguratorState.cascadeLevels,
         meterDetails: mkConfiguratorState.meterDetails,
         assets: mkConfiguratorState.assets
@@ -435,7 +582,7 @@ function mkDownloadJson() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `wattspur-messkonzept-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `wattspur-messkonzept-technisch-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -468,7 +615,10 @@ function mkInitialize() {
         statusBadge: document.getElementById('mk-status-badge'),
         measurementSummary: document.getElementById('mk-measurement-summary'),
         cascadeControls: document.getElementById('mk-cascade-controls'),
-        cascadeLevels: document.getElementById('mk-cascade-levels')
+        cascadeLevels: document.getElementById('mk-cascade-levels'),
+        objectModal: document.getElementById('mk-object-modal'),
+        objectModalContent: document.getElementById('mk-object-modal-content'),
+        objectModalTitle: document.getElementById('mk-object-modal-title')
     };
     if (!mkElements.canvas) return;
 
@@ -481,9 +631,19 @@ function mkInitialize() {
         mkReset();
         mkNotify('Messkonzept-Skizze zurückgesetzt.', 'info');
     });
-    document.getElementById('btn-mk-export')?.addEventListener('click', mkDownloadJson);
+    document.getElementById('btn-mk-export-pdf')?.addEventListener('click', mkDownloadPdf);
+    document.getElementById('btn-mk-export-json')?.addEventListener('click', mkDownloadJson);
     mkElements.cascadeLevels?.addEventListener('change', event => mkChangeCascadeLevels(event.target.value));
     document.querySelectorAll('[data-mk-mode]').forEach(button => button.addEventListener('click', () => mkChangeMode(button.dataset.mkMode)));
+    document.querySelectorAll('[data-mk-view]').forEach(button => button.addEventListener('click', () => mkChangeViewMode(button.dataset.mkView)));
+    document.getElementById('btn-mk-modal-close')?.addEventListener('click', mkCloseObjectModal);
+    document.getElementById('btn-mk-modal-done')?.addEventListener('click', mkCloseObjectModal);
+    mkElements.objectModal?.addEventListener('click', event => {
+        if (event.target === mkElements.objectModal) mkCloseObjectModal();
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && mkElements.objectModal && !mkElements.objectModal.classList.contains('hidden')) mkCloseObjectModal();
+    });
 
     document.querySelectorAll('.mk-palette-item').forEach(button => {
         button.addEventListener('click', () => mkAddAsset(button.dataset.mkType));
@@ -517,14 +677,33 @@ function mkInitialize() {
     });
     mkElements.canvas.addEventListener('click', event => {
         const removeButton = event.target.closest('[data-mk-remove-asset]');
-        if (!removeButton) return;
-        mkConfiguratorState.assets = mkConfiguratorState.assets.filter(asset => asset.id !== removeButton.dataset.mkRemoveAsset);
-        mkRender();
+        if (removeButton) {
+            const removedId = removeButton.dataset.mkRemoveAsset;
+            mkConfiguratorState.assets = mkConfiguratorState.assets.filter(asset => asset.id !== removedId);
+            if (mkConfiguratorState.selectedObject?.kind === 'asset' && mkConfiguratorState.selectedObject.id === removedId) mkConfiguratorState.selectedObject = null;
+            mkRender();
+            return;
+        }
+        const meter = event.target.closest('[data-mk-select-meter]');
+        if (meter) {
+            mkOpenObjectModal({ kind: 'meter', index: Number(meter.dataset.mkSelectMeter) || 0 });
+            return;
+        }
+        const asset = event.target.closest('[data-mk-select-asset]');
+        if (asset) mkOpenObjectModal({ kind: 'asset', id: asset.dataset.mkSelectAsset });
     });
-    mkElements.canvas.addEventListener('input', mkUpdateAssetField);
-    mkElements.canvas.addEventListener('change', mkUpdateAssetField);
-    mkElements.canvas.addEventListener('input', mkUpdateMeterDetailField);
-    mkElements.canvas.addEventListener('change', mkUpdateMeterDetailField);
+    mkElements.objectModal?.addEventListener('input', mkUpdateAssetField);
+    mkElements.objectModal?.addEventListener('change', mkUpdateAssetField);
+    mkElements.objectModal?.addEventListener('input', mkUpdateMeterDetailField);
+    mkElements.objectModal?.addEventListener('change', mkUpdateMeterDetailField);
+    mkElements.canvas.addEventListener('keydown', event => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        const target = event.target.closest('[data-mk-select-meter], [data-mk-select-asset]');
+        if (!target) return;
+        event.preventDefault();
+        if (target.dataset.mkSelectMeter !== undefined) mkOpenObjectModal({ kind: 'meter', index: Number(target.dataset.mkSelectMeter) || 0 });
+        if (target.dataset.mkSelectAsset) mkOpenObjectModal({ kind: 'asset', id: target.dataset.mkSelectAsset });
+    });
     mkReset();
 }
 

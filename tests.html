@@ -1015,7 +1015,11 @@ Datum;Uhrzeit;Verbrauch
             assert(indexText.includes('<details id="transparency"'), 'Ausführliche Hinweise müssen standardmäßig einklappbar sein');
             assert(indexText.includes('id="messkonzept-screen"'), 'Der Messkonzept-Konfigurator muss als eigener Bildschirm vorhanden sein');
             assert(indexText.includes('data-mk-type="generation"') && indexText.includes('data-mk-type="steuve"'), 'Bausteine für EA und SteuVE müssen auswählbar sein');
+            assert(indexText.includes('data-mk-view="simple"') && indexText.includes('data-mk-view="detail"'), 'Die Darstellung muss zwischen Einfach- und Detailansicht umschaltbar sein');
+            assert(indexText.includes('mk-object-modal') && indexText.includes('btn-mk-modal-done'), 'Objektdetails müssen in einem separaten Fenster erfasst werden können');
+            assert(indexText.includes('btn-mk-export-pdf') && indexText.includes('Technischer Export'), 'Der verständliche PDF-Export muss sichtbar und der JSON-Export technisch eingeordnet sein');
             assert(messkonzeptText.includes('mkChangeCascadeLevels') && messkonzeptText.includes('generationMeter'), 'Kaskadenstufen und Erzeugungszähler müssen im Konfigurator modelliert sein');
+            assert(messkonzeptText.includes('mkChangeViewMode') && messkonzeptText.includes('viewMode') && messkonzeptText.includes('mkRenderAssetSummary(asset, true)'), 'Einfach-/Detailansicht muss im Zustand und in der Darstellung berücksichtigt werden');
             assert(messkonzeptText.includes('mk-supply-column') && messkonzeptText.includes('mk-ownership-marker'), 'HAK und erster Zähler müssen vertikal durch einen Anschluss mit Eigentumsgrenze verbunden sein');
             assert(!messkonzeptText.includes('<span>Netz</span>'), 'Der HAK-Baustein darf keine separate Netz-Karte mit zusätzlichem Text rendern');
             assert(!messkonzeptText.includes('mk-drop-zone-label'), 'Die Drop-Zone darf keine zusätzliche sichtbare Bereichsüberschrift rendern');
@@ -1024,8 +1028,8 @@ Datum;Uhrzeit;Verbrauch
             assert(messkonzeptText.includes('draggable="true"') && messkonzeptText.includes('data-mk-drag-asset'), 'Bausteinkarten müssen direkt ziehbar sein');
             assert(!messkonzeptText.includes('mk-drag-handle') && !(await fetchPublishedSource('styles.css?beta-copy=1')).includes('mk-drag-handle'), 'Ein separates Pfeil-Drag-Icon darf nicht mehr gerendert werden');
             assert((await fetchPublishedSource('styles.css?beta-copy=1')).includes('position: absolute') && (await fetchPublishedSource('styles.css?beta-copy=1')).includes('background: transparent'), 'Das Löschen-Icon muss dezent oben rechts ohne graue Box erscheinen');
-            assert(messkonzeptText.includes('mk-meter-details-slide') && messkonzeptText.includes('maloBezug') && messkonzeptText.includes('maloLieferung') && messkonzeptText.includes('meterNumber') && messkonzeptText.includes('installationDate'), 'Zählerdetails müssen im linken Details-Slide erfasst werden können');
-            assert(messkonzeptText.includes('meterDetails') && messkonzeptText.includes('mk-meter-details-summary') && !messkonzeptText.includes('Z1 · Bezug und Lieferung'), 'Z1 muss als farbiges Objekt ohne weißen Zusatzschriftzug dargestellt werden und Details zusammenfassen');
+            assert(messkonzeptText.includes('mk-meter-detail-slide') && messkonzeptText.includes('maloBezug') && messkonzeptText.includes('maloLieferung') && messkonzeptText.includes('meterNumber') && messkonzeptText.includes('installationDate'), 'Zählerdetails müssen in der Detailansicht direkt am Objekt erscheinen');
+            assert(messkonzeptText.includes('meterDetails') && messkonzeptText.includes('mkOpenObjectModal') && !messkonzeptText.includes('Details bearbeiten'), 'Objektdetails müssen per Klick in einem separaten Fenster erfasst werden');
             assert((await fetchPublishedSource('styles.css?beta-copy=1')).includes('width: 32px') && (await fetchPublishedSource('styles.css?beta-copy=1')).includes('background: #bae6fd'), 'Das Zählerobjekt muss die kompakte Farbe und Größe des Zähler-Icons aus der Legende verwenden');
             assert(logoText.includes('#fb923c'), 'Die Verlaufsspur im Wattspur-Logo muss orange markiert sein');
 
