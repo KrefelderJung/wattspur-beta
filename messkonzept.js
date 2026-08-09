@@ -189,14 +189,37 @@ function mkGetAssetTypeLabel(asset) {
     return '';
 }
 
+/**
+ * Anzahl der bereits vorhandenen Zähler in der aktuellen Topologie.
+ * Grundzähler der Topologie und eventuelle zusätzliche Zählerobjekte werden
+ * gemeinsam gezählt, damit eigene Erzeugungszähler fortlaufend nummeriert
+ * werden können.
+ */
+function mkGetConfiguredMeterCount() {
+    const topologyMeters = mkConfiguratorState.mode === 'cascade'
+        ? mkConfiguratorState.cascadeLevels
+        : 1;
+    const additionalMeterAssets = mkConfiguratorState.assets.filter(asset => asset.type === 'meter').length;
+    return topologyMeters + additionalMeterAssets;
+}
+
+/** Liefert die fortlaufende Nummer eines eigenen Erzeugungszählers. */
+function mkGetGenerationMeterNumber(asset) {
+    if (!asset || asset.type !== 'generation' || !asset.generationMeter) return null;
+    const generationMeters = mkConfiguratorState.assets.filter(item => item.type === 'generation' && item.generationMeter);
+    const generationIndex = generationMeters.findIndex(item => item.id === asset.id);
+    return generationIndex < 0 ? null : mkGetConfiguredMeterCount() + generationIndex + 1;
+}
+
 function mkRenderAsset(asset) {
     const meta = MK_ASSET_META[asset.type];
     const detailMarkup = mkConfiguratorState.viewMode === 'detail'
         ? `<div class="mk-asset-detail-slide" aria-label="Details zu ${mkEscapeHtml(asset.name)}">${mkRenderAssetSummary(asset, true)}</div>`
         : '';
     const typeLabel = mkGetAssetTypeLabel(asset);
-    const generationMeterMarkup = asset.type === 'generation' && asset.generationMeter
-        ? `<span class="mk-generation-meter" title="Eigener Erzeugungszähler" role="img" aria-label="Eigener Erzeugungszähler für ${mkEscapeHtml(asset.name)}"><b>ZE</b></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`
+    const generationMeterNumber = mkGetGenerationMeterNumber(asset);
+    const generationMeterMarkup = generationMeterNumber
+        ? `<span class="mk-generation-meter" title="Eigener Erzeugungszähler Z${generationMeterNumber}" role="img" aria-label="Z${generationMeterNumber}: eigener Erzeugungszähler für ${mkEscapeHtml(asset.name)}"><b>Z${generationMeterNumber}</b></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`
         : '';
 
     return `
@@ -303,7 +326,7 @@ function mkRenderAssetSummary(asset, includeEmpty = false) {
         asset.type === 'generation' ? { label: 'Energieträger', value: asset.energyCarrier } : null,
         asset.type === 'generation' ? { label: 'Leistung', value: asset.power } : null,
         asset.type === 'generation' ? { label: 'Inbetriebnahme', value: asset.commissioningDate } : null,
-        asset.type === 'generation' ? { label: 'Erzeugungszähler', value: asset.generationMeter ? 'Ja' : (includeEmpty ? 'Nein' : '') } : null,
+        asset.type === 'generation' ? { label: 'Erzeugungszähler', value: asset.generationMeter ? `Ja · Z${mkGetGenerationMeterNumber(asset)}` : (includeEmpty ? 'Nein' : '') } : null,
         asset.type === 'steuve' ? { label: 'Art der SteuVE', value: asset.steuveType } : null
     ].filter(Boolean).filter(entry => includeEmpty || String(entry.value || '').trim());
     return entries.map(entry => `<div class="mk-meter-detail-value"><span>${mkEscapeHtml(entry.label)}</span><b>${mkEscapeHtml(String(entry.value || '—'))}</b></div>`).join('');
@@ -478,7 +501,7 @@ function mkRenderMeasurementSummary() {
 
     if (mkConfiguratorState.mode === 'single') {
         lines.push('<b>Z1</b> misst Bezug und Lieferung der Gesamtanlage.');
-        if (generationMeters.length) lines.push(`<b>Erzeugungsmessung</b> für ${generationMeters.map(asset => mkEscapeHtml(asset.name)).join(', ')} markiert.`);
+        if (generationMeters.length) lines.push(`<b>Erzeugungsmessung</b> für ${generationMeters.map(asset => `Z${mkGetGenerationMeterNumber(asset)} · ${mkEscapeHtml(asset.name)}`).join(', ')} markiert.`);
         if (!generationMeters.length) lines.push('EA werden zunächst gemeinsam hinter Z1 erfasst.');
     } else {
         for (let index = 0; index < mkConfiguratorState.cascadeLevels; index += 1) {
@@ -487,7 +510,7 @@ function mkRenderMeasurementSummary() {
             const formula = index === 0 ? 'Z1 - Z2' : `Z${index + 1} - Z${Math.min(index + 2, mkConfiguratorState.cascadeLevels)}`;
             lines.push(`<b>Z${index + 1}</b> ${index === 0 ? 'Netzbezug / Lieferung' : `Differenz ${formula}`}${names.length ? ` · ${names.join(', ')}` : ''}.`);
         }
-        if (generationMeters.length) lines.push(`<b>Eigene Erzeugungszähler:</b> ${generationMeters.map(asset => mkEscapeHtml(asset.name)).join(', ')}.`);
+        if (generationMeters.length) lines.push(`<b>Eigene Erzeugungszähler:</b> ${generationMeters.map(asset => `Z${mkGetGenerationMeterNumber(asset)} · ${mkEscapeHtml(asset.name)}`).join(', ')}.`);
     }
 
     mkElements.measurementSummary.innerHTML = lines.map(line => `<p>${line}</p>`).join('');
