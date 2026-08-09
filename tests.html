@@ -1012,6 +1012,7 @@ Datum;Uhrzeit;Verbrauch
             assert(indexText.includes('Wattspur'), 'Die Startseite muss die übergeordnete Produktmarke zeigen');
             assert(indexText.includes('wattspur-mark.svg'), 'Die Produktmarke muss ein gemeinsames SVG-Zeichen verwenden');
             assert(indexText.includes('Messkonzept-Konfigurator'), 'Das künftige Messkonzept-Werkzeug muss als eigener Einstieg erkennbar sein');
+            assert(!indexText.includes('<span class="module-state ready">MVP</span>'), 'Der Konfigurator-Kopfbereich darf kein zusätzliches MVP-Badge anzeigen');
             assert(indexText.includes('<details id="transparency"'), 'Ausführliche Hinweise müssen standardmäßig einklappbar sein');
             assert(indexText.includes('id="messkonzept-screen"'), 'Der Messkonzept-Konfigurator muss als eigener Bildschirm vorhanden sein');
             assert(indexText.includes('data-mk-type="generation"') && indexText.includes('data-mk-type="steuve"') && indexText.includes('>SteuVE</span>'), 'Bausteine für EA und SteuVE müssen auswählbar sein und die Abkürzung eindeutig anzeigen');
