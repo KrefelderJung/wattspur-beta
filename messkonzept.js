@@ -29,6 +29,8 @@ const MK_ASSET_TYPE_OPTIONS = Object.freeze({
     ]
 });
 
+const MK_STORAGE_INFO_TEXT = 'Achtung: Die Registrierung des Stromspeichers im Marktstammdatenregister ist zu prüfen. Beim netzbezogenen Laden ist zusätzlich zu prüfen, ob § 14a EnWG greift; Einspeisung und Bezug sind getrennt zu betrachten. Messkonzept mit dem Verteilnetzbetreiber abstimmen.';
+
 const MK_METER_DETAIL_FIELDS = Object.freeze([
     { key: 'maloBezug', label: 'MaLo Bezug', type: 'text' },
     { key: 'maloLieferung', label: 'MaLo Lieferung', type: 'text' },
@@ -228,6 +230,9 @@ function mkRenderAsset(asset) {
         : '';
     const typeLabel = mkGetAssetTypeLabel(asset);
     const generationMeterNumber = mkGetGenerationMeterNumber(asset);
+    const storageInfoMarkup = asset.type === 'storage' && mkConfiguratorState.viewMode === 'detail'
+        ? `<span class="mk-storage-info" data-tooltip="${mkEscapeHtml(MK_STORAGE_INFO_TEXT)}" title="${mkEscapeHtml(MK_STORAGE_INFO_TEXT)}" role="img" tabindex="0" aria-label="Hinweis zum Speicher">i</span>`
+        : '';
     const generationMeterMarkup = generationMeterNumber
         ? `<span class="mk-generation-meter" title="Eigener Erzeugungszähler Z${generationMeterNumber}" role="img" aria-label="Z${generationMeterNumber}: eigener Erzeugungszähler für ${mkEscapeHtml(asset.name)}"><b>Z${generationMeterNumber}</b></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`
         : '';
@@ -239,6 +244,7 @@ function mkRenderAsset(asset) {
                 <div class="mk-asset-head">
                     <span class="mk-asset-icon ${meta.className}">${meta.short}</span>
                     <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b>${typeLabel ? `<small>${mkEscapeHtml(typeLabel)}</small>` : ''}</span>
+                    ${storageInfoMarkup}
                     <button type="button" class="mk-remove-asset" data-mk-remove-asset="${mkEscapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${mkEscapeHtml(asset.name)} entfernen">×</button>
                 </div>
                 ${detailMarkup}
@@ -344,7 +350,8 @@ function mkRenderAssetSummary(asset, includeEmpty = false) {
         asset.type === 'generation' ? { label: 'Erzeugungszähler', value: asset.generationMeter ? `Ja · Z${mkGetGenerationMeterNumber(asset)}` : (includeEmpty ? 'Nein' : '') } : null,
         asset.type === 'steuve' ? { label: 'Art der SteuVE', value: asset.steuveType } : null,
         asset.type === 'nsh' ? { label: 'Bestand / Inbetriebnahme', value: asset.commissioningDate } : null,
-        asset.type === 'nsh' ? { label: 'Einordnung', value: mkGetNshRegime(asset) } : null
+        asset.type === 'nsh' ? { label: 'Einordnung', value: mkGetNshRegime(asset) } : null,
+        asset.type === 'storage' ? { label: 'Betriebsrolle', value: 'Erzeugung und Bezug · § 14a beim Bezug prüfen' } : null
     ].filter(Boolean).filter(entry => includeEmpty || String(entry.value || '').trim());
     return entries.map(entry => `<div class="mk-meter-detail-value"><span>${mkEscapeHtml(entry.label)}</span><b>${mkEscapeHtml(String(entry.value || '—'))}</b></div>`).join('');
 }
@@ -468,7 +475,7 @@ function mkValidation() {
     }
 
     if (storages.length) {
-        checks.push({ level: 'warning', text: 'Speicher bleibt vorerst ein eigenes Objekt. Betriebsrolle (Erzeugung, Bezug und ggf. SteuVE) fachlich festlegen.' });
+        checks.push({ level: 'warning', text: `Speicher bleibt ein eigenes Objekt. Betriebsrolle (Erzeugung und Bezug) fachlich festlegen. ${MK_STORAGE_INFO_TEXT}` });
     }
 
     if (nshAssets.length) {

@@ -945,10 +945,12 @@ body {
     position: relative;
     color: #3730a3;
     background-color: #c7d2fe;
-    background-image: linear-gradient(currentColor, currentColor);
-    background-position: 50% 4px;
+    background-image:
+        linear-gradient(currentColor, currentColor),
+        linear-gradient(135deg, transparent 43%, #92400e 44%, #92400e 56%, transparent 57%);
+    background-position: 50% 4px, center;
     background-repeat: no-repeat;
-    background-size: 7px 2px;
+    background-size: 7px 2px, 100% 100%;
     font-size: 0;
 }
 
@@ -1762,6 +1764,51 @@ body.mk-modal-open {
     background: rgba(245, 158, 11, 0.08);
     font-size: 0.68rem;
     line-height: 1.45;
+}
+
+.mk-storage-info {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-left: auto;
+    border: 1px solid rgba(56, 189, 248, 0.55);
+    border-radius: 50%;
+    color: var(--primary-color);
+    background: rgba(56, 189, 248, 0.1);
+    cursor: help;
+    font-size: 0.68rem;
+    font-weight: 900;
+}
+
+.mk-storage-info::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    z-index: 4;
+    right: -0.35rem;
+    bottom: calc(100% + 0.45rem);
+    width: min(18rem, calc(100vw - 2rem));
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    background: var(--surface-color);
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.35);
+    font-size: 0.68rem;
+    font-weight: 500;
+    line-height: 1.45;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(0.25rem);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.mk-storage-info:hover::after,
+.mk-storage-info:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .mk-check-row {
