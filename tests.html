@@ -996,13 +996,14 @@ Datum;Uhrzeit;Verbrauch
                 return response.text();
             }
 
-            const [indexText, appText, exportText, uiText, messkonzeptText, logoText] = await Promise.all([
+            const [indexText, appText, exportText, uiText, messkonzeptText, logoText, serviceWorkerText] = await Promise.all([
                 fetchPublishedSource('index.html?beta-copy=1'),
                 fetchPublishedSource('app.js?beta-copy=1'),
                 fetchPublishedSource('export/export.js?beta-copy=1'),
                 fetchPublishedSource('ui/ui.js?beta-copy=1'),
                 fetchPublishedSource('messkonzept.js?beta-copy=1'),
-                fetchPublishedSource('wattspur-mark.svg?beta-copy=1')
+                fetchPublishedSource('wattspur-mark.svg?beta-copy=1'),
+                fetchPublishedSource('service-worker.js?beta-copy=1')
             ]);
             assert(indexText.includes('öffentliche Beta'), 'Der Einstieg muss die öffentliche Beta kennzeichnen');
             assert(indexText.includes('Dateien bleiben im Browser'), 'Der Einstieg muss die lokale Verarbeitung erklären');
@@ -1013,6 +1014,7 @@ Datum;Uhrzeit;Verbrauch
             assert(!indexText.includes('fonts.googleapis.com'), 'Die öffentliche Seite darf keine externen Google Fonts laden');
             assert(indexText.includes('Wattspur'), 'Die Startseite muss die übergeordnete Produktmarke zeigen');
             assert(indexText.includes('wattspur-mark.svg'), 'Die Produktmarke muss ein gemeinsames SVG-Zeichen verwenden');
+            assert(serviceWorkerText.includes("event.request.mode === 'navigate'") && serviceWorkerText.includes('fetch(event.request).then(response'), 'Seitenaufrufe müssen für neue Veröffentlichungen zuerst frisch geladen und nur offline aus dem Cache bedient werden');
             assert(indexText.includes('Messkonzept-Konfigurator'), 'Das künftige Messkonzept-Werkzeug muss als eigener Einstieg erkennbar sein');
             assert(!indexText.includes('<span class="module-state ready">MVP</span>'), 'Der Konfigurator-Kopfbereich darf kein zusätzliches MVP-Badge anzeigen');
             assert(!indexText.includes('<span class="landing-kicker">Eigenes Schema'), 'Der Konfigurator-Kopfbereich darf keine zusätzliche Schema-Kickerzeile anzeigen');
