@@ -8,7 +8,7 @@
 const MK_ASSET_META = Object.freeze({
     meter: { label: 'Zähler', short: 'Z', className: 'meter', detail: 'Zusätzlicher Messpunkt' },
     generation: { label: 'Erzeugungsanlage', short: 'EA', className: 'generation', detail: 'PV, KWK, Wind ...' },
-    consumer: { label: 'Verbraucher', short: '⌁', className: 'consumer', detail: 'Allgemeine Last' },
+    consumer: { label: 'Verbraucher', short: 'V', className: 'consumer', detail: 'Allgemeine Last' },
     steuve: { label: 'SteuVE', short: 'SteuVE', className: 'steuve', detail: 'Steuerbare Verbrauchseinrichtung' },
     storage: { label: 'Speicher', short: '▤', className: 'storage', detail: 'Speicheranlage' }
 });
@@ -217,9 +217,10 @@ function mkRenderAsset(asset) {
 function mkRenderDropZone(zone, index) {
     const assets = mkGetZoneAssets(zone);
     const isRestricted = mkConfiguratorState.mode === 'cascade' && index === 0;
+    const continuesCascade = mkConfiguratorState.mode === 'cascade' && index < mkConfiguratorState.cascadeLevels - 1;
     return `
         <div class="mk-drop-zone ${isRestricted ? 'restricted' : ''}" data-mk-zone="${mkEscapeHtml(zone)}" aria-label="${mkEscapeHtml(mkGetZoneLabel(index))}">
-            <div class="mk-zone-assets ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}">${assets.length ? assets.map(mkRenderAsset).join('') : '<div class="mk-empty-zone">Noch leer</div>'}</div>
+            <div class="mk-zone-assets ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}${continuesCascade ? ' cascade-link-zone' : ''}">${assets.length ? assets.map(mkRenderAsset).join('') : '<div class="mk-empty-zone">Noch leer</div>'}</div>
         </div>
     `;
 }
@@ -403,7 +404,7 @@ function mkRenderCanvas() {
             </div>
         `);
     }
-    mkElements.canvas.innerHTML = `<div class="mk-cascade-stack">${levels.join('<div class="mk-cascade-arrow">↓</div>')}</div>`;
+    mkElements.canvas.innerHTML = `<div class="mk-cascade-stack">${levels.join('<div class="mk-cascade-arrow" aria-hidden="true"></div>')}</div>`;
 }
 
 function mkValidation() {
