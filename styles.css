@@ -877,6 +877,10 @@ body {
     cursor: grabbing;
 }
 
+.mk-palette-legend {
+    cursor: default;
+}
+
 .mk-palette-item:hover,
 .mk-palette-item:focus-visible {
     border-color: var(--primary-color);
@@ -1493,7 +1497,16 @@ body.mk-modal-open {
     justify-self: center;
 }
 
-.mk-zone-assets.simple-mode .mk-asset-card::before {
+.mk-zone-assets.simple-mode .mk-asset-branch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-self: center;
+    width: max-content;
+    min-width: 0;
+}
+
+.mk-zone-assets.simple-mode .mk-asset-branch::before {
     content: '';
     position: absolute;
     top: -1.1rem;
@@ -1502,6 +1515,29 @@ body.mk-modal-open {
     height: 1.1rem;
     background: var(--primary-color);
     transform: translateX(-50%);
+}
+
+.mk-generation-meter {
+    position: relative;
+    z-index: 1;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 32px;
+    border: 1px solid rgba(56, 189, 248, 0.48);
+    border-radius: 9px;
+    color: #0c4a6e;
+    background: #bae6fd;
+    font-size: 0.58rem;
+    font-weight: 900;
+}
+
+.mk-generation-meter-link {
+    width: 0.65rem;
+    height: 2px;
+    flex: 0 0 0.65rem;
+    background: var(--primary-color);
 }
 
 .mk-zone-assets.simple-mode .mk-asset-head {
@@ -1548,11 +1584,20 @@ body.mk-modal-open {
     background: linear-gradient(90deg, var(--text-muted), var(--primary-color), var(--text-muted));
 }
 
-.mk-zone-assets.detail-mode .mk-asset-card {
+.mk-zone-assets.detail-mode .mk-asset-branch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-self: stretch;
+    min-width: 0;
     z-index: 1;
 }
 
-.mk-zone-assets.detail-mode .mk-asset-card::before {
+.mk-zone-assets.detail-mode .mk-asset-branch .mk-asset-card {
+    flex: 1 1 auto;
+}
+
+.mk-zone-assets.detail-mode .mk-asset-branch::before {
     content: '';
     position: absolute;
     top: -1.35rem;
@@ -1567,6 +1612,11 @@ body.mk-modal-open {
 .mk-zone-assets.detail-mode .mk-asset-card .mk-asset-detail-slide {
     position: relative;
     z-index: 1;
+}
+
+.mk-zone-assets.detail-mode .mk-generation-meter {
+    flex: 0 0 32px;
+    margin-right: 0.65rem;
 }
 
 .mk-empty-zone {

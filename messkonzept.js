@@ -195,16 +195,22 @@ function mkRenderAsset(asset) {
         ? `<div class="mk-asset-detail-slide" aria-label="Details zu ${mkEscapeHtml(asset.name)}">${mkRenderAssetSummary(asset, true)}</div>`
         : '';
     const typeLabel = mkGetAssetTypeLabel(asset);
+    const generationMeterMarkup = asset.type === 'generation' && asset.generationMeter
+        ? `<span class="mk-generation-meter" title="Eigener Erzeugungszähler" role="img" aria-label="Eigener Erzeugungszähler für ${mkEscapeHtml(asset.name)}"><b>ZE</b></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`
+        : '';
 
     return `
-        <article class="mk-asset-card ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" data-mk-select-asset="${mkEscapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${mkEscapeHtml(asset.name)} auswählen und verschieben">
-            <div class="mk-asset-head">
-                <span class="mk-asset-icon ${meta.className}">${meta.short}</span>
-                <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b>${typeLabel ? `<small>${mkEscapeHtml(typeLabel)}</small>` : ''}</span>
-                <button type="button" class="mk-remove-asset" data-mk-remove-asset="${mkEscapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${mkEscapeHtml(asset.name)} entfernen">×</button>
-            </div>
-            ${detailMarkup}
-        </article>
+        <div class="mk-asset-branch ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'} ${generationMeterMarkup ? 'has-generation-meter' : ''}">
+            ${generationMeterMarkup}
+            <article class="mk-asset-card ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" data-mk-select-asset="${mkEscapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${mkEscapeHtml(asset.name)} auswählen und verschieben">
+                <div class="mk-asset-head">
+                    <span class="mk-asset-icon ${meta.className}">${meta.short}</span>
+                    <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b>${typeLabel ? `<small>${mkEscapeHtml(typeLabel)}</small>` : ''}</span>
+                    <button type="button" class="mk-remove-asset" data-mk-remove-asset="${mkEscapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${mkEscapeHtml(asset.name)} entfernen">×</button>
+                </div>
+                ${detailMarkup}
+            </article>
+        </div>
     `;
 }
 
@@ -696,6 +702,7 @@ function mkInitialize() {
     });
 
     document.querySelectorAll('.mk-palette-item').forEach(button => {
+        if (button.dataset.mkLegendOnly === 'true') return;
         button.addEventListener('click', () => mkAddAsset(button.dataset.mkType));
         button.addEventListener('dragstart', event => {
             event.dataTransfer.effectAllowed = 'copy';
