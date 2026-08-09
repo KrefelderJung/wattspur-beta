@@ -207,7 +207,14 @@ function mkRenderMeterNode(index) {
 
 function mkRenderMeterLayout(index) {
     const detailMarkup = mkConfiguratorState.viewMode === 'detail'
-        ? `<div class="mk-meter-detail-slide" aria-label="Details zu Z${index + 1}">${mkRenderMeterDetailsSummary(index, true)}</div>`
+        ? `
+            <article class="mk-asset-card detail-mode mk-meter-detail-card" data-mk-select-meter="${index}" role="button" tabindex="0" aria-label="Z${index + 1} auswählen">
+                <div class="mk-asset-head">
+                    <span class="mk-asset-icon meter">Z</span>
+                    <span class="mk-asset-title"><b>Z${index + 1}</b></span>
+                </div>
+                <div class="mk-asset-detail-slide" aria-label="Details zu Z${index + 1}">${mkRenderMeterDetailsSummary(index, true)}</div>
+            </article>`
         : '';
     return `
         <div class="mk-meter-layout ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : ''}">
