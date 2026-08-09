@@ -9,8 +9,23 @@ const MK_ASSET_META = Object.freeze({
     meter: { label: 'Zähler', short: 'Z', className: 'meter', detail: 'Zusätzlicher Messpunkt' },
     generation: { label: 'Erzeugungsanlage', short: 'EA', className: 'generation', detail: 'PV, KWK, Wind ...' },
     consumer: { label: 'Verbraucher', short: 'V', className: 'consumer', detail: 'Allgemeine Last' },
-    steuve: { label: 'SteuVE', short: 'S', className: 'steuve', detail: 'Steuerbare Verbrauchseinrichtung' },
+    steuve: { label: 'SteuVE', short: 'SteuVE', className: 'steuve', detail: 'Steuerbare Verbrauchseinrichtung' },
     storage: { label: 'Speicher', short: '↕', className: 'storage', detail: 'Speicheranlage' }
+});
+
+const MK_ASSET_TYPE_OPTIONS = Object.freeze({
+    generation: [
+        { value: 'PV', label: 'PV-Anlage' },
+        { value: 'KWK', label: 'KWK / BHKW' },
+        { value: 'Wind', label: 'Windenergieanlage' },
+        { value: 'Sonstige', label: 'Sonstige Erzeugungsanlage' }
+    ],
+    steuve: [
+        { value: 'Wärmepumpe', label: 'Wärmepumpe' },
+        { value: 'Wallbox', label: 'Wallbox' },
+        { value: 'Klimaanlage', label: 'Klimaanlage' },
+        { value: 'Sonstige', label: 'Sonstige SteuVE' }
+    ]
 });
 
 const MK_METER_DETAIL_FIELDS = Object.freeze([
@@ -40,6 +55,11 @@ function mkEscapeHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function mkRenderSelectOptions(options, selectedValue, placeholder = 'Bitte auswählen') {
+    const placeholderMarkup = selectedValue ? '' : `<option value="" disabled selected>${mkEscapeHtml(placeholder)}</option>`;
+    return `${placeholderMarkup}${options.map(option => `<option value="${mkEscapeHtml(option.value)}" ${option.value === selectedValue ? 'selected' : ''}>${mkEscapeHtml(option.label)}</option>`).join('')}`;
 }
 
 function mkCreateMeterDetails() {
@@ -80,6 +100,7 @@ function mkCreateAsset(type, zone) {
         zone,
         name: defaultNames[type] || meta.label,
         energyCarrier: type === 'generation' ? 'PV' : '',
+        steuveType: '',
         power: '',
         commissioningDate: '',
         meterRole: type === 'meter' ? 'Bezug / Lieferung' : '',
@@ -159,18 +180,29 @@ function mkGetZoneLabel(index) {
     return `Zwischen Z${index + 1} und Z${index + 2} · Kaskadenstufe`;
 }
 
+function mkGetAssetTypeLabel(asset) {
+    if (asset.type === 'generation') {
+        return MK_ASSET_TYPE_OPTIONS.generation.find(option => option.value === asset.energyCarrier)?.label || '';
+    }
+    if (asset.type === 'steuve') {
+        return MK_ASSET_TYPE_OPTIONS.steuve.find(option => option.value === asset.steuveType)?.label || '';
+    }
+    return '';
+}
+
 function mkRenderAsset(asset) {
     const meta = MK_ASSET_META[asset.type];
     const isSelected = mkConfiguratorState.selectedObject?.kind === 'asset' && mkConfiguratorState.selectedObject.id === asset.id;
     const detailMarkup = mkConfiguratorState.viewMode === 'detail'
         ? `<div class="mk-asset-detail-slide" aria-label="Details zu ${mkEscapeHtml(asset.name)}">${mkRenderAssetSummary(asset, true)}</div>`
         : '';
+    const typeLabel = mkGetAssetTypeLabel(asset);
 
     return `
-        <article class="mk-asset-card ${isSelected ? 'selected' : ''} ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : ''}" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" data-mk-select-asset="${mkEscapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${mkEscapeHtml(asset.name)} auswählen und verschieben">
+        <article class="mk-asset-card ${isSelected ? 'selected' : ''} ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" data-mk-select-asset="${mkEscapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${mkEscapeHtml(asset.name)} auswählen und verschieben">
             <div class="mk-asset-head">
                 <span class="mk-asset-icon ${meta.className}">${meta.short}</span>
-                <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b></span>
+                <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b>${typeLabel ? `<small>${mkEscapeHtml(typeLabel)}</small>` : ''}</span>
                 <button type="button" class="mk-remove-asset" data-mk-remove-asset="${mkEscapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${mkEscapeHtml(asset.name)} entfernen">×</button>
             </div>
             ${detailMarkup}
@@ -183,7 +215,7 @@ function mkRenderDropZone(zone, index) {
     const isRestricted = mkConfiguratorState.mode === 'cascade' && index === 0;
     return `
         <div class="mk-drop-zone ${isRestricted ? 'restricted' : ''}" data-mk-zone="${mkEscapeHtml(zone)}" aria-label="${mkEscapeHtml(mkGetZoneLabel(index))}">
-            <div class="mk-zone-assets">${assets.length ? assets.map(mkRenderAsset).join('') : '<div class="mk-empty-zone">Noch leer</div>'}</div>
+            <div class="mk-zone-assets ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}">${assets.length ? assets.map(mkRenderAsset).join('') : '<div class="mk-empty-zone">Noch leer</div>'}</div>
         </div>
     `;
 }
@@ -235,11 +267,14 @@ function mkRenderAssetEditorFields(asset) {
     ` : '';
     const generationFields = asset.type === 'generation' ? `
         <div class="mk-asset-form-grid">
-            <label>Energieträger<input type="text" data-mk-field="energyCarrier" value="${mkEscapeHtml(asset.energyCarrier)}" placeholder="z. B. PV"></label>
+            <label>Art der Erzeugungsanlage<select data-mk-field="energyCarrier">${mkRenderSelectOptions(MK_ASSET_TYPE_OPTIONS.generation, asset.energyCarrier)}</select></label>
             <label>Leistung<input type="text" data-mk-field="power" value="${mkEscapeHtml(asset.power)}" placeholder="kW / kWp"></label>
             <label>Inbetriebnahme<input type="date" data-mk-field="commissioningDate" value="${mkEscapeHtml(asset.commissioningDate)}"></label>
         </div>
         <label class="mk-check-row"><input type="checkbox" data-mk-field="generationMeter" ${asset.generationMeter ? 'checked' : ''}> Eigener Erzeugungszähler für diese EA</label>
+    ` : '';
+    const steuveFields = asset.type === 'steuve' ? `
+        <label>Art der SteuVE<select data-mk-field="steuveType">${mkRenderSelectOptions(MK_ASSET_TYPE_OPTIONS.steuve, asset.steuveType)}</select></label>
     ` : '';
     return `
         <div class="mk-object-editor-form" data-mk-asset-id="${mkEscapeHtml(asset.id)}">
@@ -247,6 +282,7 @@ function mkRenderAssetEditorFields(asset) {
                 <label>Bezeichnung<input type="text" data-mk-field="name" value="${mkEscapeHtml(asset.name)}"></label>
                 ${meterFields}
                 ${generationFields}
+                ${steuveFields}
             </div>
         </div>
     `;
@@ -259,7 +295,8 @@ function mkRenderAssetSummary(asset, includeEmpty = false) {
         asset.type === 'generation' ? { label: 'Energieträger', value: asset.energyCarrier } : null,
         asset.type === 'generation' ? { label: 'Leistung', value: asset.power } : null,
         asset.type === 'generation' ? { label: 'Inbetriebnahme', value: asset.commissioningDate } : null,
-        asset.type === 'generation' ? { label: 'Erzeugungszähler', value: asset.generationMeter ? 'Ja' : (includeEmpty ? 'Nein' : '') } : null
+        asset.type === 'generation' ? { label: 'Erzeugungszähler', value: asset.generationMeter ? 'Ja' : (includeEmpty ? 'Nein' : '') } : null,
+        asset.type === 'steuve' ? { label: 'Art der SteuVE', value: asset.steuveType } : null
     ].filter(Boolean).filter(entry => includeEmpty || String(entry.value || '').trim());
     return entries.map(entry => `<div class="mk-meter-detail-value"><span>${mkEscapeHtml(entry.label)}</span><b>${mkEscapeHtml(String(entry.value || '—'))}</b></div>`).join('');
 }
