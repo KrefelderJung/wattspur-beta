@@ -39,7 +39,7 @@ Die Anwendung verarbeitet importierte Dateien lokal im Browser und sendet sie ni
 
 ### 🛡️ Qualität & Sicherheit
 - **Datenqualitäts-Gate**: Automatische Filterung von Duplikaten, Lücken, Extremwerten
-- **79 automatisierte Tests** (Parser, Aggregation, Kapazitätsszenarien, Feiertage, Beta-Kommunikation)
+- **83 automatisierte Tests** (Parser, Aggregation, Kapazitätsszenarien, Feiertage, Beta-Kommunikation, rechtliche Seiten)
 - **XSS-Schutz** für alle nutzergenerierten Inhalte
 - **PWA / Offline-fähig** — als App installierbar
 
@@ -93,7 +93,7 @@ Die Anwendung verarbeitet importierte Dateien lokal im Browser und sendet sie ni
 
 ## 🧪 Tests
 
-Öffne `tests.html` im Browser — alle **79 Tests** laufen automatisch durch:
+Öffne `tests.html` im Browser — alle **83 Tests** laufen automatisch durch:
 
 - CSV-Parser (Viertelstundenwerte, Multi-Kanal, Zeitumstellung)
 - Aggregation (Stunde, Tag, Woche, Monat)

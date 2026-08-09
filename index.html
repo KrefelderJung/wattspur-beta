@@ -9,7 +9,7 @@
     <!-- PapaParse -->
     <script src="lib/papaparse.min.js"></script>
     
-    <link rel="stylesheet" href="styles.css?v=112">
+    <link rel="stylesheet" href="styles.css?v=127">
     <link rel="icon" type="image/svg+xml" href="wattspur-mark.svg">
     <!-- PWA Meta tags -->
     <link rel="manifest" href="manifest.json">
@@ -21,27 +21,25 @@
         <!-- Public beta landing page and upload screen -->
         <div id="upload-screen" class="screen active">
             <header class="landing-header" aria-label="Seitennavigation">
-                <a class="landing-brand" href="#top" aria-label="Zur Startseite">
+                    <a class="landing-brand" href="#top" aria-label="Zur Startseite">
                     <img class="landing-brand-icon" src="wattspur-mark.svg" alt="" aria-hidden="true">
                     <span class="landing-brand-copy"><strong>Wattspur</strong><small>Energiewerkzeuge</small></span>
                 </a>
-                <nav class="landing-links" aria-label="Bereiche">
-                    <a href="#modules">Werkzeuge</a>
-                    <a href="#import">Datei einlesen</a>
-                    <a href="#transparency">Hinweise</a>
-                    <a href="#feedback">Feedback</a>
+                    <nav class="landing-links" aria-label="Bereiche">
+                        <a href="#modules">Werkzeuge</a>
+                        <a href="#import">Datei einlesen</a>
+                        <a href="#transparency">Hinweise</a>
+                        <a href="#feedback">Feedback</a>
                 </nav>
             </header>
 
             <main id="top" class="landing-main">
                 <section class="landing-hero" aria-labelledby="landing-title">
                     <div class="hero-copy">
-                        <span class="landing-kicker">Browserbasiertes Energie-Werkzeug · öffentliche Beta</span>
                         <h1 id="landing-title"><span class="hero-title-wordmark">Wattspur</span><br>Energie klarer sehen.</h1>
                         <p>Lokale Werkzeuge für Lastgänge und Messkonzepte – ohne Konto und ohne Upload in eine Cloud.</p>
                         <div class="landing-actions">
-                            <a class="btn landing-primary" href="#import">Lastgang analysieren</a>
-                            <a class="btn landing-secondary" href="#modules">Werkzeuge ansehen</a>
+                            <a class="btn landing-primary" href="#modules">Werkzeuge wählen</a>
                         </div>
                         <ul class="trust-list" aria-label="Datenschutz- und Nutzungshinweise">
                             <li>Dateien bleiben im Browser</li>
@@ -49,35 +47,19 @@
                             <li>Keine Registrierung</li>
                         </ul>
                     </div>
-                    <aside class="hero-preview" aria-label="Werkzeugauswahl">
-                        <div class="preview-topline"><span>Werkzeuge</span><span class="status-dot">im Browser</span></div>
-                        <a class="tool-choice active" href="#import">
-                            <span class="tool-choice-icon">01</span>
-                            <span class="tool-choice-body"><b>Lastgänge analysieren</b><small>CSV oder MSCONS · jetzt verfügbar</small></span>
-                            <span class="tool-choice-arrow" aria-hidden="true">→</span>
-                        </a>
-                        <button type="button" class="tool-choice upcoming" id="btn-open-messkonzept" aria-label="Messkonzept-Konfigurator öffnen">
-                            <span class="tool-choice-icon">02</span>
-                            <span class="tool-choice-body"><b>Messkonzept konfigurieren</b><small>Assets, Zähler und Zeitscheiben · MVP</small></span>
-                            <span class="tool-choice-arrow" aria-hidden="true">→</span>
-                        </button>
-                    </aside>
                 </section>
 
                 <section id="modules" class="landing-section" aria-labelledby="modules-title">
                     <div class="section-heading">
-                        <span class="landing-kicker">Werkzeuge</span>
-                        <h2 id="modules-title">Wähle den passenden Einstieg.</h2>
+                        <h2 id="modules-title">Wähle ein Werkzeug.</h2>
                     </div>
                     <div class="module-card-grid">
                         <article class="landing-module-card featured">
-                            <span class="module-state ready">Jetzt verfügbar</span>
                             <h3>Lastganganalyse</h3>
                             <p>CSV- und MSCONS-Dateien lokal prüfen, visualisieren und vergleichen.</p>
                             <a href="#import">Analyse starten →</a>
                         </article>
                         <article class="landing-module-card">
-                            <span class="module-state ready">MVP verfügbar</span>
                             <h3>Messkonzept-Konfigurator</h3>
                             <p>Anlagen, Zähler und historische Zeitscheiben strukturiert erfassen.</p>
                             <button type="button" class="landing-card-action" id="btn-open-messkonzept-card">Konfigurator öffnen →</button>
@@ -86,25 +68,8 @@
                                 <p>Geführte Topologien, Prüfhinweise und ein nachvollziehbares Ergebnisdokument. Der aktuelle Stand ist ein technischer MVP.</p>
                             </details>
                         </article>
-                        <article class="landing-module-card muted">
-                            <span class="module-state experimental">Experimentell</span>
-                            <h3>Kapazitätsbestellung</h3>
-                            <p>Szenariowerte für Leistungsbuchung und Kosten – nicht für Abrechnung oder verbindliche Entscheidungen.</p>
-                            <details class="module-more">
-                                <summary>Mehr zur Einordnung</summary>
-                                <p>Die Berechnung ist ein transparentes Szenariomodell und ersetzt keine fachliche Prüfung.</p>
-                            </details>
-                        </article>
                     </div>
-                </section>
-
-                <section id="messkonzept" class="landing-section messkonzept-teaser" aria-labelledby="messkonzept-teaser-title">
-                    <div>
-                        <span class="landing-kicker">Neues Werkzeug</span>
-                        <h2 id="messkonzept-teaser-title">Messkonzepte als nachvollziehbare Skizze.</h2>
-                        <p>Zähler, Erzeugungsanlagen, Verbraucher, SteuVE und Nachtspeicherheizungen werden als eigene Bausteine angeordnet. Die Hinweise erklären, wo eine Kombination fachlich geprüft werden muss.</p>
-                    </div>
-                    <button type="button" class="btn landing-primary" id="btn-open-messkonzept-teaser">Konfigurator öffnen</button>
+                    <p class="module-future"><strong>In Vorbereitung:</strong> Kapazitätsbestellung als unverbindliche Szenariorechnung – nicht für Abrechnung oder verbindliche Entscheidungen.</p>
                 </section>
 
                 <section id="import" class="landing-section import-section" aria-labelledby="import-title">
@@ -198,8 +163,14 @@
             </main>
 
             <footer class="landing-footer">
-                <span>Wattspur · Energiewerkzeuge</span>
-                <span>Lokale Verarbeitung · keine EDM-Anbindung · unverbindliche Ergebnisse</span>
+                <div class="footer-meta">
+                    <span>Wattspur · Energiewerkzeuge · öffentliche Beta</span>
+                    <span>Lokale Verarbeitung · keine EDM-Anbindung · unverbindliche Ergebnisse</span>
+                </div>
+                <nav class="footer-links" aria-label="Rechtliche Hinweise">
+                    <a href="impressum.html">Impressum</a>
+                    <a href="datenschutz.html">Datenschutz</a>
+                </nav>
             </footer>
         </div>
 
@@ -217,13 +188,16 @@
 
                 <div class="mk-layout">
                     <aside class="mk-palette" aria-label="Bausteine">
-                        <div class="mk-panel-heading"><span>Bausteine</span><small>Ziehen</small></div>
-                        <div class="mk-palette-item mk-palette-legend" data-mk-type="meter" data-mk-legend-only="true" role="img" aria-label="Zähler – wird über die Grundtopologie festgelegt"><span class="mk-palette-icon meter">Z</span><span><b>Zähler</b><small>Bezug / Lieferung</small></span></div>
-                        <button type="button" class="mk-palette-item" draggable="true" data-mk-type="generation"><span class="mk-palette-icon generation">EA</span><span><b>Erzeugungsanlage</b><small>PV, KWK, Wind ...</small></span></button>
-                        <button type="button" class="mk-palette-item" draggable="true" data-mk-type="consumer"><span class="mk-palette-icon consumer">V</span><span><b>Verbraucher</b><small>Allgemeine Last</small></span></button>
-                        <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve"><span class="mk-palette-icon steuve">SteuVE</span><span><b>SteuVE</b><small>§ 14a EnWG</small></span></button>
-                        <button type="button" class="mk-palette-item" draggable="true" data-mk-type="storage"><span class="mk-palette-icon storage" aria-label="Erzeugungsanlage und Speicher"><span class="mk-storage-icon-generation" aria-hidden="true">EA</span><span class="mk-storage-icon-battery" aria-hidden="true"></span></span><span><b>Speicher</b><small>Erzeugung und Bezug</small></span></button>
-                        <button type="button" class="mk-palette-item" draggable="true" data-mk-type="nsh"><span class="mk-palette-icon nsh">NSH</span><span><b>Nachtspeicherheizung</b><small>Elektrische Speicherheizung</small></span></button>
+                        <div class="mk-palette-heading"><span>Bausteine</span><small>Tippen oder ziehen</small></div>
+                        <div class="mk-palette-items">
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="generation" title="Erzeugungsanlage einfügen"><span class="mk-palette-icon generation" aria-hidden="true">EA</span><span class="mk-palette-label">Erzeugungsanlage</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="storage" title="Batteriespeicher einfügen"><span class="mk-palette-icon storage" aria-hidden="true"><span class="mk-battery-symbol"><span class="mk-battery-level"></span></span></span><span class="mk-palette-label">Batteriespeicher</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="consumer" title="Sonstigen Verbraucher einfügen"><span class="mk-palette-icon consumer" aria-hidden="true">V</span><span class="mk-palette-label">Sonstige Verbraucher</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wallbox" title="Wallbox einfügen"><span class="mk-palette-icon steuve mk-device-wallbox" aria-hidden="true"><span class="mk-charge-symbol"><span class="mk-charge-bolt">⚡</span><span class="mk-charge-cable"></span></span></span><span class="mk-palette-label">Wallbox</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wärmepumpe" title="Wärmepumpe einfügen"><span class="mk-palette-icon steuve mk-device-heatpump" aria-hidden="true"><span class="mk-fan-symbol"><span class="mk-fan-blade mk-fan-blade-1"></span><span class="mk-fan-blade mk-fan-blade-2"></span><span class="mk-fan-blade mk-fan-blade-3"></span><span class="mk-fan-hub"></span></span></span><span class="mk-palette-label">Wärmepumpe</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Klimaanlage" title="Klimaanlage einfügen"><span class="mk-palette-icon steuve mk-device-climate" aria-hidden="true">❄</span><span class="mk-palette-label">Klimaanlage</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="nsh" title="Nachtspeicherheizung einfügen"><span class="mk-palette-icon nsh" aria-hidden="true">NSH</span><span class="mk-palette-label">Nachtspeicherheizung</span></button>
+                        </div>
                     </aside>
 
                     <section class="mk-builder-card" aria-labelledby="mk-builder-title">
@@ -245,11 +219,12 @@
                                     <div class="mk-topology-switch" role="group" aria-label="Messkonzept">
                                         <button type="button" class="mk-topology-btn active" data-mk-mode="single" aria-pressed="true" title="Ein Messzähler für den Messbereich">Einzähler</button>
                                         <button type="button" class="mk-topology-btn" data-mk-mode="cascade" aria-pressed="false" title="Mehrere Zähler in Reihe, startet mit zwei Zählern">Mehrzähler</button>
+                                        <button type="button" class="mk-topology-btn" data-mk-mode="parallel" aria-pressed="false" title="Der Hausanschluss teilt sich direkt auf eigene Zählerzweige auf">Parallelmessung</button>
                                         <span class="mk-meter-count-divider" aria-hidden="true"></span>
-                                        <div class="mk-meter-count-switch" role="group" aria-label="Zähleranzahl in der Kaskade">
-                                            <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="2" aria-pressed="false" disabled title="Kaskade mit zwei Zählern">2</button>
-                                            <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="3" aria-pressed="false" disabled title="Kaskade mit drei Zählern">3</button>
-                                            <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="4" aria-pressed="false" disabled title="Kaskade mit vier Zählern">4</button>
+                                        <div class="mk-meter-count-switch" role="group" aria-label="Zähleranzahl für Kaskade oder Parallelmessung">
+                                            <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="2" aria-pressed="false" disabled title="Zwei Zähler">2</button>
+                                            <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="3" aria-pressed="false" disabled title="Drei Zähler">3</button>
+                                            <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="4" aria-pressed="false" disabled title="Vier Zähler">4</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1506,6 +1481,6 @@
     <script src="parser.js?v=304"></script>
     <script src="charts.js?v=304"></script>
     <script src="app.js?v=305"></script>
-    <script src="messkonzept.js?v=2"></script>
+    <script src="messkonzept.js?v=18"></script>
 </body>
 </html>

@@ -7,10 +7,10 @@
 
 const MK_ASSET_META = Object.freeze({
     meter: { label: 'Zähler', short: 'Z', className: 'meter', detail: 'Zusätzlicher Messpunkt' },
-    generation: { label: 'Erzeugungsanlage', short: 'EA', className: 'generation', detail: 'PV, KWK, Wind ...' },
-    consumer: { label: 'Verbraucher', short: 'V', className: 'consumer', detail: 'Allgemeine Last' },
-    steuve: { label: 'SteuVE', short: 'SteuVE', className: 'steuve', detail: 'Steuerbare Verbrauchseinrichtung' },
-    storage: { label: 'Speicher', short: '▤', className: 'storage', detail: 'Speicheranlage' },
+    generation: { label: 'Erzeugungsanlage', short: 'EA', className: 'generation', detail: 'PV, KWK, Wind, Balkonkraftwerk' },
+    consumer: { label: 'Sonstige Verbraucher', short: 'V', className: 'consumer', detail: 'Allgemeine Last' },
+    steuve: { label: 'Steuerbare Anlage', short: '⚡', className: 'steuve', detail: 'Leistungsabhängig nach § 14a EnWG prüfen' },
+    storage: { label: 'Batteriespeicher', short: '▤', className: 'storage', detail: 'Speicheranlage' },
     nsh: { label: 'Nachtspeicherheizung', short: 'NSH', className: 'nsh', detail: 'Historische Tarif- und Messbehandlung prüfen' }
 });
 
@@ -18,23 +18,31 @@ const MK_ASSET_TYPE_OPTIONS = Object.freeze({
     generation: [
         { value: 'PV', label: 'PV-Anlage' },
         { value: 'KWK', label: 'KWK / BHKW' },
-        { value: 'Wind', label: 'Windenergieanlage' },
-        { value: 'Sonstige', label: 'Sonstige Erzeugungsanlage' }
+        { value: 'Wind', label: 'Windrad / Windenergieanlage' },
+        { value: 'Balkonkraftwerk', label: 'Balkonkraftwerk (Steckersolargerät)' }
     ],
     steuve: [
         { value: 'Wärmepumpe', label: 'Wärmepumpe' },
         { value: 'Wallbox', label: 'Wallbox' },
         { value: 'Klimaanlage', label: 'Klimaanlage' },
-        { value: 'Sonstige', label: 'Sonstige SteuVE' }
+        { value: 'Sonstige', label: 'Sonstige steuerbare Anlage' }
     ]
 });
 
+const MK_STEUVE_MODULE_OPTIONS = Object.freeze([
+    { value: 'Modul 1', label: 'Modul 1' },
+    { value: 'Modul 2', label: 'Modul 2' },
+    { value: 'Modul 3', label: 'Modul 3' }
+]);
+
 const MK_STORAGE_INFO_TEXT = 'Achtung: Die Registrierung des Stromspeichers im Marktstammdatenregister ist zu prüfen. Beim netzbezogenen Laden ist zusätzlich zu prüfen, ob § 14a EnWG greift; Einspeisung und Bezug sind getrennt zu betrachten. Messkonzept mit dem Verteilnetzbetreiber abstimmen.';
+const MK_BALCONY_INFO_TEXT = 'Balkonkraftwerk / Steckersolargerät: Registrierung im Marktstammdatenregister prüfen. Die vereinfachte Behandlung hängt unter anderem von Leistungsgrenzen und der gewählten EEG-Veräußerungsform ab.';
+const MK_ASSETS_PER_ROW = 3;
 
 const MK_METER_DETAIL_FIELDS = Object.freeze([
     { key: 'maloBezug', label: 'MaLo Bezug', type: 'text' },
     { key: 'maloLieferung', label: 'MaLo Lieferung', type: 'text' },
-    { key: 'melo', label: 'MeLo', type: 'text' },
+    { key: 'melo', label: 'MeLo', type: 'text', maxLength: 33 },
     { key: 'meterNumber', label: 'Zählernummer', type: 'text' },
     { key: 'installationDate', label: 'Einbaudatum', type: 'date' }
 ]);
@@ -86,14 +94,17 @@ function mkNotify(message, type = 'info') {
     if (mkElements.canvasStatus) mkElements.canvasStatus.textContent = message;
 }
 
-function mkCreateAsset(type, zone) {
+function mkCreateAsset(type, zone, steuveType = '', energyCarrier = '') {
     const meta = MK_ASSET_META[type] || MK_ASSET_META.consumer;
-    const sameType = mkConfiguratorState.assets.filter(asset => asset.type === type).length + 1;
+    const selectedEnergyCarrier = type === 'generation' ? energyCarrier || 'PV' : '';
+    const sameType = mkConfiguratorState.assets.filter(asset => asset.type === type
+        && (type !== 'steuve' || asset.steuveType === steuveType)
+        && (type !== 'generation' || asset.energyCarrier === selectedEnergyCarrier)).length + 1;
     const defaultNames = {
         meter: `Zusatzzaehler ${sameType}`,
-        generation: `EA ${sameType}`,
-        consumer: `Verbraucher ${sameType}`,
-        steuve: `SteuVE ${sameType}`,
+        generation: selectedEnergyCarrier === 'Balkonkraftwerk' ? `Balkonkraftwerk ${sameType}` : `EA ${sameType}`,
+        consumer: `Sonstiger Verbraucher ${sameType}`,
+        steuve: `${steuveType || 'Steuerbare Anlage'} ${sameType}`,
         storage: `Speicher ${sameType}`,
         nsh: `Nachtspeicherheizung ${sameType}`
     };
@@ -103,8 +114,9 @@ function mkCreateAsset(type, zone) {
         type,
         zone,
         name: defaultNames[type] || meta.label,
-        energyCarrier: type === 'generation' ? 'PV' : '',
-        steuveType: '',
+        energyCarrier: selectedEnergyCarrier,
+        steuveType: type === 'steuve' ? steuveType : '',
+        steuveModule: '',
         power: '',
         commissioningDate: '',
         meterRole: type === 'meter' ? 'Bezug / Lieferung' : '',
@@ -113,14 +125,14 @@ function mkCreateAsset(type, zone) {
 }
 
 function mkDefaultZone() {
-    return mkConfiguratorState.mode === 'cascade'
-        ? `cascade-${Math.max(0, mkConfiguratorState.cascadeLevels - 1)}`
-        : 'single-main';
+    if (mkConfiguratorState.mode === 'cascade') return `cascade-${Math.max(0, mkConfiguratorState.cascadeLevels - 1)}`;
+    if (mkConfiguratorState.mode === 'parallel') return 'parallel-0';
+    return 'single-main';
 }
 
-function mkAddAsset(type, zone = mkDefaultZone()) {
+function mkAddAsset(type, zone = mkDefaultZone(), steuveType = '', energyCarrier = '') {
     if (!MK_ASSET_META[type]) return;
-    const asset = mkCreateAsset(type, zone);
+    const asset = mkCreateAsset(type, zone, steuveType, energyCarrier);
     mkConfiguratorState.assets.push(asset);
     mkRender();
 }
@@ -142,34 +154,53 @@ function mkChangeViewMode(viewMode) {
     mkRender();
 }
 
-function mkChangeMode(mode) {
-    if (!['single', 'cascade'].includes(mode) || mode === mkConfiguratorState.mode) return;
+function mkMapAssetZoneForMode(zone, previousMode, nextMode, levels) {
+    if (nextMode === 'single') return 'single-main';
 
-    if (mode === 'cascade') {
-        mkConfiguratorState.cascadeLevels = 2;
-        mkConfiguratorState.assets.forEach(asset => {
-            asset.zone = `cascade-${Math.max(0, mkConfiguratorState.cascadeLevels - 1)}`;
-        });
-    } else {
-        mkConfiguratorState.assets.forEach(asset => {
-            asset.zone = 'single-main';
-        });
+    const maxIndex = Math.max(0, levels - 1);
+    const previousZone = String(zone || '');
+    if (nextMode === 'parallel') {
+        const cascadeMatch = previousMode === 'cascade' ? previousZone.match(/^cascade-(\d+)$/) : null;
+        const index = cascadeMatch ? Number(cascadeMatch[1]) : 0;
+        return `parallel-${Math.min(maxIndex, Math.max(0, index))}`;
     }
+
+    const parallelMatch = previousMode === 'parallel' ? previousZone.match(/^parallel-(\d+)$/) : null;
+    const index = parallelMatch ? Number(parallelMatch[1]) : maxIndex;
+    return `cascade-${Math.min(maxIndex, Math.max(0, index))}`;
+}
+
+function mkChangeMode(mode) {
+    if (!['single', 'cascade', 'parallel'].includes(mode) || mode === mkConfiguratorState.mode) return;
+
+    const previousMode = mkConfiguratorState.mode;
+    const previousLevels = mkConfiguratorState.cascadeLevels;
+    if (mode === 'cascade' || mode === 'parallel') {
+        const keepMeterCount = ['cascade', 'parallel'].includes(previousMode);
+        mkConfiguratorState.cascadeLevels = keepMeterCount
+            ? Math.min(4, Math.max(2, previousLevels))
+            : 2;
+    }
+
+    mkConfiguratorState.assets.forEach(asset => {
+        asset.zone = mkMapAssetZoneForMode(asset.zone, previousMode, mode, mkConfiguratorState.cascadeLevels);
+    });
     mkConfiguratorState.mode = mode;
     mkRender();
 }
 
 function mkChangeCascadeLevels(levels) {
-    if (mkConfiguratorState.mode !== 'cascade') return;
+    if (!['cascade', 'parallel'].includes(mkConfiguratorState.mode)) return;
     const parsed = Math.min(4, Math.max(2, Number(levels) || 2));
     mkConfiguratorState.cascadeLevels = parsed;
     mkConfiguratorState.assets.forEach(asset => {
-        const match = String(asset.zone).match(/^cascade-(\d+)$/);
+        const prefix = mkConfiguratorState.mode === 'parallel' ? 'parallel' : 'cascade';
+        const match = String(asset.zone).match(new RegExp(`^${prefix}-(\\d+)$`));
         if (!match) {
-            asset.zone = `cascade-${parsed - 1}`;
+            asset.zone = `${prefix}-${parsed - 1}`;
             return;
         }
-        asset.zone = `cascade-${Math.min(parsed - 1, Number(match[1]))}`;
+        asset.zone = `${prefix}-${Math.min(parsed - 1, Number(match[1]))}`;
     });
     mkRender();
 }
@@ -179,6 +210,7 @@ function mkGetZoneAssets(zone) {
 }
 
 function mkGetZoneLabel(index) {
+    if (mkConfiguratorState.mode === 'parallel') return `Hinter Z${index + 1} · eigener Parallel-Messbereich`;
     if (mkConfiguratorState.mode !== 'cascade') return 'Hinter Z1 · Verbraucher- und Anlagenbereich';
     if (index === mkConfiguratorState.cascadeLevels - 1) return `Hinter Z${index + 1} · Verbraucher- und Anlagenbereich`;
     return `Zwischen Z${index + 1} und Z${index + 2} · Kaskadenstufe`;
@@ -195,6 +227,48 @@ function mkGetAssetTypeLabel(asset) {
     return '';
 }
 
+function mkGetSteuveIconClass(asset) {
+    if (asset?.type !== 'steuve') return '';
+    const classes = {
+        Wallbox: 'mk-device-wallbox',
+        Wärmepumpe: 'mk-device-heatpump',
+        Klimaanlage: 'mk-device-climate'
+    };
+    return classes[asset.steuveType] || 'mk-device-generic';
+}
+
+function mkGetPowerNumber(value) {
+    const match = String(value || '').replace(',', '.').match(/-?\d+(?:\.\d+)?/);
+    if (!match) return null;
+    const parsed = Number(match[0]);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function mkGetSteuveRegime(asset) {
+    const power = mkGetPowerNumber(asset?.power);
+    if (power === null) return 'Leistung noch offen';
+    return power > 4.2 ? 'Über 4,2 kW · § 14a EnWG prüfen' : 'Bis 4,2 kW · § 14a-EnWG-Prüfung nicht automatisch';
+}
+
+function mkRenderSteuveNotice(asset) {
+    const power = mkGetPowerNumber(asset.power);
+    if (power === null) {
+        return '<p class="mk-steuve-editor-hint" role="note">Leistung eintragen. Ab mehr als 4,2 kW die Einordnung nach § 14a EnWG und die Anmeldung beim Netzbetreiber prüfen.</p>';
+    }
+    if (power > 4.2) {
+        return '<p class="mk-steuve-editor-notice" role="note"><b>Hinweis zu § 14a EnWG:</b> Bei mehr als 4,2 kW ist die Einordnung als steuerbare Verbrauchseinrichtung typischerweise zu prüfen. Bitte beim Netzbetreiber anmelden und das passende Modul für dieses Messkonzept abstimmen.</p>';
+    }
+    return '<p class="mk-steuve-editor-hint" role="note">Bis 4,2 kW liegt nicht automatisch eine § 14a-relevante Einordnung vor. Die fachliche Prüfung bleibt erforderlich.</p>';
+}
+
+function mkRenderSteuveModuleFields(asset) {
+    if (mkGetPowerNumber(asset.power) <= 4.2) return '';
+    return `
+        <label>§14a-Modul<select data-mk-field="steuveModule">${mkRenderSelectOptions(MK_STEUVE_MODULE_OPTIONS, asset.steuveModule, 'Noch offen')}</select></label>
+        <p class="mk-steuve-module-hint">Die Auswahl ist eine Vorprüfung und ersetzt keine Abstimmung mit dem Netzbetreiber.</p>
+    `;
+}
+
 function mkGetNshRegime(asset) {
     const year = Number(String(asset?.commissioningDate || '').slice(0, 4));
     if (!Number.isFinite(year) || year < 1900) return 'Einordnung offen · Abstimmung erforderlich';
@@ -209,7 +283,7 @@ function mkGetNshRegime(asset) {
  * werden können.
  */
 function mkGetConfiguredMeterCount() {
-    const topologyMeters = mkConfiguratorState.mode === 'cascade'
+    const topologyMeters = ['cascade', 'parallel'].includes(mkConfiguratorState.mode)
         ? mkConfiguratorState.cascadeLevels
         : 1;
     const additionalMeterAssets = mkConfiguratorState.assets.filter(asset => asset.type === 'meter').length;
@@ -226,8 +300,14 @@ function mkGetGenerationMeterNumber(asset) {
 
 function mkRenderAssetIcon(asset) {
     const meta = MK_ASSET_META[asset.type];
-    if (asset.type !== 'storage') return mkEscapeHtml(meta.short);
-    return '<span class="mk-storage-icon-generation" aria-hidden="true">EA</span><span class="mk-storage-icon-battery" aria-hidden="true"></span>';
+    if (asset.type === 'storage') return '<span class="mk-battery-symbol" aria-hidden="true"><span class="mk-battery-level"></span></span>';
+    if (asset.type === 'steuve') {
+        if (asset.steuveType === 'Wallbox') return '<span class="mk-charge-symbol" aria-hidden="true"><span class="mk-charge-bolt">⚡</span><span class="mk-charge-cable"></span></span>';
+        if (asset.steuveType === 'Wärmepumpe') return '<span class="mk-fan-symbol" aria-hidden="true"><span class="mk-fan-blade mk-fan-blade-1"></span><span class="mk-fan-blade mk-fan-blade-2"></span><span class="mk-fan-blade mk-fan-blade-3"></span><span class="mk-fan-hub"></span></span>';
+        const icons = { Klimaanlage: '❄' };
+        return mkEscapeHtml(icons[asset.steuveType] || meta.short);
+    }
+    return mkEscapeHtml(meta.short);
 }
 
 function mkRenderAsset(asset) {
@@ -240,6 +320,9 @@ function mkRenderAsset(asset) {
     const storageInfoMarkup = asset.type === 'storage' && mkConfiguratorState.viewMode === 'detail'
         ? `<span class="mk-storage-info" data-tooltip="${mkEscapeHtml(MK_STORAGE_INFO_TEXT)}" title="${mkEscapeHtml(MK_STORAGE_INFO_TEXT)}" role="img" tabindex="0" aria-label="Hinweis zum Speicher">i</span>`
         : '';
+    const balconyInfoMarkup = asset.type === 'generation' && asset.energyCarrier === 'Balkonkraftwerk' && mkConfiguratorState.viewMode === 'detail'
+        ? `<span class="mk-storage-info" data-tooltip="${mkEscapeHtml(MK_BALCONY_INFO_TEXT)}" title="${mkEscapeHtml(MK_BALCONY_INFO_TEXT)}" role="img" tabindex="0" aria-label="Hinweis zum Balkonkraftwerk">i</span>`
+        : '';
     const generationMeterMarkup = generationMeterNumber
         ? `<span class="mk-generation-meter" title="Eigener Erzeugungszähler Z${generationMeterNumber}" role="img" aria-label="Z${generationMeterNumber}: eigener Erzeugungszähler für ${mkEscapeHtml(asset.name)}"><b>Z${generationMeterNumber}</b></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`
         : '';
@@ -249,8 +332,8 @@ function mkRenderAsset(asset) {
             ${generationMeterMarkup}
             <article class="mk-asset-card ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" data-mk-select-asset="${mkEscapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${mkEscapeHtml(asset.name)} auswählen und verschieben">
                 <div class="mk-asset-head">
-                    <span class="mk-asset-icon ${meta.className}" aria-label="${asset.type === 'storage' ? 'Erzeugungsanlage und Speicher' : mkEscapeHtml(meta.label)}">${mkRenderAssetIcon(asset)}</span>
-                    <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b>${typeLabel ? `<small>${mkEscapeHtml(typeLabel)}</small>` : ''}</span>
+                    <span class="mk-asset-icon ${meta.className} ${mkGetSteuveIconClass(asset)}" aria-label="${asset.type === 'storage' ? 'Batteriespeicher' : mkEscapeHtml(typeLabel || meta.label)}">${mkRenderAssetIcon(asset)}</span>
+                    ${balconyInfoMarkup}
                     ${storageInfoMarkup}
                     <button type="button" class="mk-remove-asset" data-mk-remove-asset="${mkEscapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${mkEscapeHtml(asset.name)} entfernen">×</button>
                 </div>
@@ -260,13 +343,48 @@ function mkRenderAsset(asset) {
     `;
 }
 
+function mkGetAssetsPerRow(assetCount = MK_ASSETS_PER_ROW) {
+    if (mkConfiguratorState.viewMode === 'detail') {
+        return typeof window !== 'undefined' && window.matchMedia?.('(max-width: 480px)').matches
+            ? 1
+            : MK_ASSETS_PER_ROW;
+    }
+    return Math.max(MK_ASSETS_PER_ROW, Number(assetCount) || 0);
+}
+
+function mkGetSimpleCanvasMinimumWidth(assetCount) {
+    return 128 + (Math.max(MK_ASSETS_PER_ROW, Number(assetCount) || 0) * 66);
+}
+
+function mkGetParallelCanvasMinimumWidth(meterCount) {
+    const longestAssetRow = Math.max(
+        MK_ASSETS_PER_ROW,
+        ...Array.from({ length: meterCount }, (_, index) => mkGetZoneAssets(`parallel-${index}`).length)
+    );
+    const minimumBranchWidth = Math.max(364, (longestAssetRow * 132) - 32);
+    return (minimumBranchWidth * meterCount) + (Math.max(0, meterCount - 1) * 16);
+}
+
+function mkRenderAssetRows(assets) {
+    const rows = [];
+    const assetsPerRow = mkGetAssetsPerRow(assets.length);
+    for (let start = 0; start < assets.length; start += assetsPerRow) {
+        const rowAssets = assets.slice(start, start + assetsPerRow);
+        const rowClass = start === 0 ? 'primary' : 'secondary';
+        rows.push(`<div class="mk-asset-row ${rowClass}" style="--mk-asset-columns: ${rowAssets.length};">${rowAssets.map(mkRenderAsset).join('')}</div>`);
+    }
+    return rows.join('');
+}
+
 function mkRenderDropZone(zone, index) {
     const assets = mkGetZoneAssets(zone);
     const isRestricted = mkConfiguratorState.mode === 'cascade' && index === 0;
     const continuesCascade = mkConfiguratorState.mode === 'cascade' && index < mkConfiguratorState.cascadeLevels - 1;
+    const hasWrappedRows = assets.length > mkGetAssetsPerRow(assets.length);
+    const rowsMarkup = assets.length ? mkRenderAssetRows(assets) : '<div class="mk-empty-zone">Noch leer</div>';
     return `
         <div class="mk-drop-zone ${isRestricted ? 'restricted' : ''}" data-mk-zone="${mkEscapeHtml(zone)}" aria-label="${mkEscapeHtml(mkGetZoneLabel(index))}">
-            <div class="mk-zone-assets ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}${continuesCascade ? ' cascade-link-zone' : ''}">${assets.length ? assets.map(mkRenderAsset).join('') : '<div class="mk-empty-zone">Noch leer</div>'}</div>
+            <div class="mk-zone-assets ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}${continuesCascade ? ' cascade-link-zone' : ''}"><span class="mk-zone-junction" aria-hidden="true"></span>${hasWrappedRows ? '<span class="mk-zone-wrap-strand" aria-hidden="true"></span>' : ''}${rowsMarkup}</div>
         </div>
     `;
 }
@@ -289,14 +407,17 @@ function mkRenderMeterNode(index) {
 
 function mkRenderMeterLayout(index) {
     if (mkConfiguratorState.viewMode === 'detail') {
+        const meterSummary = mkRenderMeterDetailsSummary(index);
+        const meterSummaryMarkup = meterSummary
+            ? `<div class="mk-asset-detail-slide" aria-label="Details zu Z${index + 1}">${meterSummary}</div>`
+            : '';
         return `
             <div class="mk-meter-layout detail-mode">
                 <article class="mk-asset-card detail-mode mk-meter-detail-card" data-mk-select-meter="${index}" role="button" tabindex="0" aria-label="Z${index + 1} auswählen">
                     <div class="mk-asset-head">
-                        <span class="mk-asset-icon meter">Z</span>
-                        <span class="mk-asset-title"><b>Z${index + 1}</b></span>
+                        <span class="mk-asset-icon meter">Z${index + 1}</span>
                     </div>
-                    <div class="mk-asset-detail-slide" aria-label="Details zu Z${index + 1}">${mkRenderMeterDetailsSummary(index, true)}</div>
+                    ${meterSummaryMarkup}
                 </article>
                 <div class="mk-meter-detail-connection" aria-hidden="true"></div>
             </div>
@@ -328,7 +449,12 @@ function mkRenderAssetEditorFields(asset) {
         <label class="mk-check-row"><input type="checkbox" data-mk-field="generationMeter" ${asset.generationMeter ? 'checked' : ''}> Eigener Erzeugungszähler für diese EA</label>
     ` : '';
     const steuveFields = asset.type === 'steuve' ? `
-        <label>Art der SteuVE<select data-mk-field="steuveType">${mkRenderSelectOptions(MK_ASSET_TYPE_OPTIONS.steuve, asset.steuveType)}</select></label>
+        <div class="mk-asset-form-grid">
+            <label>Anlage<select data-mk-field="steuveType">${mkRenderSelectOptions(MK_ASSET_TYPE_OPTIONS.steuve, asset.steuveType)}</select></label>
+            <label>Leistung<input type="text" data-mk-field="power" value="${mkEscapeHtml(asset.power)}" placeholder="z. B. 11 kW"></label>
+        </div>
+        <div data-mk-steuve-notice="${mkEscapeHtml(asset.id)}">${mkRenderSteuveNotice(asset)}</div>
+        <div class="mk-asset-form-grid" data-mk-steuve-module-fields="${mkEscapeHtml(asset.id)}">${mkRenderSteuveModuleFields(asset)}</div>
     ` : '';
     const nshFields = asset.type === 'nsh' ? `
         <label>Bestand / Inbetriebnahme<input type="date" data-mk-field="commissioningDate" value="${mkEscapeHtml(asset.commissioningDate)}"></label>
@@ -355,7 +481,10 @@ function mkRenderAssetSummary(asset, includeEmpty = false) {
         asset.type === 'generation' ? { label: 'Leistung', value: asset.power } : null,
         asset.type === 'generation' ? { label: 'Inbetriebnahme', value: asset.commissioningDate } : null,
         asset.type === 'generation' ? { label: 'Erzeugungszähler', value: asset.generationMeter ? `Ja · Z${mkGetGenerationMeterNumber(asset)}` : (includeEmpty ? 'Nein' : '') } : null,
-        asset.type === 'steuve' ? { label: 'Art der SteuVE', value: asset.steuveType } : null,
+        asset.type === 'steuve' ? { label: 'Anlage', value: asset.steuveType || 'Steuerbare Anlage' } : null,
+        asset.type === 'steuve' ? { label: 'Leistung', value: asset.power } : null,
+        asset.type === 'steuve' ? { label: 'Einordnung', value: mkGetSteuveRegime(asset) } : null,
+        asset.type === 'steuve' ? { label: '§14a-Modul', value: asset.steuveModule } : null,
         asset.type === 'nsh' ? { label: 'Bestand / Inbetriebnahme', value: asset.commissioningDate } : null,
         asset.type === 'nsh' ? { label: 'Einordnung', value: mkGetNshRegime(asset) } : null,
         asset.type === 'storage' ? { label: 'Betriebsrolle', value: 'Erzeugung und Bezug · § 14a beim Bezug prüfen' } : null
@@ -366,12 +495,11 @@ function mkRenderAssetSummary(asset, includeEmpty = false) {
 function mkRenderMeterEditorFields(index) {
     const details = mkGetMeterDetails(index);
     const fields = MK_METER_DETAIL_FIELDS.map(field => `
-        <label>${mkEscapeHtml(field.label)}<input type="${field.type}" data-mk-meter-field="${mkEscapeHtml(field.key)}" data-mk-meter-index="${index}" value="${mkEscapeHtml(details[field.key])}"></label>
+        <label>${mkEscapeHtml(field.label)}<input type="${field.type}"${field.maxLength ? ` maxlength="${field.maxLength}"` : ''} data-mk-meter-field="${mkEscapeHtml(field.key)}" data-mk-meter-index="${index}" value="${mkEscapeHtml(details[field.key])}"></label>
     `).join('');
     return `
         <div class="mk-object-editor-head">
             <span class="mk-asset-icon meter">Z${index + 1}</span>
-            <span><b>Z${index + 1}</b><small>Zählerobjekt</small></span>
         </div>
         <div class="mk-object-editor-form"><div class="mk-meter-form">${fields}</div></div>
     `;
@@ -387,7 +515,7 @@ function mkRenderObjectEditor(selection) {
     if (!asset) return '<p class="mk-empty-editor">Objekt nicht mehr vorhanden.</p>';
     return `
         <div class="mk-object-editor-head">
-            <span class="mk-asset-icon ${MK_ASSET_META[asset.type].className}" aria-label="${asset.type === 'storage' ? 'Erzeugungsanlage und Speicher' : mkEscapeHtml(MK_ASSET_META[asset.type].label)}">${mkRenderAssetIcon(asset)}</span>
+            <span class="mk-asset-icon ${MK_ASSET_META[asset.type].className} ${mkGetSteuveIconClass(asset)}" aria-label="${asset.type === 'storage' ? 'Batteriespeicher' : mkEscapeHtml(mkGetAssetTypeLabel(asset) || MK_ASSET_META[asset.type].label)}">${mkRenderAssetIcon(asset)}</span>
             <span><b>${mkEscapeHtml(asset.name)}</b><small>${mkEscapeHtml(MK_ASSET_META[asset.type].label)}</small></span>
         </div>
         ${mkRenderAssetEditorFields(asset)}
@@ -425,28 +553,76 @@ function mkCloseObjectModal() {
 function mkRenderHakMeterRow() {
     return `
         <div class="mk-supply-column ${mkConfiguratorState.viewMode === 'detail' ? 'has-details' : ''}" aria-label="Hausanschlusskasten mit erstem Zähler">
-            <div class="mk-hak-node" title="Hausanschlusskasten" data-tooltip="HAK = Hausanschlusskasten" role="img" tabindex="0" aria-label="HAK = Hausanschlusskasten"><b>HAK</b></div>
-            <div class="mk-supply-connector" aria-label="Eigentumsgrenze">
-                <span class="mk-ownership-marker" title="Eigentumsgrenze"></span>
-                <span class="mk-ownership-label">Eigentumsgrenze</span>
-                <i class="mk-supply-line"></i>
-            </div>
+            ${mkRenderHakNode()}
+            ${mkRenderOwnershipConnector()}
             ${mkRenderMeterLayout(0)}
+        </div>
+    `;
+}
+
+function mkRenderHakNode() {
+    return '<div class="mk-hak-node" title="Hausanschlusskasten" data-tooltip="HAK = Hausanschlusskasten" role="img" tabindex="0" aria-label="HAK = Hausanschlusskasten"><b>HAK</b></div>';
+}
+
+function mkRenderOwnershipConnector() {
+    return `
+        <div class="mk-supply-connector" aria-label="Eigentumsgrenze">
+            <span class="mk-ownership-marker" title="Eigentumsgrenze"></span>
+            <span class="mk-ownership-label">Eigentumsgrenze</span>
+            <i class="mk-supply-line"></i>
+        </div>
+    `;
+}
+
+function mkRenderParallelCanvas() {
+    const branches = [];
+    for (let index = 0; index < mkConfiguratorState.cascadeLevels; index += 1) {
+        branches.push(`
+            <div class="mk-parallel-branch">
+                <span class="mk-parallel-branch-connector" aria-hidden="true"></span>
+                ${mkRenderMeterLayout(index)}
+                ${mkRenderDropZone(`parallel-${index}`, index)}
+            </div>
+        `);
+    }
+    const minimumCanvasWidth = mkGetParallelCanvasMinimumWidth(mkConfiguratorState.cascadeLevels);
+    return `
+        <div class="mk-parallel-stack" style="--mk-parallel-min-width: ${minimumCanvasWidth}px;">
+            <div class="mk-parallel-hak-head" aria-label="Hausanschlusskasten mit Eigentumsgrenze">
+                ${mkRenderHakNode()}
+                ${mkRenderOwnershipConnector()}
+            </div>
+            <div class="mk-parallel-feed" aria-hidden="true"></div>
+            <div class="mk-parallel-branches">
+                ${branches.join('')}
+            </div>
         </div>
     `;
 }
 
 function mkRenderCanvas() {
     if (!mkElements.canvas) return;
+    if (mkConfiguratorState.mode === 'parallel') {
+        mkElements.canvas.innerHTML = mkRenderParallelCanvas();
+        return;
+    }
     if (mkConfiguratorState.mode === 'single') {
+        const minimumCanvasWidth = mkGetSimpleCanvasMinimumWidth(mkGetZoneAssets('single-main').length);
         mkElements.canvas.innerHTML = `
-            ${mkRenderHakMeterRow()}
-            ${mkRenderDropZone('single-main', 0)}
+            <div class="mk-single-stack" style="--mk-cascade-min-width: ${minimumCanvasWidth}px;">
+                ${mkRenderHakMeterRow()}
+                ${mkRenderDropZone('single-main', 0)}
+            </div>
         `;
         return;
     }
 
     const levels = [];
+    const longestAssetRow = Math.max(
+        MK_ASSETS_PER_ROW,
+        ...Array.from({ length: mkConfiguratorState.cascadeLevels }, (_, index) => mkGetZoneAssets(`cascade-${index}`).length)
+    );
+    const minimumCanvasWidth = mkGetSimpleCanvasMinimumWidth(longestAssetRow);
     for (let i = 0; i < mkConfiguratorState.cascadeLevels; i += 1) {
         const meterMarkup = i === 0
             ? mkRenderHakMeterRow()
@@ -458,7 +634,7 @@ function mkRenderCanvas() {
             </div>
         `);
     }
-    mkElements.canvas.innerHTML = `<div class="mk-cascade-stack">${levels.join('<div class="mk-cascade-arrow" aria-hidden="true"></div>')}</div>`;
+    mkElements.canvas.innerHTML = `<div class="mk-cascade-stack" style="--mk-cascade-min-width: ${minimumCanvasWidth}px;">${levels.join('<div class="mk-cascade-arrow" aria-hidden="true"></div>')}</div>`;
 }
 
 function mkValidation() {
@@ -466,6 +642,7 @@ function mkValidation() {
     const generations = assets.filter(asset => asset.type === 'generation');
     const consumers = assets.filter(asset => asset.type === 'consumer');
     const steuves = assets.filter(asset => asset.type === 'steuve');
+    const overThresholdSteuves = steuves.filter(asset => mkGetPowerNumber(asset.power) > 4.2);
     const storages = assets.filter(asset => asset.type === 'storage');
     const nshAssets = assets.filter(asset => asset.type === 'nsh');
     const extraMeters = assets.filter(asset => asset.type === 'meter');
@@ -485,6 +662,10 @@ function mkValidation() {
         checks.push({ level: 'warning', text: `Speicher bleibt ein eigenes Objekt. Betriebsrolle (Erzeugung und Bezug) fachlich festlegen. ${MK_STORAGE_INFO_TEXT}` });
     }
 
+    if (overThresholdSteuves.length) {
+        checks.push({ level: 'warning', text: `${overThresholdSteuves.length} steuerbare ${overThresholdSteuves.length === 1 ? 'Anlage liegt' : 'Anlagen liegen'} über 4,2 kW. Einordnung nach § 14a EnWG, Anmeldung und passendes Modul beim Netzbetreiber prüfen.` });
+    }
+
     if (nshAssets.length) {
         const hasPre2024Asset = nshAssets.some(asset => {
             const year = Number(String(asset.commissioningDate || '').slice(0, 4));
@@ -498,7 +679,7 @@ function mkValidation() {
 
     if (mkConfiguratorState.mode === 'single') {
         if (steuves.length && consumers.length) {
-            checks.push({ level: 'warning', text: 'SteuVE und weitere Verbraucher liegen im selben Messbereich. Tarif- und Messabgrenzung fachlich prüfen.' });
+            checks.push({ level: 'warning', text: 'Steuerbare Anlagen und weitere Verbraucher liegen im selben Messbereich. Tarif- und Messabgrenzung fachlich prüfen.' });
         }
         if (generations.some(asset => asset.generationMeter)) {
             checks.push({ level: 'ok', text: 'Mindestens eine EA ist mit eigener Erzeugungsmessung markiert.' });
@@ -520,6 +701,17 @@ function mkValidation() {
             checks.push({ level: 'warning', text: 'Mehrstufige Kaskade: Zählerreihenfolge, Abrechnung und Messstellenbetrieb separat prüfen.' });
         }
         checks.push({ level: 'ok', text: `Differenzlogik für ${mkConfiguratorState.cascadeLevels} Zähler vorbereitet.` });
+    }
+
+    if (mkConfiguratorState.mode === 'parallel') {
+        const emptyBranches = [];
+        for (let index = 0; index < mkConfiguratorState.cascadeLevels; index += 1) {
+            if (!mkGetZoneAssets(`parallel-${index}`).length) emptyBranches.push(`Z${index + 1}`);
+        }
+        checks.push({ level: 'ok', text: `Parallelmessung mit ${mkConfiguratorState.cascadeLevels} direkt verzweigten Zählern vorbereitet.` });
+        if (emptyBranches.length) {
+            checks.push({ level: 'warning', text: `${emptyBranches.join(', ')} hat noch keinen zugeordneten Messbereich.` });
+        }
     }
 
     return checks;
@@ -546,7 +738,7 @@ function mkRenderMeasurementSummary() {
         lines.push('<b>Z1</b> misst Bezug und Lieferung der Gesamtanlage.');
         if (generationMeters.length) lines.push(`<b>Erzeugungsmessung</b> für ${generationMeters.map(asset => `Z${mkGetGenerationMeterNumber(asset)} · ${mkEscapeHtml(asset.name)}`).join(', ')} markiert.`);
         if (!generationMeters.length) lines.push('EA werden zunächst gemeinsam hinter Z1 erfasst.');
-    } else {
+    } else if (mkConfiguratorState.mode === 'cascade') {
         for (let index = 0; index < mkConfiguratorState.cascadeLevels; index += 1) {
             const zoneAssets = mkGetZoneAssets(`cascade-${index}`);
             const names = zoneAssets.filter(asset => asset.type !== 'meter').map(asset => mkEscapeHtml(asset.name));
@@ -554,6 +746,13 @@ function mkRenderMeasurementSummary() {
             lines.push(`<b>Z${index + 1}</b> ${index === 0 ? 'Netzbezug / Lieferung' : `Differenz ${formula}`}${names.length ? ` · ${names.join(', ')}` : ''}.`);
         }
         if (generationMeters.length) lines.push(`<b>Eigene Erzeugungszähler:</b> ${generationMeters.map(asset => `Z${mkGetGenerationMeterNumber(asset)} · ${mkEscapeHtml(asset.name)}`).join(', ')}.`);
+    } else {
+        for (let index = 0; index < mkConfiguratorState.cascadeLevels; index += 1) {
+            const zoneAssets = mkGetZoneAssets(`parallel-${index}`);
+            const names = zoneAssets.filter(asset => asset.type !== 'meter').map(asset => mkEscapeHtml(asset.name));
+            lines.push(`<b>Z${index + 1}</b> misst einen eigenen Parallelzweig ohne Differenzbildung${names.length ? ` · ${names.join(', ')}` : ''}.`);
+        }
+        lines.push('Der HAK teilt die Anlage direkt auf die Zählerzweige auf.');
     }
 
     mkElements.measurementSummary.innerHTML = lines.map(line => `<p>${line}</p>`).join('');
@@ -569,6 +768,33 @@ function mkRefreshInlineStatus() {
     }
 }
 
+function mkUpdateSimpleAssetStrands() {
+    if (!mkElements.canvas || mkConfiguratorState.viewMode !== 'simple') return;
+    mkElements.canvas.querySelectorAll('.mk-zone-assets.simple-mode').forEach(zone => {
+        const junction = zone.querySelector('.mk-zone-junction');
+        const branches = [...zone.querySelectorAll('.mk-asset-branch')];
+        if (!junction) return;
+        const junctionRect = junction.getBoundingClientRect();
+        const lastBranch = branches[branches.length - 1];
+        const lastBranchRect = lastBranch?.getBoundingClientRect();
+        const originX = junctionRect.left + (junctionRect.width / 2);
+        const endX = lastBranchRect
+            ? lastBranchRect.left + (lastBranchRect.width / 2)
+            : originX + 48;
+        zone.style.setProperty('--mk-zone-bus-width-px', `${Math.max(0, endX - originX)}px`);
+    });
+}
+
+function mkCenterParallelViewport() {
+    if (!mkElements.canvas || mkConfiguratorState.mode !== 'parallel') return;
+    const stack = mkElements.canvas.querySelector('.mk-parallel-stack');
+    if (!stack) return;
+    const layoutKey = `${mkConfiguratorState.mode}:${Math.round(stack.getBoundingClientRect().width)}`;
+    if (mkElements.canvas.dataset.mkViewportLayout === layoutKey) return;
+    mkElements.canvas.scrollLeft = Math.max(0, (stack.getBoundingClientRect().width - mkElements.canvas.clientWidth) / 2);
+    mkElements.canvas.dataset.mkViewportLayout = layoutKey;
+}
+
 function mkRender() {
     if (!mkElements.canvas) return;
     document.querySelectorAll('[data-mk-mode]').forEach(button => {
@@ -577,8 +803,9 @@ function mkRender() {
         button.setAttribute('aria-pressed', String(active));
     });
     document.querySelectorAll('[data-mk-level]').forEach(button => {
-        const active = mkConfiguratorState.mode === 'cascade' && Number(button.dataset.mkLevel) === mkConfiguratorState.cascadeLevels;
-        button.disabled = mkConfiguratorState.mode !== 'cascade';
+        const meterCountMode = ['cascade', 'parallel'].includes(mkConfiguratorState.mode);
+        const active = meterCountMode && Number(button.dataset.mkLevel) === mkConfiguratorState.cascadeLevels;
+        button.disabled = !meterCountMode;
         button.classList.toggle('active', active);
         button.setAttribute('aria-pressed', String(active));
     });
@@ -588,6 +815,10 @@ function mkRender() {
         button.setAttribute('aria-pressed', String(active));
     });
     mkRenderCanvas();
+    window.requestAnimationFrame(() => {
+        mkUpdateSimpleAssetStrands();
+        mkCenterParallelViewport();
+    });
     mkRefreshInlineStatus();
 }
 
@@ -605,7 +836,7 @@ function mkHandleDrop(event, zone) {
     if (!transfer) return;
 
     if (transfer.source === 'palette' && MK_ASSET_META[transfer.type]) {
-        mkAddAsset(transfer.type, zone);
+        mkAddAsset(transfer.type, zone, transfer.steuveType || '', transfer.energyCarrier || '');
     }
     if (transfer.source === 'asset') {
         const asset = mkConfiguratorState.assets.find(item => item.id === transfer.id);
@@ -623,6 +854,12 @@ function mkUpdateAssetField(event) {
     if (!asset) return;
     const field = event.target.dataset.mkField;
     asset[field] = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    if (asset.type === 'steuve' && ['power', 'steuveType'].includes(field)) {
+        const notice = document.querySelector(`[data-mk-steuve-notice="${asset.id}"]`);
+        if (notice) notice.innerHTML = mkRenderSteuveNotice(asset);
+        const moduleFields = document.querySelector(`[data-mk-steuve-module-fields="${asset.id}"]`);
+        if (moduleFields) moduleFields.innerHTML = mkRenderSteuveModuleFields(asset);
+    }
     mkRefreshInlineStatus();
 }
 
@@ -644,7 +881,7 @@ function mkGetExportStand() {
 
 function mkRenderExportDetails() {
     const meterBlocks = [];
-    const meterCount = mkConfiguratorState.mode === 'cascade' ? mkConfiguratorState.cascadeLevels : 1;
+    const meterCount = ['cascade', 'parallel'].includes(mkConfiguratorState.mode) ? mkConfiguratorState.cascadeLevels : 1;
     for (let index = 0; index < meterCount; index += 1) {
         meterBlocks.push(`<article class="mk-print-detail-block"><h4>Z${index + 1} · Zähler</h4>${mkRenderMeterDetailsSummary(index, true)}</article>`);
     }
@@ -662,7 +899,7 @@ function mkRenderPrintSheet(stand) {
         <section class="mk-print-sheet" aria-label="Messkonzept-Export">
             <header class="mk-print-header">
                 <div><span class="mk-print-kicker">Wattspur · Messkonzept-Konfigurator</span><h1>Messkonzept</h1></div>
-                <div class="mk-print-meta"><b>Exportstand</b><span>${mkEscapeHtml(stand.label)}</span><span>${mkConfiguratorState.mode === 'cascade' ? `Kaskade · ${mkConfiguratorState.cascadeLevels} Zähler` : '1 Zähler'}</span></div>
+                <div class="mk-print-meta"><b>Exportstand</b><span>${mkEscapeHtml(stand.label)}</span><span>${mkConfiguratorState.mode === 'cascade' ? `Kaskade · ${mkConfiguratorState.cascadeLevels} Zähler` : mkConfiguratorState.mode === 'parallel' ? `Parallelmessung · ${mkConfiguratorState.cascadeLevels} Zähler` : '1 Zähler'}</span></div>
             </header>
             <p class="mk-print-notice">Dieser Export dokumentiert den zum Ausgabezeitpunkt erfassten Stand. Spätere Änderungen am Konzept sind in dieser Datei nicht enthalten. Die Skizze ist eine unverbindliche Orientierung und ersetzt keine fachliche Prüfung.</p>
             <section class="mk-print-topology"><h2>Messskizze</h2>${topology}</section>
@@ -751,7 +988,7 @@ function mkInitialize() {
     };
     if (!mkElements.canvas) return;
 
-    ['btn-open-messkonzept', 'btn-open-messkonzept-card', 'btn-open-messkonzept-teaser'].forEach(id => {
+    ['btn-open-messkonzept-card'].forEach(id => {
         const button = document.getElementById(id);
         if (button) button.addEventListener('click', mkShowScreen);
     });
@@ -775,10 +1012,15 @@ function mkInitialize() {
     });
 
     document.querySelectorAll('.mk-palette-item').forEach(button => {
-        if (button.dataset.mkLegendOnly === 'true') return;
         button.addEventListener('dragstart', event => {
             event.dataTransfer.effectAllowed = 'copy';
-            event.dataTransfer.setData('application/json', JSON.stringify({ source: 'palette', type: button.dataset.mkType }));
+            event.dataTransfer.setData('application/json', JSON.stringify({ source: 'palette', type: button.dataset.mkType, steuveType: button.dataset.mkSteuveType || '', energyCarrier: button.dataset.mkEnergyCarrier || '' }));
+        });
+        button.addEventListener('click', () => {
+            const type = button.dataset.mkType;
+            if (!MK_ASSET_META[type]) return;
+            mkAddAsset(type, mkDefaultZone(), button.dataset.mkSteuveType || '', button.dataset.mkEnergyCarrier || '');
+            mkNotify(`${button.querySelector('.mk-palette-label')?.textContent || 'Baustein'} eingefügt.`, 'info');
         });
     });
 
@@ -787,6 +1029,11 @@ function mkInitialize() {
         if (!zone) return;
         event.preventDefault();
         zone.classList.add('dragover');
+    });
+    let mkResizeTimer = null;
+    window.addEventListener('resize', () => {
+        window.clearTimeout(mkResizeTimer);
+        mkResizeTimer = window.setTimeout(() => mkRender(), 120);
     });
     mkElements.canvas.addEventListener('dragleave', event => {
         const zone = event.target.closest('[data-mk-zone]');
