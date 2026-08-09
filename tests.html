@@ -1018,6 +1018,7 @@ Datum;Uhrzeit;Verbrauch
             assert(indexText.includes('<details id="transparency"'), 'Ausführliche Hinweise müssen standardmäßig einklappbar sein');
             assert(indexText.includes('id="messkonzept-screen"'), 'Der Messkonzept-Konfigurator muss als eigener Bildschirm vorhanden sein');
             assert(indexText.includes('data-mk-type="generation"') && indexText.includes('data-mk-type="steuve"') && indexText.includes('>SteuVE</span>') && !indexText.includes('data-mk-type="steuve"><span class="mk-palette-icon steuve">S</span>'), 'Bausteine für EA und SteuVE müssen auswählbar sein und die Bezeichnung eindeutig anzeigen');
+            assert(!indexText.includes('mk-palette-hint') && !(await fetchPublishedSource('styles.css?beta-copy=1')).includes('mk-palette-hint'), 'Die Bausteinleiste darf keinen zusätzlichen Erklärungskasten anzeigen');
             assert(indexText.includes('data-mk-view="simple"') && indexText.includes('data-mk-view="detail"') && indexText.includes('mk-control-label'), 'Die Darstellung muss zwischen Einfach- und Detailansicht umschaltbar sein');
             assert(indexText.includes('Darstellung') && indexText.includes('Messkonzept') && indexText.includes('Einzähler') && indexText.includes('Mehrzähler'), 'Die Auswahlgruppen müssen verständlich beschriftet sein');
             assert(indexText.includes('mk-object-modal') && indexText.includes('btn-mk-modal-done'), 'Objektdetails müssen in einem separaten Fenster erfasst werden können');

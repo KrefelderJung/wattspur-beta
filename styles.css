@@ -989,17 +989,6 @@ body {
     transform: translateX(-50%);
 }
 
-.mk-palette-hint {
-    margin-top: 1rem;
-    padding: 0.7rem;
-    border-left: 3px solid var(--secondary-color);
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    background: rgba(45, 212, 191, 0.06);
-    font-size: 0.72rem;
-    line-height: 1.45;
-}
-
 .mk-builder-card {
     overflow: hidden;
 }
@@ -1880,8 +1869,7 @@ body.mk-modal-open {
         gap: 0.55rem;
     }
 
-    .mk-palette .mk-panel-heading,
-    .mk-palette-hint {
+    .mk-palette .mk-panel-heading {
         grid-column: 1 / -1;
     }
 
@@ -1991,8 +1979,7 @@ body.mk-modal-open {
         grid-template-columns: 1fr;
     }
 
-    .mk-palette .mk-panel-heading,
-    .mk-palette-hint {
+    .mk-palette .mk-panel-heading {
         grid-column: auto;
     }
 
