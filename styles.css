@@ -1471,6 +1471,10 @@ body.mk-modal-open {
 .mk-zone-assets.simple-mode .mk-asset-card {
     width: max-content;
     min-width: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
     justify-self: center;
 }
 
@@ -1523,7 +1527,8 @@ body.mk-modal-open {
 }
 
 .mk-zone-assets.simple-mode .mk-asset-head {
-    padding: 0.4rem;
+    padding: 0;
+    gap: 0;
 }
 
 .mk-zone-assets.simple-mode .mk-asset-title {
@@ -1531,22 +1536,32 @@ body.mk-modal-open {
 }
 
 .mk-zone-assets.simple-mode .mk-asset-icon {
-    width: 42px;
-    min-width: 42px;
-    height: 34px;
-    flex-basis: 42px;
+    width: 3.5rem;
+    min-width: 3.5rem;
+    height: 2.75rem;
+    flex-basis: 3.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.35rem 0.9rem rgba(2, 6, 23, 0.22);
 }
 
 .mk-zone-assets.simple-mode .mk-asset-icon.steuve {
-    width: 68px;
-    min-width: 68px;
-    flex-basis: 68px;
+    width: 4.75rem;
+    min-width: 4.75rem;
+    flex-basis: 4.75rem;
     font-size: 0.68rem;
 }
 
 .mk-zone-assets.simple-mode .mk-remove-asset {
-    top: -0.35rem;
-    right: -0.55rem;
+    top: -0.4rem;
+    right: -0.4rem;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--surface-color);
+    box-shadow: 0 0.2rem 0.45rem rgba(2, 6, 23, 0.25);
+    font-size: 0.76rem;
+    opacity: 0.92;
 }
 
 .mk-zone-assets.detail-mode {
