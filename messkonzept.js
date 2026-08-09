@@ -146,6 +146,7 @@ function mkChangeMode(mode) {
     if (!['single', 'cascade'].includes(mode) || mode === mkConfiguratorState.mode) return;
 
     if (mode === 'cascade') {
+        mkConfiguratorState.cascadeLevels = 2;
         mkConfiguratorState.assets.forEach(asset => {
             asset.zone = `cascade-${Math.max(0, mkConfiguratorState.cascadeLevels - 1)}`;
         });
@@ -159,6 +160,7 @@ function mkChangeMode(mode) {
 }
 
 function mkChangeCascadeLevels(levels) {
+    if (mkConfiguratorState.mode !== 'cascade') return;
     const parsed = Math.min(4, Math.max(2, Number(levels) || 2));
     mkConfiguratorState.cascadeLevels = parsed;
     mkConfiguratorState.assets.forEach(asset => {
@@ -178,7 +180,6 @@ function mkGetZoneAssets(zone) {
 
 function mkGetZoneLabel(index) {
     if (mkConfiguratorState.mode !== 'cascade') return 'Hinter Z1 · Verbraucher- und Anlagenbereich';
-    if (index === 0) return 'Zwischen Z1 und Z2 · eingeschränkter Kaskadenbereich';
     if (index === mkConfiguratorState.cascadeLevels - 1) return `Hinter Z${index + 1} · Verbraucher- und Anlagenbereich`;
     return `Zwischen Z${index + 1} und Z${index + 2} · Kaskadenstufe`;
 }
@@ -564,14 +565,22 @@ function mkRefreshInlineStatus() {
 
 function mkRender() {
     if (!mkElements.canvas) return;
-    document.querySelectorAll('[data-mk-mode]').forEach(button => button.classList.toggle('active', button.dataset.mkMode === mkConfiguratorState.mode));
+    document.querySelectorAll('[data-mk-mode]').forEach(button => {
+        const active = button.dataset.mkMode === mkConfiguratorState.mode;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+    });
+    document.querySelectorAll('[data-mk-level]').forEach(button => {
+        const active = mkConfiguratorState.mode === 'cascade' && Number(button.dataset.mkLevel) === mkConfiguratorState.cascadeLevels;
+        button.disabled = mkConfiguratorState.mode !== 'cascade';
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+    });
     document.querySelectorAll('[data-mk-view]').forEach(button => {
         const active = button.dataset.mkView === mkConfiguratorState.viewMode;
         button.classList.toggle('active', active);
         button.setAttribute('aria-pressed', String(active));
     });
-    if (mkElements.cascadeControls) mkElements.cascadeControls.classList.toggle('hidden', mkConfiguratorState.mode !== 'cascade');
-    if (mkElements.cascadeLevels) mkElements.cascadeLevels.value = String(mkConfiguratorState.cascadeLevels);
     mkRenderCanvas();
     mkRefreshInlineStatus();
 }
@@ -730,8 +739,6 @@ function mkInitialize() {
         validation: document.getElementById('mk-validation-list'),
         statusBadge: document.getElementById('mk-status-badge'),
         measurementSummary: document.getElementById('mk-measurement-summary'),
-        cascadeControls: document.getElementById('mk-cascade-controls'),
-        cascadeLevels: document.getElementById('mk-cascade-levels'),
         objectModal: document.getElementById('mk-object-modal'),
         objectModalContent: document.getElementById('mk-object-modal-content'),
         objectModalTitle: document.getElementById('mk-object-modal-title')
@@ -749,8 +756,8 @@ function mkInitialize() {
     });
     document.getElementById('btn-mk-export-pdf')?.addEventListener('click', mkDownloadPdf);
     document.getElementById('btn-mk-export-json')?.addEventListener('click', mkDownloadJson);
-    mkElements.cascadeLevels?.addEventListener('change', event => mkChangeCascadeLevels(event.target.value));
     document.querySelectorAll('[data-mk-mode]').forEach(button => button.addEventListener('click', () => mkChangeMode(button.dataset.mkMode)));
+    document.querySelectorAll('[data-mk-level]').forEach(button => button.addEventListener('click', () => mkChangeCascadeLevels(button.dataset.mkLevel)));
     document.querySelectorAll('[data-mk-view]').forEach(button => button.addEventListener('click', () => mkChangeViewMode(button.dataset.mkView)));
     document.getElementById('btn-mk-modal-close')?.addEventListener('click', mkCloseObjectModal);
     document.getElementById('btn-mk-modal-done')?.addEventListener('click', mkCloseObjectModal);

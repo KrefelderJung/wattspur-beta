@@ -243,16 +243,17 @@
                                 <div class="mk-control-group">
                                     <span class="mk-control-label">Messkonzept</span>
                                     <div class="mk-topology-switch" role="group" aria-label="Messkonzept">
-                                        <button type="button" class="mk-topology-btn active" data-mk-mode="single" title="Ein Messzähler für den Messbereich">Einzähler</button>
-                                        <button type="button" class="mk-topology-btn" data-mk-mode="cascade" title="Zwei oder mehr Zähler in Reihe">Mehrzähler</button>
+                                        <button type="button" class="mk-topology-btn active" data-mk-mode="single" aria-pressed="true" title="Ein Messzähler für den Messbereich">Einzähler</button>
+                                        <button type="button" class="mk-topology-btn" data-mk-mode="cascade" aria-pressed="false" title="Mehrere Zähler in Reihe, startet mit zwei Zählern">Mehrzähler</button>
+                                        <span class="mk-meter-count-divider" aria-hidden="true"></span>
+                                        <div class="mk-meter-count-switch" role="group" aria-label="Zähleranzahl in der Kaskade">
+                                            <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="2" aria-pressed="false" disabled title="Kaskade mit zwei Zählern">2</button>
+                                            <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="3" aria-pressed="false" disabled title="Kaskade mit drei Zählern">3</button>
+                                            <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="4" aria-pressed="false" disabled title="Kaskade mit vier Zählern">4</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div id="mk-cascade-controls" class="mk-cascade-controls hidden">
-                            <label for="mk-cascade-levels">Zähler in Reihe</label>
-                            <select id="mk-cascade-levels"><option value="2">2 Zähler</option><option value="3">3 Zähler</option><option value="4">4 Zähler</option></select>
-                            <span>Die oberste Zone wird konservativ als eingeschränkter Kaskadenbereich markiert.</span>
                         </div>
                         <div id="mk-canvas" class="mk-canvas" aria-live="polite"></div>
                         <div class="mk-canvas-footer"><button type="button" class="btn btn-secondary btn-sm" id="btn-mk-reset">Schema zurücksetzen</button><span id="mk-canvas-status">Bereit für Bausteine.</span></div>
