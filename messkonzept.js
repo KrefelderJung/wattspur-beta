@@ -118,7 +118,6 @@ function mkAddAsset(type, zone = mkDefaultZone()) {
     if (!MK_ASSET_META[type]) return;
     const asset = mkCreateAsset(type, zone);
     mkConfiguratorState.assets.push(asset);
-    mkConfiguratorState.selectedObject = { kind: 'asset', id: asset.id };
     mkRender();
 }
 
@@ -192,14 +191,13 @@ function mkGetAssetTypeLabel(asset) {
 
 function mkRenderAsset(asset) {
     const meta = MK_ASSET_META[asset.type];
-    const isSelected = mkConfiguratorState.selectedObject?.kind === 'asset' && mkConfiguratorState.selectedObject.id === asset.id;
     const detailMarkup = mkConfiguratorState.viewMode === 'detail'
         ? `<div class="mk-asset-detail-slide" aria-label="Details zu ${mkEscapeHtml(asset.name)}">${mkRenderAssetSummary(asset, true)}</div>`
         : '';
     const typeLabel = mkGetAssetTypeLabel(asset);
 
     return `
-        <article class="mk-asset-card ${isSelected ? 'selected' : ''} ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" data-mk-select-asset="${mkEscapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${mkEscapeHtml(asset.name)} auswählen und verschieben">
+        <article class="mk-asset-card ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" data-mk-select-asset="${mkEscapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${mkEscapeHtml(asset.name)} auswählen und verschieben">
             <div class="mk-asset-head">
                 <span class="mk-asset-icon ${meta.className}">${meta.short}</span>
                 <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b>${typeLabel ? `<small>${mkEscapeHtml(typeLabel)}</small>` : ''}</span>
@@ -229,9 +227,8 @@ function mkRenderMeterDetailsSummary(index, includeEmpty = false) {
 }
 
 function mkRenderMeterNode(index) {
-    const isSelected = mkConfiguratorState.selectedObject?.kind === 'meter' && mkConfiguratorState.selectedObject.index === index;
     return `
-        <div class="mk-meter-node ${isSelected ? 'selected' : ''}" data-mk-select-meter="${index}" role="button" tabindex="0" aria-label="Z${index + 1} auswählen">
+        <div class="mk-meter-node" data-mk-select-meter="${index}" role="button" tabindex="0" aria-label="Z${index + 1} auswählen">
             <span class="mk-meter-symbol">Z${index + 1}</span>
         </div>
     `;

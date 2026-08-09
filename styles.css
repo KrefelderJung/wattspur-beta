@@ -1354,12 +1354,6 @@ body {
     font-weight: 900;
 }
 
-.mk-meter-node.selected .mk-meter-symbol,
-.mk-asset-card.selected {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-}
-
 .mk-connection-line {
     width: 1px;
     height: 1.2rem;
@@ -1578,17 +1572,6 @@ body.mk-modal-open {
     height: 1.35rem;
     background: var(--primary-color);
     transform: translateX(-50%);
-}
-
-.mk-zone-assets.detail-mode .mk-asset-card::after {
-    content: '';
-    position: absolute;
-    z-index: 0;
-    top: 1.85rem;
-    right: -0.7rem;
-    left: -0.7rem;
-    height: 2px;
-    background: var(--primary-color);
 }
 
 .mk-zone-assets.detail-mode .mk-asset-card .mk-asset-head,
