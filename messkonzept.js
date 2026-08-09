@@ -11,7 +11,7 @@ const MK_ASSET_META = Object.freeze({
     consumer: { label: 'Verbraucher', short: 'V', className: 'consumer', detail: 'Allgemeine Last' },
     steuve: { label: 'SteuVE', short: 'SteuVE', className: 'steuve', detail: 'Steuerbare Verbrauchseinrichtung' },
     storage: { label: 'Speicher', short: '▤', className: 'storage', detail: 'Speicheranlage' },
-    nsh: { label: 'Nachtspeicher- / Fußbodenheizung', short: 'NSH', className: 'nsh', detail: 'Historische Tarif- und Messbehandlung prüfen' }
+    nsh: { label: 'Nachtspeicherheizung', short: 'NSH', className: 'nsh', detail: 'Historische Tarif- und Messbehandlung prüfen' }
 });
 
 const MK_ASSET_TYPE_OPTIONS = Object.freeze({
@@ -95,7 +95,7 @@ function mkCreateAsset(type, zone) {
         consumer: `Verbraucher ${sameType}`,
         steuve: `SteuVE ${sameType}`,
         storage: `Speicher ${sameType}`,
-        nsh: `NSH / FBH ${sameType}`
+        nsh: `Nachtspeicherheizung ${sameType}`
     };
 
     return {
@@ -224,6 +224,12 @@ function mkGetGenerationMeterNumber(asset) {
     return generationIndex < 0 ? null : mkGetConfiguredMeterCount() + generationIndex + 1;
 }
 
+function mkRenderAssetIcon(asset) {
+    const meta = MK_ASSET_META[asset.type];
+    if (asset.type !== 'storage') return mkEscapeHtml(meta.short);
+    return '<span class="mk-storage-icon-generation" aria-hidden="true">EA</span><span class="mk-storage-icon-battery" aria-hidden="true"></span>';
+}
+
 function mkRenderAsset(asset) {
     const meta = MK_ASSET_META[asset.type];
     const detailMarkup = mkConfiguratorState.viewMode === 'detail'
@@ -243,7 +249,7 @@ function mkRenderAsset(asset) {
             ${generationMeterMarkup}
             <article class="mk-asset-card ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" draggable="true" data-mk-asset-id="${mkEscapeHtml(asset.id)}" data-mk-drag-asset="${mkEscapeHtml(asset.id)}" data-mk-select-asset="${mkEscapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${mkEscapeHtml(asset.name)} auswählen und verschieben">
                 <div class="mk-asset-head">
-                    <span class="mk-asset-icon ${meta.className}">${meta.short}</span>
+                    <span class="mk-asset-icon ${meta.className}" aria-label="${asset.type === 'storage' ? 'Erzeugungsanlage und Speicher' : mkEscapeHtml(meta.label)}">${mkRenderAssetIcon(asset)}</span>
                     <span class="mk-asset-title"><b>${mkEscapeHtml(asset.name)}</b>${typeLabel ? `<small>${mkEscapeHtml(typeLabel)}</small>` : ''}</span>
                     ${storageInfoMarkup}
                     <button type="button" class="mk-remove-asset" data-mk-remove-asset="${mkEscapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${mkEscapeHtml(asset.name)} entfernen">×</button>
@@ -381,7 +387,7 @@ function mkRenderObjectEditor(selection) {
     if (!asset) return '<p class="mk-empty-editor">Objekt nicht mehr vorhanden.</p>';
     return `
         <div class="mk-object-editor-head">
-            <span class="mk-asset-icon ${MK_ASSET_META[asset.type].className}">${MK_ASSET_META[asset.type].short}</span>
+            <span class="mk-asset-icon ${MK_ASSET_META[asset.type].className}" aria-label="${asset.type === 'storage' ? 'Erzeugungsanlage und Speicher' : mkEscapeHtml(MK_ASSET_META[asset.type].label)}">${mkRenderAssetIcon(asset)}</span>
             <span><b>${mkEscapeHtml(asset.name)}</b><small>${mkEscapeHtml(MK_ASSET_META[asset.type].label)}</small></span>
         </div>
         ${mkRenderAssetEditorFields(asset)}
@@ -487,7 +493,7 @@ function mkValidation() {
         const regimeHint = hasPre2024Asset
             ? 'Bei Bestandsanlagen vor 2024 können historische Tarif- und Messbedingungen betroffen sein.'
             : 'Die Einordnung ab 2024 ist nicht automatisch mit einer aktuellen SteuVE gleichzusetzen.';
-        checks.push({ level: 'warning', text: `NSH / FBH erkannt. ${regimeHint} Gemeinsame Messung, Tarif und Bestand bitte mit Netzbetreiber und Messstellenbetreiber abstimmen.` });
+        checks.push({ level: 'warning', text: `Nachtspeicherheizung erkannt. ${regimeHint} Gemeinsame Messung, Tarif und Bestand bitte mit Netzbetreiber und Messstellenbetreiber abstimmen.` });
     }
 
     if (mkConfiguratorState.mode === 'single') {

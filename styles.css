@@ -892,6 +892,19 @@ body {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.mk-palette-item > span:last-child b {
+    overflow-wrap: anywhere;
+}
+
+.mk-palette-item[data-mk-type="generation"] {
+    align-items: flex-start;
+}
+
+.mk-palette-item[data-mk-type="generation"] .mk-palette-icon {
+    margin-top: 0.1rem;
 }
 
 .mk-palette-item small,
@@ -942,43 +955,61 @@ body {
 }
 .mk-palette-icon.storage,
 .mk-asset-icon.storage {
-    position: relative;
-    color: #3730a3;
-    background-color: #c7d2fe;
-    background-image:
-        linear-gradient(currentColor, currentColor),
-        linear-gradient(135deg, transparent 43%, #92400e 44%, #92400e 56%, transparent 57%);
-    background-position: 50% 4px, center;
-    background-repeat: no-repeat;
-    background-size: 7px 2px, 100% 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid rgba(129, 140, 248, 0.5);
+    background: transparent;
     font-size: 0;
 }
 
-.mk-palette-icon.storage::before,
-.mk-asset-icon.storage::before {
-    content: '';
-    position: absolute;
-    top: 6px;
-    left: 50%;
-    width: 15px;
-    height: 19px;
-    border: 2px solid currentColor;
-    border-radius: 3px;
-    transform: translateX(-50%);
+.mk-storage-icon-generation,
+.mk-storage-icon-battery {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: 1 1 50%;
+    min-width: 0;
+    height: 100%;
 }
 
-.mk-palette-icon.storage::after,
-.mk-asset-icon.storage::after {
+.mk-storage-icon-generation {
+    color: #713f12;
+    background: #fde68a;
+    font-size: 0.52rem;
+    font-weight: 900;
+}
+
+.mk-storage-icon-battery {
+    color: #701a75;
+    background: #f5d0fe;
+}
+
+.mk-storage-icon-battery::before {
     content: '';
     position: absolute;
-    top: 12px;
+    top: 50%;
+    left: 50%;
+    width: 11px;
+    height: 15px;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+    transform: translate(-50%, -50%);
+}
+
+.mk-storage-icon-battery::after {
+    content: '';
+    position: absolute;
+    top: 50%;
     left: 50%;
     width: 9px;
     height: 2px;
     border-radius: 999px;
     background: currentColor;
     box-shadow: 0 5px currentColor;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
 }
 
 .mk-builder-card {
