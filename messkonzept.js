@@ -10,7 +10,8 @@ const MK_ASSET_META = Object.freeze({
     generation: { label: 'Erzeugungsanlage', short: 'EA', className: 'generation', detail: 'PV, KWK, Wind ...' },
     consumer: { label: 'Verbraucher', short: 'V', className: 'consumer', detail: 'Allgemeine Last' },
     steuve: { label: 'SteuVE', short: 'SteuVE', className: 'steuve', detail: 'Steuerbare Verbrauchseinrichtung' },
-    storage: { label: 'Speicher', short: '▤', className: 'storage', detail: 'Speicheranlage' }
+    storage: { label: 'Speicher', short: '▤', className: 'storage', detail: 'Speicheranlage' },
+    nsh: { label: 'Nachtspeicher- / Fußbodenheizung', short: 'NSH', className: 'nsh', detail: 'Historische Tarif- und Messbehandlung prüfen' }
 });
 
 const MK_ASSET_TYPE_OPTIONS = Object.freeze({
@@ -91,7 +92,8 @@ function mkCreateAsset(type, zone) {
         generation: `EA ${sameType}`,
         consumer: `Verbraucher ${sameType}`,
         steuve: `SteuVE ${sameType}`,
-        storage: `Speicher ${sameType}`
+        storage: `Speicher ${sameType}`,
+        nsh: `NSH / FBH ${sameType}`
     };
 
     return {
@@ -186,7 +188,15 @@ function mkGetAssetTypeLabel(asset) {
     if (asset.type === 'steuve') {
         return MK_ASSET_TYPE_OPTIONS.steuve.find(option => option.value === asset.steuveType)?.label || '';
     }
+    if (asset.type === 'nsh') return MK_ASSET_META.nsh.label;
     return '';
+}
+
+function mkGetNshRegime(asset) {
+    const year = Number(String(asset?.commissioningDate || '').slice(0, 4));
+    if (!Number.isFinite(year) || year < 1900) return 'Einordnung offen · Abstimmung erforderlich';
+    if (year < 2024) return 'Bestand vor 2024 · historische SteuVE-/Tarifbehandlung möglich';
+    return 'Ab 2024 · nicht automatisch als SteuVE einordnen';
 }
 
 /**
@@ -307,6 +317,10 @@ function mkRenderAssetEditorFields(asset) {
     const steuveFields = asset.type === 'steuve' ? `
         <label>Art der SteuVE<select data-mk-field="steuveType">${mkRenderSelectOptions(MK_ASSET_TYPE_OPTIONS.steuve, asset.steuveType)}</select></label>
     ` : '';
+    const nshFields = asset.type === 'nsh' ? `
+        <label>Bestand / Inbetriebnahme<input type="date" data-mk-field="commissioningDate" value="${mkEscapeHtml(asset.commissioningDate)}"></label>
+        <p class="mk-nsh-editor-hint">Vor 2024 können historische Tarif- und Messbedingungen gelten. Bei gemeinsamer Messung mit einer aktuellen SteuVE bitte abstimmen.</p>
+    ` : '';
     return `
         <div class="mk-object-editor-form" data-mk-asset-id="${mkEscapeHtml(asset.id)}">
             <div class="mk-asset-form">
@@ -314,6 +328,7 @@ function mkRenderAssetEditorFields(asset) {
                 ${meterFields}
                 ${generationFields}
                 ${steuveFields}
+                ${nshFields}
             </div>
         </div>
     `;
@@ -327,7 +342,9 @@ function mkRenderAssetSummary(asset, includeEmpty = false) {
         asset.type === 'generation' ? { label: 'Leistung', value: asset.power } : null,
         asset.type === 'generation' ? { label: 'Inbetriebnahme', value: asset.commissioningDate } : null,
         asset.type === 'generation' ? { label: 'Erzeugungszähler', value: asset.generationMeter ? `Ja · Z${mkGetGenerationMeterNumber(asset)}` : (includeEmpty ? 'Nein' : '') } : null,
-        asset.type === 'steuve' ? { label: 'Art der SteuVE', value: asset.steuveType } : null
+        asset.type === 'steuve' ? { label: 'Art der SteuVE', value: asset.steuveType } : null,
+        asset.type === 'nsh' ? { label: 'Bestand / Inbetriebnahme', value: asset.commissioningDate } : null,
+        asset.type === 'nsh' ? { label: 'Einordnung', value: mkGetNshRegime(asset) } : null
     ].filter(Boolean).filter(entry => includeEmpty || String(entry.value || '').trim());
     return entries.map(entry => `<div class="mk-meter-detail-value"><span>${mkEscapeHtml(entry.label)}</span><b>${mkEscapeHtml(String(entry.value || '—'))}</b></div>`).join('');
 }
@@ -436,6 +453,7 @@ function mkValidation() {
     const consumers = assets.filter(asset => asset.type === 'consumer');
     const steuves = assets.filter(asset => asset.type === 'steuve');
     const storages = assets.filter(asset => asset.type === 'storage');
+    const nshAssets = assets.filter(asset => asset.type === 'nsh');
     const extraMeters = assets.filter(asset => asset.type === 'meter');
     const checks = [];
 
@@ -451,6 +469,17 @@ function mkValidation() {
 
     if (storages.length) {
         checks.push({ level: 'warning', text: 'Speicher bleibt vorerst ein eigenes Objekt. Betriebsrolle (Erzeugung, Bezug und ggf. SteuVE) fachlich festlegen.' });
+    }
+
+    if (nshAssets.length) {
+        const hasPre2024Asset = nshAssets.some(asset => {
+            const year = Number(String(asset.commissioningDate || '').slice(0, 4));
+            return !Number.isFinite(year) || year < 2024;
+        });
+        const regimeHint = hasPre2024Asset
+            ? 'Bei Bestandsanlagen vor 2024 können historische Tarif- und Messbedingungen betroffen sein.'
+            : 'Die Einordnung ab 2024 ist nicht automatisch mit einer aktuellen SteuVE gleichzusetzen.';
+        checks.push({ level: 'warning', text: `NSH / FBH erkannt. ${regimeHint} Gemeinsame Messung, Tarif und Bestand bitte mit Netzbetreiber und Messstellenbetreiber abstimmen.` });
     }
 
     if (mkConfiguratorState.mode === 'single') {

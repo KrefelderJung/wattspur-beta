@@ -931,6 +931,15 @@ body {
     background: #f5d0fe;
     font-size: 0.62rem;
 }
+.mk-palette-icon.nsh,
+.mk-asset-icon.nsh {
+    min-width: 48px;
+    width: auto;
+    padding: 0 0.35rem;
+    color: #7c2d12;
+    background: #fed7aa;
+    font-size: 0.62rem;
+}
 .mk-palette-icon.storage,
 .mk-asset-icon.storage {
     position: relative;
@@ -1743,6 +1752,16 @@ body.mk-modal-open {
 
 .mk-asset-form-grid label:last-child {
     grid-column: 1 / -1;
+}
+
+.mk-nsh-editor-hint {
+    margin: 0;
+    padding: 0.5rem 0.6rem;
+    border-left: 2px solid var(--warning-color);
+    color: var(--text-muted);
+    background: rgba(245, 158, 11, 0.08);
+    font-size: 0.68rem;
+    line-height: 1.45;
 }
 
 .mk-check-row {
