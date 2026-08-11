@@ -1525,65 +1525,266 @@ function setupEventListeners() {
 
     // --- Data Editor Event Listeners ---
 
+    function createDemoDatasets() {
+        const demoYear = 2026;
+        const intervalsPerDay = 96;
+        const daysInYear = (Date.UTC(demoYear + 1, 0, 1) - Date.UTC(demoYear, 0, 1)) / 86400000;
+        const intervalCount = daysInYear * intervalsPerDay;
+        const point = (dateObj, kw) => ({
+            timestamp: dateObj.getTime(),
+            dateObj,
+            dateStr: `${String(dateObj.getDate()).padStart(2, '0')}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${dateObj.getFullYear()}`,
+            timeStr: `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`,
+            rawKw: kw,
+            kw,
+            kvar: null,
+            hasData: true
+        });
+
+        const householdData = [];
+        const pvData = [];
+
+        // Deterministisches Rauschen erzeugt wechselnde, reproduzierbare Tage.
+        // So bleibt die Demo bei jedem Öffnen gleich, wirkt aber nicht wie eine
+        // einzelne Woche, die 52-mal kopiert wurde.
+        const deterministicNoise = seed => {
+            const raw = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+            return (raw - Math.floor(raw)) * 2 - 1;
+        };
+        const holidayFn = typeof window !== 'undefined' && typeof window.isNRWHoliday === 'function'
+            ? window.isNRWHoliday
+            : () => false;
+
+        for (let dayIndex = 0; dayIndex < daysInYear; dayIndex++) {
+            const dayOfYear = dayIndex + 1;
+            const dayDate = new Date(demoYear, 0, dayOfYear, 12, 0, 0, 0);
+            const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
+            const isHoliday = Boolean(holidayFn(dayDate));
+            const isRestDay = isWeekend || isHoliday;
+            const seasonal = Math.sin((Math.PI * 2 * (dayOfYear - 81)) / daysInYear);
+            const winterFactor = (1 - seasonal) / 2;
+            const daylightHours = 8.2 + (8.1 * ((seasonal + 1) / 2));
+            const sunrise = 12 - (daylightHours / 2);
+            const sunset = 12 + (daylightHours / 2);
+            const cloudFactor = Math.min(1, Math.max(0.25,
+                0.68
+                + (0.18 * Math.sin(dayIndex * 0.37 + 0.8))
+                + (0.12 * Math.sin(dayIndex * 1.73 + 0.3))
+                + (0.08 * Math.sin(dayIndex * 0.08))
+            ));
+            const dailyFactor = 0.92 + (0.11 * deterministicNoise(dayIndex + 100));
+            const restDayFactor = isRestDay ? 1.06 : 1;
+            const pvSeasonFactor = 0.62 + (0.38 * ((seasonal + 1) / 2));
+
+            for (let quarter = 0; quarter < intervalsPerDay; quarter++) {
+                const hour = Math.floor(quarter / 4);
+                const minute = (quarter % 4) * 15;
+                const dateObj = new Date(demoYear, 0, dayOfYear, hour, minute, 0, 0);
+                const hourValue = hour + (minute / 60);
+                const morningPeak = 1.05 * Math.exp(-Math.pow((hourValue - (isRestDay ? 8.8 : 7.1)) / 1.35, 2));
+                const eveningPeak = 1.5 * Math.exp(-Math.pow((hourValue - 19.2) / 2.25, 2));
+                const daytimeActivity = (isRestDay ? 0.55 : 0.28) * Math.exp(-Math.pow((hourValue - 13.2) / 3.2, 2));
+                const baseLoad = 0.22 + (0.04 * Math.sin((hourValue / 24) * Math.PI * 2 - 1.2));
+                const seasonalHeating = 0.16 * winterFactor * (0.55 + (0.45 * Math.exp(-Math.pow((hourValue - 7.5) / 5.5, 2))));
+                const intervalFactor = 1 + (0.04 * deterministicNoise((dayIndex * intervalsPerDay) + quarter + 400));
+                const householdKw = Math.max(0.12,
+                    (baseLoad + morningPeak + eveningPeak + daytimeActivity + seasonalHeating)
+                    * 0.72
+                    * dailyFactor
+                    * restDayFactor
+                    * intervalFactor
+                );
+
+                const solarCurve = hourValue >= sunrise && hourValue <= sunset
+                    ? Math.max(0, Math.sin(Math.PI * (hourValue - sunrise) / daylightHours))
+                    : 0;
+                const pvVariation = 0.98 + (0.04 * deterministicNoise((dayIndex * intervalsPerDay) + quarter + 800));
+                const pvKw = Math.pow(solarCurve, 1.55) * 4.8 * pvSeasonFactor * cloudFactor * pvVariation;
+
+                householdData.push(point(dateObj, Number(householdKw.toFixed(3))));
+                pvData.push(point(dateObj, Number(pvKw.toFixed(3))));
+            }
+        }
+
+        const dataset = (name, data) => ({
+            name,
+            data,
+            totalRowsCount: data.length,
+            invalidRowsCount: 0,
+            importedUnit: 'kw',
+            isDemo: true,
+            demoYear,
+            intervalMinutes: 15,
+            profileKind: 'synthetic-year'
+        });
+
+        return [
+            dataset(`Demo: Haushaltsbezug (Jahresprofil ${demoYear})`, householdData),
+            dataset(`Demo: PV-Einspeisung (Jahresprofil ${demoYear})`, pvData)
+        ];
+    }
+
+    function createEmptyDataset() {
+        const emptyData = [];
+        for (let i = 0; i < 96; i++) {
+            const h = Math.floor(i / 4);
+            const m = (i % 4) * 15;
+            const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            const ts = new Date(2026, 0, 1, h, m);
+            emptyData.push({
+                timestamp: ts.getTime(),
+                dateObj: ts,
+                dateStr: "01.01.2026",
+                timeStr,
+                rawKw: null,
+                kw: null,
+                kvar: null,
+                hasData: false
+            });
+        }
+
+        return {
+            name: 'Manueller Lastgang',
+            data: emptyData,
+            totalRowsCount: 0,
+            invalidRowsCount: 0,
+            importedUnit: 'kw'
+        };
+    }
+
+    function openDatasetsInDashboard(datasets, options = {}) {
+        allDatasets = datasets;
+        currentDatasetId = 0;
+        activeDatasetIds = [0];
+        rawData = datasets[0]?.data || [];
+        cachedAggregations = {};
+
+        const allData = datasets.flatMap(dataset => dataset.data || []);
+        const validDates = allData.map(point => point.dateObj).filter(date => date instanceof Date && Number.isFinite(date.getTime()));
+        const minDate = new Date(Math.min(...validDates.map(date => date.getTime())));
+        const maxDate = new Date(Math.max(...validDates.map(date => date.getTime())));
+        globalDateRange.validMin = minDate;
+        globalDateRange.validMax = maxDate;
+        globalDateRange.start = minDate;
+        globalDateRange.end = maxDate;
+
+        const toInputDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        const inputStart = document.getElementById('date-start');
+        const inputEnd = document.getElementById('date-end');
+        if (inputStart && inputEnd) {
+            inputStart.value = toInputDate(minDate);
+            inputEnd.value = toInputDate(maxDate);
+        }
+
+        renderDatasetCheckboxes();
+        if (options.activateAll && datasets.length > 1) {
+            const buttons = document.querySelectorAll('#dataset-checkboxes-container .btn-dataset-select');
+            buttons.forEach(button => {
+                const checkbox = button.querySelector('input[type="checkbox"]');
+                if (checkbox) checkbox.checked = true;
+                button.classList.add('active');
+            });
+            activeDatasetIds = datasets.map((_, index) => index);
+            rawData = datasets[0].data;
+        }
+
+        const uploadScreen = document.getElementById('upload-screen');
+        const dashboardScreen = document.getElementById('dashboard-screen');
+        if (uploadScreen) uploadScreen.classList.add('hidden');
+        if (dashboardScreen) dashboardScreen.classList.remove('hidden');
+
+        if (options.openEditor) {
+            const editorTabBtn = document.querySelector('.tab-btn[data-target="tab-editor"]');
+            if (editorTabBtn) editorTabBtn.click();
+        } else {
+            updateDashboard();
+        }
+
+        if (options.message) showToast(options.message, 'success');
+    }
+
+    window.createDemoDatasets = createDemoDatasets;
+
+    function formatCsvDate(date) {
+        return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+    }
+
+    function createLoadProfileCsv(dataset) {
+        const lines = ['Datum;Uhrzeit;Wert'];
+        (dataset?.data || []).forEach(point => {
+            const date = point.dateObj instanceof Date ? point.dateObj : new Date(point.timestamp);
+            const value = Number.isFinite(point.kw) ? point.kw.toFixed(3).replace('.', ',') : '';
+            lines.push(`${formatCsvDate(date)};${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })};${value}`);
+        });
+        return `${lines.join('\r\n')}\r\n`;
+    }
+
+    function createCsvTemplate() {
+        const lines = ['Datum;Uhrzeit;Wert'];
+        for (let i = 0; i < 96; i++) {
+            const hour = Math.floor(i / 4);
+            const minute = (i % 4) * 15;
+            lines.push(`01.01.2026;${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')};`);
+        }
+        return `${lines.join('\r\n')}\r\n`;
+    }
+
+    function downloadCsvText(content, fileName) {
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), content], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    const btnDownloadCsvTemplate = document.getElementById('btn-download-csv-template');
+    if (btnDownloadCsvTemplate) {
+        btnDownloadCsvTemplate.addEventListener('click', () => {
+            downloadCsvText(createCsvTemplate(), 'lastgang-vorlage.csv');
+            showToast('CSV-Vorlage heruntergeladen.', 'success');
+        });
+    }
+
+    const btnDownloadDemoHousehold = document.getElementById('btn-download-demo-household');
+    if (btnDownloadDemoHousehold) {
+        btnDownloadDemoHousehold.addEventListener('click', () => {
+            const householdDataset = createDemoDatasets()[0];
+            downloadCsvText(createLoadProfileCsv(householdDataset), 'demo-haushaltsbezug-jahresprofil-2026.csv');
+            showToast('Synthetisches Jahresprofil für den Haushaltsbezug heruntergeladen.', 'success');
+        });
+    }
+
+    const btnDownloadDemoPv = document.getElementById('btn-download-demo-pv');
+    if (btnDownloadDemoPv) {
+        btnDownloadDemoPv.addEventListener('click', () => {
+            const pvDataset = createDemoDatasets()[1];
+            downloadCsvText(createLoadProfileCsv(pvDataset), 'demo-pv-einspeisung-jahresprofil-2026.csv');
+            showToast('Synthetisches Jahresprofil für die PV-Einspeisung heruntergeladen.', 'success');
+        });
+    }
+
     // --- Start empty dataset ---
     const btnStartEmpty = document.getElementById('btn-start-empty');
     if (btnStartEmpty) {
         btnStartEmpty.addEventListener('click', () => {
-            let emptyData = [];
-            for (let i = 0; i < 96; i++) {
-                const h = Math.floor(i / 4);
-                const m = (i % 4) * 15;
-                const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-                const ts = new Date(2026, 0, 1, h, m);
-                emptyData.push({
-                    timestamp: ts.getTime(),
-                    dateObj: ts,
-                    dateStr: "01.01.2026",
-                    timeStr: timeStr,
-                    rawKw: null,
-                    kw: null,
-                    kvar: null,
-                    hasData: false
-                });
-            }
-            
-            allDatasets = [{
-                name: "Manueller Lastgang",
-                data: emptyData,
-                totalRowsCount: 0,
-                invalidRowsCount: 0,
-                importedUnit: "kw"
-            }];
-            
-            currentDatasetId = 0;
-            rawData = allDatasets[0].data;
-            activeDatasetIds = [0];
-            
-            globalDateRange.validMin = emptyData[0].dateObj;
-            globalDateRange.validMax = emptyData[emptyData.length - 1].dateObj;
-            globalDateRange.start = emptyData[0].dateObj;
-            globalDateRange.end = emptyData[emptyData.length - 1].dateObj;
-            
-            const inputDateStart = document.getElementById('date-start');
-            const inputDateEnd = document.getElementById('date-end');
-            if (inputDateStart && inputDateEnd) {
-                inputDateStart.value = "2026-01-01";
-                inputDateEnd.value = "2026-01-01";
-            }
-            
-            if (typeof renderDatasetCheckboxes === 'function') {
-                renderDatasetCheckboxes();
-            }
-            
-            const scrUpload = document.getElementById('upload-screen');
-            const scrDashboard = document.getElementById('dashboard-screen');
-            if (scrUpload) scrUpload.classList.add('hidden');
-            if (scrDashboard) scrDashboard.classList.remove('hidden');
-            
-            const editorTabBtn = document.querySelector('.tab-btn[data-target="tab-editor"]');
-            if (editorTabBtn) editorTabBtn.click();
-            
-            showToast("Manueller Lastgang initialisiert! Kopiere deine Excel-Spalten hier hinein.", "success");
+            openDatasetsInDashboard([createEmptyDataset()], {
+                openEditor: true,
+                message: 'Leerer Lastgang geöffnet. Füge deine Daten aus Excel ein.'
+            });
+        });
+    }
+
+    const btnStartDemo = document.getElementById('btn-start-demo');
+    if (btnStartDemo) {
+        btnStartDemo.addEventListener('click', () => {
+            openDatasetsInDashboard(createDemoDatasets(), {
+                activateAll: true,
+                message: 'Jahres-Demo geladen: Haushaltsbezug und PV-Einspeisung.'
+            });
         });
     }
 

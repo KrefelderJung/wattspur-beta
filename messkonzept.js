@@ -93,9 +93,7 @@ function mkGetMeterDetails(index) {
 function mkNotify(message, type = 'info') {
     if (typeof showToast === 'function') {
         showToast(message, type);
-        return;
     }
-    if (mkElements.canvasStatus) mkElements.canvasStatus.textContent = message;
 }
 
 function mkCreateAsset(type, zone, steuveType = '', energyCarrier = '') {
@@ -204,6 +202,7 @@ function mkChangeCascadeLevels(levels) {
             asset.zone = `${prefix}-${parsed - 1}`;
             return;
         }
+        if (Number(match[1]) >= parsed) return;
         asset.zone = `${prefix}-${Math.min(parsed - 1, Number(match[1]))}`;
     });
     mkRender();
@@ -348,25 +347,56 @@ function mkRenderAsset(asset) {
 }
 
 function mkGetAssetsPerRow(assetCount = MK_ASSETS_PER_ROW) {
+    const isNarrowViewport = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 480px)').matches;
+    const normalizedAssetCount = Math.max(1, Number(assetCount) || 0);
+    if (isNarrowViewport && mkConfiguratorState.viewMode === 'simple') return Math.min(MK_ASSETS_PER_ROW, normalizedAssetCount);
     if (mkConfiguratorState.viewMode === 'detail') {
-        return typeof window !== 'undefined' && window.matchMedia?.('(max-width: 480px)').matches
+        return isNarrowViewport
             ? 1
             : MK_ASSETS_PER_ROW;
     }
-    return Math.max(MK_ASSETS_PER_ROW, Number(assetCount) || 0);
+    return normalizedAssetCount;
 }
 
 function mkGetSimpleCanvasMinimumWidth(assetCount) {
-    return 128 + (Math.max(MK_ASSETS_PER_ROW, Number(assetCount) || 0) * 66);
+    return 128 + (Math.max(1, Number(assetCount) || 0) * 66);
+}
+
+function mkGetParallelBranchWidth(assetCount) {
+    const normalizedAssetCount = Math.max(0, Number(assetCount) || 0);
+    const columns = mkGetAssetsPerRow(Math.max(1, normalizedAssetCount));
+    const isSimple = mkConfiguratorState.viewMode === 'simple';
+    const cardWidth = isSimple ? 56 : 132;
+    const cardGap = isSimple ? 9.6 : 16;
+    const leftOffset = isSimple ? 12.8 : 0;
+    const rightPadding = isSimple ? 13 : 20;
+    const dropZonePadding = isSimple ? 32 : 40;
+    const rowWidth = normalizedAssetCount
+        ? (columns * cardWidth) + (Math.max(0, columns - 1) * cardGap)
+        : 0;
+    // The parallel strand starts at the left edge of its own branch. The
+    // width must include the object row and drop-zone padding so the branch
+    // stays compact without overlapping its neighbor.
+    const contentWidth = rowWidth + leftOffset + rightPadding + dropZonePadding;
+    return Math.max(isSimple ? 220 : 300, contentWidth);
+}
+
+function mkGetParallelLayoutMetrics(meterCount) {
+    const branchCount = Math.max(1, Number(meterCount) || 1);
+    const branchWidths = Array.from({ length: branchCount }, (_, index) => mkGetParallelBranchWidth(mkGetZoneAssets(`parallel-${index}`).length));
+    const branchGap = 16;
+    const minimumBranchWidth = Math.max(...branchWidths);
+    return {
+        branchCount,
+        branchWidths,
+        minimumBranchWidth,
+        gridTemplateColumns: branchWidths.map(width => `${width}px`).join(' '),
+        minimumCanvasWidth: branchWidths.reduce((total, width) => total + width, 0) + (Math.max(0, branchCount - 1) * branchGap) + 12
+    };
 }
 
 function mkGetParallelCanvasMinimumWidth(meterCount) {
-    const longestAssetRow = Math.max(
-        MK_ASSETS_PER_ROW,
-        ...Array.from({ length: meterCount }, (_, index) => mkGetZoneAssets(`parallel-${index}`).length)
-    );
-    const minimumBranchWidth = Math.max(364, (longestAssetRow * 132) - 32);
-    return (minimumBranchWidth * meterCount) + (Math.max(0, meterCount - 1) * 16);
+    return mkGetParallelLayoutMetrics(meterCount).minimumCanvasWidth;
 }
 
 function mkRenderAssetRows(assets) {
@@ -579,19 +609,20 @@ function mkRenderOwnershipConnector() {
 }
 
 function mkRenderParallelCanvas() {
+    const layoutMetrics = mkGetParallelLayoutMetrics(mkConfiguratorState.cascadeLevels);
     const branches = [];
     for (let index = 0; index < mkConfiguratorState.cascadeLevels; index += 1) {
+        const branchWidth = layoutMetrics.branchWidths[index] || layoutMetrics.minimumBranchWidth;
         branches.push(`
-            <div class="mk-parallel-branch">
+            <div class="mk-parallel-branch" style="--mk-parallel-branch-width: ${branchWidth}px;">
                 <span class="mk-parallel-branch-connector" aria-hidden="true"></span>
                 ${mkRenderMeterLayout(index)}
                 ${mkRenderDropZone(`parallel-${index}`, index)}
             </div>
         `);
     }
-    const minimumCanvasWidth = mkGetParallelCanvasMinimumWidth(mkConfiguratorState.cascadeLevels);
     return `
-        <div class="mk-parallel-stack" style="--mk-parallel-min-width: ${minimumCanvasWidth}px;">
+        <div class="mk-parallel-stack" style="--mk-parallel-min-width: ${layoutMetrics.minimumCanvasWidth}px; --mk-parallel-count: ${layoutMetrics.branchCount}; --mk-parallel-branch-width: ${layoutMetrics.minimumBranchWidth}px; --mk-parallel-grid-template-columns: ${layoutMetrics.gridTemplateColumns};">
             <div class="mk-parallel-hak-head" aria-label="Hausanschlusskasten mit Eigentumsgrenze">
                 ${mkRenderHakNode()}
                 ${mkRenderOwnershipConnector()}
@@ -632,7 +663,7 @@ function mkRenderCanvas() {
 
     const levels = [];
     const longestAssetRow = Math.max(
-        MK_ASSETS_PER_ROW,
+        1,
         ...Array.from({ length: mkConfiguratorState.cascadeLevels }, (_, index) => mkGetZoneAssets(`cascade-${index}`).length)
     );
     const minimumCanvasWidth = mkGetSimpleCanvasMinimumWidth(longestAssetRow);
@@ -737,7 +768,7 @@ function mkRenderValidation() {
     const hasError = checks.some(check => check.level === 'error');
     const hasWarning = checks.some(check => check.level === 'warning');
     const state = hasError ? 'error' : hasWarning ? 'warning' : checks.some(check => check.level === 'ok') ? 'ok' : 'neutral';
-    const labels = { error: 'Prüfen', warning: 'Hinweis', ok: 'Plausibel', neutral: 'Start' };
+    const labels = { error: 'Prüfen', warning: 'Hinweis', ok: 'Unauffällig', neutral: 'Bereit' };
     mkElements.statusBadge.className = `mk-status-badge ${state}`;
     mkElements.statusBadge.textContent = labels[state];
 }
@@ -774,15 +805,19 @@ function mkRenderMeasurementSummary() {
 function mkRefreshInlineStatus() {
     mkRenderValidation();
     mkRenderMeasurementSummary();
-    if (mkElements.canvasStatus) {
-        mkElements.canvasStatus.textContent = mkConfiguratorState.assets.length
-            ? `${mkConfiguratorState.assets.length} Baustein${mkConfiguratorState.assets.length === 1 ? '' : 'e'} · Änderungen werden lokal gehalten.`
-            : 'Bereit für Bausteine.';
-    }
+}
+
+function mkGetStageScale(stage) {
+    if (!stage?.offsetWidth) return 1;
+    const stageRect = stage.getBoundingClientRect();
+    const scale = stageRect.width / stage.offsetWidth;
+    return Number.isFinite(scale) && scale > 0 ? scale : 1;
 }
 
 function mkUpdateSimpleAssetStrands() {
     if (!mkElements.canvas || mkConfiguratorState.viewMode !== 'simple') return;
+    const stage = mkElements.canvas.querySelector('.mk-canvas-stage');
+    const scale = mkGetStageScale(stage);
     mkElements.canvas.querySelectorAll('.mk-zone-assets.simple-mode').forEach(zone => {
         const junction = zone.querySelector('.mk-zone-junction');
         const branches = [...zone.querySelectorAll('.mk-asset-branch')];
@@ -794,8 +829,44 @@ function mkUpdateSimpleAssetStrands() {
         const endX = lastBranchRect
             ? lastBranchRect.left + (lastBranchRect.width / 2)
             : originX + 48;
-        zone.style.setProperty('--mk-zone-bus-width-px', `${Math.max(0, endX - originX)}px`);
+        const busWidth = Math.max(0, (endX - originX) / scale);
+        zone.style.setProperty('--mk-zone-bus-width-px', `${busWidth}px`);
     });
+}
+
+function mkUpdateParallelBus() {
+    if (!mkElements.canvas || mkConfiguratorState.mode !== 'parallel') return;
+    const stage = mkElements.canvas.querySelector('.mk-canvas-stage');
+    const bus = stage?.querySelector('.mk-parallel-branches');
+    const branches = bus
+        ? [...bus.children].filter(child => child.matches('.mk-parallel-branch'))
+        : [];
+    if (!stage || !bus || !branches.length) return;
+
+    const scale = mkGetStageScale(stage);
+    const busRect = bus.getBoundingClientRect();
+    const firstAnchor = branches[0].querySelector('.mk-meter-node')
+        || branches[0].querySelector('.mk-parallel-branch-connector')
+        || branches[0];
+    const lastAnchor = branches[branches.length - 1].querySelector('.mk-meter-node')
+        || branches[branches.length - 1].querySelector('.mk-parallel-branch-connector')
+        || branches[branches.length - 1];
+    const firstRect = firstAnchor.getBoundingClientRect();
+    const lastRect = lastAnchor.getBoundingClientRect();
+    const firstCenter = firstRect.left + (firstRect.width / 2);
+    const lastCenter = lastRect.left + (lastRect.width / 2);
+    const left = Math.max(0, (firstCenter - busRect.left) / scale);
+    const width = Math.max(0, (lastCenter - firstCenter) / scale);
+    bus.style.setProperty('--mk-parallel-bus-left-px', `${left}px`);
+    bus.style.setProperty('--mk-parallel-bus-width-px', `${width}px`);
+    const stack = stage.querySelector('.mk-parallel-stack');
+    const feed = stage.querySelector('.mk-parallel-feed');
+    if (stack && feed) {
+        const stackRect = stack.getBoundingClientRect();
+        const busCenter = (firstCenter + lastCenter) / 2;
+        const stackCenter = stackRect.left + (stackRect.width / 2);
+        stack.style.setProperty('--mk-parallel-feed-offset-px', `${(busCenter - stackCenter) / scale}px`);
+    }
 }
 
 function mkFindIncomingMeterLayout(zone) {
@@ -818,12 +889,51 @@ function mkGetStagePoint(element, stageRect, scale, horizontal = 'center', verti
 
 function mkBuildDynamicWire(start, end) {
     if (!Number.isFinite(start?.x) || !Number.isFinite(start?.y) || !Number.isFinite(end?.x) || !Number.isFinite(end?.y)) return '';
-    if (end.y <= start.y + 1) return '';
     const xDifference = Math.abs(start.x - end.x);
+    const yDifference = Math.abs(start.y - end.y);
+    if (xDifference < 1 && yDifference < 1) return '';
+    if (yDifference < 1) return `<path class="mk-dynamic-wire" d="M ${start.x} ${start.y} H ${end.x}" />`;
+    const bendY = end.y >= start.y
+        ? Math.min(end.y, start.y + 14)
+        : Math.max(end.y, start.y - 14);
     const path = xDifference < 1
         ? `M ${start.x} ${start.y} V ${end.y}`
-        : `M ${start.x} ${start.y} V ${start.y + 14} H ${end.x} V ${end.y}`;
+        : `M ${start.x} ${start.y} V ${bendY} H ${end.x} V ${end.y}`;
     return `<path class="mk-dynamic-wire" d="${path}" />`;
+}
+
+function mkGetAssetBranchAnchor(branch) {
+    return branch?.querySelector('.mk-generation-meter')
+        || branch?.querySelector('.mk-asset-card')
+        || branch;
+}
+
+function mkBuildDynamicNode(point) {
+    if (!Number.isFinite(point?.x) || !Number.isFinite(point?.y)) return '';
+    return `<circle class="mk-dynamic-node" cx="${point.x}" cy="${point.y}" r="3" />`;
+}
+
+function mkBuildAssetBranchWires(zone, junctionPoint, pointFor, dynamicNodes = []) {
+    const wires = [];
+    const rows = [...zone.querySelectorAll('.mk-asset-row')];
+
+    rows.forEach((row, rowIndex) => {
+        const rowBusY = rowIndex === 0
+            ? junctionPoint.y
+            : pointFor(row, 'center', 'top').y;
+        const branches = [...row.children].filter(child => child.matches('.mk-asset-branch'));
+
+        branches.forEach(branch => {
+            const branchPoint = pointFor(mkGetAssetBranchAnchor(branch), 'center', 'top');
+            wires.push(mkBuildDynamicWire(
+                { x: branchPoint.x, y: rowBusY },
+                branchPoint
+            ));
+            dynamicNodes.push({ x: branchPoint.x, y: rowBusY });
+        });
+    });
+
+    return wires;
 }
 
 function mkUpdateDynamicConnections() {
@@ -832,19 +942,21 @@ function mkUpdateDynamicConnections() {
     if (!stage || !layer || !stage.offsetWidth || !stage.offsetHeight) return;
 
     const stageRect = stage.getBoundingClientRect();
-    const scale = stage.offsetWidth ? stageRect.width / stage.offsetWidth : 1;
-    if (!Number.isFinite(scale) || scale <= 0) return;
+    const scale = mkGetStageScale(stage);
 
     const width = Math.ceil(Math.max(stage.scrollWidth, stage.offsetWidth));
     const height = Math.ceil(Math.max(stage.scrollHeight, stage.offsetHeight));
     const wires = [];
+    const dynamicNodes = [];
     const pointFor = (element, horizontal, vertical) => mkGetStagePoint(element, stageRect, scale, horizontal, vertical);
 
     stage.querySelectorAll('.mk-drop-zone').forEach(zone => {
         const meterLayout = mkFindIncomingMeterLayout(zone);
         const junction = zone.querySelector('.mk-zone-junction');
         if (!meterLayout || !junction) return;
-        wires.push(mkBuildDynamicWire(pointFor(meterLayout, 'center', 'bottom'), pointFor(junction)));
+        const junctionPoint = pointFor(junction);
+        wires.push(mkBuildDynamicWire(pointFor(meterLayout, 'center', 'bottom'), junctionPoint));
+        wires.push(...mkBuildAssetBranchWires(zone, junctionPoint, pointFor, dynamicNodes));
     });
 
     if (mkConfiguratorState.mode === 'cascade') {
@@ -859,7 +971,7 @@ function mkUpdateDynamicConnections() {
     layer.setAttribute('viewBox', `0 0 ${width} ${height}`);
     layer.setAttribute('width', String(width));
     layer.setAttribute('height', String(height));
-    layer.innerHTML = wires.filter(Boolean).join('');
+    layer.innerHTML = wires.filter(Boolean).join('') + dynamicNodes.map(mkBuildDynamicNode).join('');
 }
 
 function mkScheduleConnectorGeometry() {
@@ -867,6 +979,7 @@ function mkScheduleConnectorGeometry() {
     mkGeometryFrame = window.requestAnimationFrame(() => {
         mkGeometryFrame = 0;
         mkUpdateSimpleAssetStrands();
+        mkUpdateParallelBus();
         mkUpdateDynamicConnections();
         mkCenterParallelViewport();
     });
@@ -924,6 +1037,8 @@ function mkObserveConnectorGeometry() {
     mkGeometryObserver?.disconnect();
     mkGeometryObserver = new ResizeObserver(() => mkScheduleConnectorGeometry());
     mkGeometryObserver.observe(mkElements.canvas);
+    const stage = mkElements.canvas.querySelector('.mk-canvas-stage');
+    if (stage) mkGeometryObserver.observe(stage);
 }
 
 function mkCenterParallelViewport() {
@@ -954,6 +1069,7 @@ function mkRender() {
         button.setAttribute('aria-pressed', String(active));
     });
     mkRenderCanvas();
+    mkObserveConnectorGeometry();
     mkRenderZoomControls();
     mkScheduleConnectorGeometry();
     mkRefreshInlineStatus();
@@ -1040,7 +1156,7 @@ function mkRenderPrintSheet(stand) {
             </header>
             <p class="mk-print-notice">Dieser Export dokumentiert den zum Ausgabezeitpunkt erfassten Stand. Spätere Änderungen am Konzept sind in dieser Datei nicht enthalten. Die Skizze ist eine unverbindliche Orientierung und ersetzt keine fachliche Prüfung.</p>
             <section class="mk-print-topology"><h2>Messskizze</h2>${topology}</section>
-            <section class="mk-print-status"><div><h3>Prüfstatus</h3><ul>${checks}</ul></div><div><h3>Messlogik</h3>${logic}</div></section>
+            <section class="mk-print-status"><div><h3>Technischer Hinweisstatus</h3><ul>${checks}</ul></div><div><h3>Messlogik</h3>${logic}</div></section>
             ${mkRenderExportDetails()}
             <footer class="mk-print-footer">Wattspur Beta · lokal im Browser erstellt · Stand ${mkEscapeHtml(stand.label)}</footer>
         </section>
@@ -1071,29 +1187,6 @@ function mkDownloadPdf() {
     mkNotify('Druckdialog geöffnet. Wähle dort „Als PDF speichern“.', 'info');
 }
 
-function mkDownloadJson() {
-    const exportPayload = {
-        tool: 'Wattspur Messkonzept-Konfigurator',
-        version: 1,
-        generatedAt: new Date().toISOString(),
-        exportType: 'technical-backup',
-        mode: mkConfiguratorState.mode,
-        viewMode: mkConfiguratorState.viewMode,
-        cascadeLevels: mkConfiguratorState.cascadeLevels,
-        meterDetails: mkConfiguratorState.meterDetails,
-        assets: mkConfiguratorState.assets
-    };
-    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `wattspur-messkonzept-technisch-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-}
-
 function mkShowScreen() {
     const upload = document.getElementById('upload-screen');
     const dashboard = document.getElementById('dashboard-screen');
@@ -1116,7 +1209,6 @@ function mkHideScreen() {
 function mkInitialize() {
     mkElements = {
         canvas: document.getElementById('mk-canvas'),
-        canvasStatus: document.getElementById('mk-canvas-status'),
         validation: document.getElementById('mk-validation-list'),
         statusBadge: document.getElementById('mk-status-badge'),
         measurementSummary: document.getElementById('mk-measurement-summary'),
@@ -1137,7 +1229,6 @@ function mkInitialize() {
         mkNotify('Messkonzept-Skizze zurückgesetzt.', 'info');
     });
     document.getElementById('btn-mk-export-pdf')?.addEventListener('click', mkDownloadPdf);
-    document.getElementById('btn-mk-export-json')?.addEventListener('click', mkDownloadJson);
     document.querySelectorAll('[data-mk-mode]').forEach(button => button.addEventListener('click', () => mkChangeMode(button.dataset.mkMode)));
     document.querySelectorAll('[data-mk-level]').forEach(button => button.addEventListener('click', () => mkChangeCascadeLevels(button.dataset.mkLevel)));
     document.querySelectorAll('[data-mk-view]').forEach(button => button.addEventListener('click', () => mkChangeViewMode(button.dataset.mkView)));

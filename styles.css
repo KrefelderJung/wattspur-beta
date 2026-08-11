@@ -98,8 +98,7 @@ body {
 }
 
 .landing-brand,
-.landing-links a,
-.landing-module-card a {
+.landing-links a {
     color: inherit;
     text-decoration: none;
 }
@@ -118,17 +117,30 @@ body {
     line-height: 1.05;
 }
 
+.landing-brand-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.2rem;
+}
+
 .landing-brand-copy strong {
     font-size: 1rem;
 }
 
 .landing-brand-copy small {
-    margin-top: 0.2rem;
     color: var(--text-muted);
     font-size: 0.62rem;
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+}
+
+.landing-brand-beta {
+    padding: 0.12rem 0.4rem;
+    border: 1px solid rgba(125, 211, 252, 0.55);
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
 }
 
 .landing-brand-icon {
@@ -173,9 +185,7 @@ body {
 }
 
 .landing-links a:hover,
-.landing-links a:focus-visible,
-.landing-module-card a:hover,
-.landing-module-card a:focus-visible {
+.landing-links a:focus-visible {
     color: var(--primary-color);
 }
 
@@ -189,6 +199,28 @@ body {
 .landing-home #format-example,
 .landing-home #transparency {
     display: none;
+}
+
+/* Analyse-Modus: dieselbe vollständige App, aber ohne die Startseiteninhalte. */
+html[data-tool="lastgang"] .landing-header .landing-links,
+html[data-tool="lastgang"] .landing-hero,
+html[data-tool="lastgang"] #modules,
+html[data-tool="lastgang"] .landing-footer {
+    display: none;
+}
+
+html[data-tool="lastgang"] .landing-home #import,
+html[data-tool="lastgang"] .landing-home #format-example,
+html[data-tool="lastgang"] .landing-home #transparency {
+    display: block;
+}
+
+html[data-tool="lastgang"] .landing-home #import {
+    display: grid;
+}
+
+html[data-tool="lastgang"] .landing-main {
+    padding-top: 2rem;
 }
 
 .analysis-page-main {
@@ -224,10 +256,14 @@ body {
 }
 
 .landing-hero {
-    min-height: 410px;
+    min-height: auto;
     display: flex;
     align-items: center;
-    padding: clamp(1.5rem, 5vw, 4rem) 0;
+    padding: clamp(1.25rem, 3vw, 2.5rem) 0 0;
+}
+
+.landing-home #modules {
+    margin-top: 2.5rem;
 }
 
 .landing-kicker {
@@ -248,8 +284,28 @@ body {
     margin: 0;
 }
 
+.hero-title-row {
+    display: inline-flex;
+    align-items: center;
+    gap: clamp(0.65rem, 1.6vw, 1.25rem);
+    max-width: 100%;
+    vertical-align: middle;
+}
+
 .hero-title-wordmark {
     color: var(--primary-color);
+}
+
+/* Kleine Wattspur als dezentes Bild-Asset neben dem Wortmarkenbereich. */
+.hero-trail {
+    display: block;
+    flex: 0 0 clamp(7.25rem, 17vw, 13.75rem);
+    width: clamp(7.25rem, 17vw, 13.75rem);
+    height: auto;
+    aspect-ratio: 2120 / 392;
+    object-fit: contain;
+    margin-top: 0.12em;
+    opacity: 0.86;
 }
 
 .hero-copy > p {
@@ -261,13 +317,6 @@ body {
 
 .hero-copy {
     max-width: 720px;
-}
-
-.landing-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1.8rem;
 }
 
 .landing-primary,
@@ -328,6 +377,24 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     background: var(--surface-color);
+    color: var(--text-main);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-module-card:hover,
+.landing-module-card:focus-visible {
+    border-color: var(--primary-color);
+    background: var(--surface-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.landing-card-button {
+    width: 100%;
+    font: inherit;
 }
 
 .landing-module-icon {
@@ -356,16 +423,33 @@ body {
     font-size: 1.12rem;
 }
 
+.module-card-points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.95rem;
+    margin: auto 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--text-main);
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.module-card-points li::before {
+    margin-right: 0.35rem;
+    color: var(--success-color);
+    content: "✓";
+    font-weight: 800;
+}
+
 .landing-module-card p {
     color: var(--text-muted);
     font-size: 0.9rem;
 }
 
-.landing-module-card a {
-    margin-top: auto;
-    color: var(--primary-color);
-    font-weight: 700;
-    font-size: 0.86rem;
+.module-card-context {
+    max-width: 34rem;
+    line-height: 1.45;
 }
 
 .module-state {
@@ -485,6 +569,19 @@ body {
 .format-example ul {
     padding-left: 1.2rem;
     align-self: center;
+}
+
+.format-downloads {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+    margin-top: 0.1rem;
+}
+
+.format-downloads .btn {
+    min-height: 38px;
 }
 
 .transparency-panel {
@@ -734,18 +831,6 @@ body {
 
 .privacy-note strong {
     color: var(--text-main);
-}
-
-.inline-help {
-    margin-top: 1rem;
-    color: var(--text-muted);
-    font-size: 0.8rem;
-}
-
-.inline-help summary {
-    cursor: pointer;
-    color: var(--primary-color);
-    font-weight: 700;
 }
 
 .landing-details {
@@ -1320,12 +1405,13 @@ body {
 .mk-topology-content {
     position: relative;
     z-index: 1;
-    min-width: 100%;
+    width: max-content;
+    min-width: 0;
 }
 
 .mk-connector-layer {
     position: absolute;
-    z-index: 0;
+    z-index: 2;
     inset: 0;
     width: 100%;
     height: 100%;
@@ -1338,6 +1424,12 @@ body {
     stroke: var(--primary-color);
     stroke-width: 2;
     stroke-linecap: round;
+}
+
+.mk-dynamic-node {
+    fill: var(--primary-color);
+    stroke: var(--bg-color);
+    stroke-width: 2;
 }
 
 .mk-supply-column {
@@ -1353,8 +1445,9 @@ body {
 }
 
 .mk-parallel-stack {
-    width: min(100%, 1020px);
-    min-width: max(100%, var(--mk-parallel-min-width, 100%));
+    width: max-content;
+    min-width: var(--mk-parallel-min-width, 0px);
+    max-width: none;
     margin: 0 auto;
 }
 
@@ -1362,6 +1455,7 @@ body {
     display: grid;
     justify-items: center;
     gap: 0.5rem;
+    transform: translateX(var(--mk-parallel-feed-offset-px, 0px));
 }
 
 .mk-parallel-feed {
@@ -1370,22 +1464,25 @@ body {
     margin: 0 auto;
     border-radius: 999px;
     background: var(--primary-color);
+    transform: translateX(var(--mk-parallel-feed-offset-px, 0px));
 }
 
 .mk-parallel-branches {
     position: relative;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+    grid-template-columns: var(--mk-parallel-grid-template-columns, repeat(var(--mk-parallel-count, 1), minmax(0, var(--mk-parallel-branch-width, 1fr))));
     gap: 1rem;
     padding: 1.7rem 0.35rem 0;
+    justify-content: start;
 }
 
 .mk-parallel-branches::before {
     content: '';
     position: absolute;
     top: 0;
-    right: 12.5%;
-    left: 12.5%;
+    right: auto;
+    left: var(--mk-parallel-bus-left-px, 12.5%);
+    width: var(--mk-parallel-bus-width-px, 75%);
     height: 2px;
     border-radius: 999px;
     background: var(--primary-color);
@@ -1404,12 +1501,11 @@ body {
     position: absolute;
     z-index: 0;
     top: -1.7rem;
-    left: 50%;
+    left: 15px;
     width: 2px;
     height: 1.7rem;
     border-radius: 999px;
     background: var(--primary-color);
-    transform: translateX(-50%);
 }
 
 .mk-parallel-branch > .mk-meter-layout,
@@ -1423,13 +1519,32 @@ body {
     box-sizing: border-box;
 }
 
+.mk-parallel-branch > .mk-meter-layout:not(.detail-mode) {
+    width: 32px;
+    justify-items: start;
+}
+
+/* Im Parallelzweig verbindet die dynamische SVG-Leitung den Zähler direkt
+   mit dem einen Knotenpunkt. Die dekorativen Zwischenlinien würden denselben
+   Weg ein zweites Mal zeichnen und dadurch wie lose Stränge wirken. */
+.mk-parallel-branch .mk-connection-line,
+.mk-parallel-branch .mk-zone-assets::after {
+    display: none;
+}
+
+.mk-parallel-branch .mk-empty-zone {
+    padding: 0.75rem;
+}
+
 .mk-parallel-branch .mk-zone-assets {
-    --mk-strand-origin: 50%;
+    --mk-strand-origin: 0;
+    padding-left: 0;
 }
 
 /* Der Parallelzweig beginnt neben dem Zählerstrang, nicht auf ihm. */
 .mk-parallel-branch .mk-zone-assets.simple-mode {
-    --mk-asset-row-offset: 0;
+    --mk-asset-row-offset: 0.8rem;
+    padding-left: 0;
 }
 
 .mk-hak-node {
@@ -1849,6 +1964,7 @@ body.mk-modal-open {
     border-radius: 999px;
     background: var(--primary-color);
     transform: translateX(-50%);
+    display: none;
 }
 
 .mk-zone-junction {
@@ -1891,15 +2007,11 @@ body.mk-modal-open {
     z-index: 1;
 }
 
-.mk-zone-assets.simple-mode .mk-asset-branch::before {
-    content: '';
-    position: absolute;
-    top: -1.1rem;
-    left: 50%;
-    width: 2px;
-    height: 1.1rem;
-    background: var(--primary-color);
-    transform: translateX(-50%);
+/* Die vertikalen Abgänge werden in der SVG-Leitungsschicht aus den echten
+   Objektpositionen berechnet. Dadurch bleiben sie beim Verschieben oder
+   Einfügen von Anlagen magnetisch mit dem Objekt verbunden. */
+.mk-zone-assets .mk-asset-branch::before {
+    display: none;
 }
 
 .mk-generation-meter {
@@ -2198,12 +2310,25 @@ body.mk-modal-open {
     --mk-stack-origin: 10rem;
     display: grid;
     gap: 0;
-    min-width: max(100%, var(--mk-cascade-min-width, 100%));
+    width: max-content;
+    min-width: var(--mk-cascade-min-width, 0px);
+}
+
+.mk-cascade-level {
+    width: max-content;
+    align-items: start;
 }
 
 .mk-single-stack .mk-zone-assets,
 .mk-cascade-stack .mk-zone-assets {
     --mk-strand-origin: calc(var(--mk-stack-origin) - 0.9rem);
+}
+
+/* In einer Kaskade beginnt der Anlagenzweig rechts neben der Zählerachse.
+   Der Knoten bleibt auf der Achse und die Sammelschiene verbindet ihn mit
+   dem ersten Objekt. Dadurch landen neue Anlagen nicht im Hauptstrang. */
+.mk-cascade-stack .mk-zone-assets.simple-mode {
+    --mk-asset-row-offset: 0.75rem;
 }
 
 .mk-cascade-level {
@@ -2335,39 +2460,6 @@ body.mk-modal-open {
     cursor: pointer;
 }
 
-.mk-technical-export {
-    margin-top: 0.8rem;
-    color: var(--text-muted);
-    font-size: 0.7rem;
-}
-
-.mk-technical-export summary {
-    cursor: pointer;
-    color: var(--primary-color);
-    font-weight: 700;
-}
-
-.mk-technical-export p {
-    margin: 0.5rem 0;
-    line-height: 1.4;
-}
-
-.mk-technical-export .btn {
-    width: 100%;
-}
-
-.landing-card-action {
-    margin-top: auto;
-    padding: 0;
-    border: 0;
-    color: var(--primary-color);
-    background: transparent;
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.86rem;
-    font-weight: 700;
-}
-
 @media (max-width: 1100px) {
     .mk-layout {
         grid-template-columns: minmax(180px, 0.3fr) minmax(0, 1fr);
@@ -2488,6 +2580,23 @@ body.mk-modal-open {
         grid-template-columns: 1fr;
         gap: 1rem;
         padding: 1.4rem 0 0;
+        justify-content: stretch;
+    }
+
+    /* Auf kleinen Bildschirmen werden Parallelzweige untereinander gesetzt;
+       die Desktop-Mindestbreite darf dann keinen horizontalen Überlauf erzwingen. */
+    .mk-parallel-stack {
+        width: 100%;
+        min-width: 100%;
+        max-width: none;
+    }
+
+    .mk-topology-content,
+    .mk-single-stack,
+    .mk-cascade-stack,
+    .mk-cascade-level {
+        width: 100%;
+        min-width: 100%;
     }
 
     .mk-parallel-branches::before {
@@ -2661,9 +2770,13 @@ body.mk-modal-open {
         font-size: 2.25rem;
     }
 
-    .landing-actions,
-    .landing-actions .btn {
-        width: 100%;
+    .hero-title-row {
+        gap: 0.55rem;
+    }
+
+    .hero-trail {
+        flex-basis: clamp(6rem, 29vw, 8.75rem);
+        width: clamp(6rem, 29vw, 8.75rem);
     }
 
     .landing-section {
@@ -2747,6 +2860,7 @@ body.mk-modal-open {
     display: flex;
     flex-direction: row;
     height: 100vh;
+    min-height: 0;
     overflow: hidden;
 }
 
@@ -2766,6 +2880,26 @@ body.mk-modal-open {
     align-items: center;
     gap: 1rem;
     color: var(--primary-color);
+}
+
+.brand-link {
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    padding: 0.25rem 0.45rem;
+    margin-left: -0.45rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.brand-link:hover,
+.brand-link:focus-visible {
+    background-color: var(--surface-hover);
+    color: var(--secondary-color);
+}
+
+.brand-link:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 .brand img {
@@ -2993,9 +3127,10 @@ body.mk-modal-open {
 
 .dashboard-layout {
     display: flex;
-    flex: 1;
+    flex: 1 1 auto;
     overflow: hidden;
-    height: calc(100vh - 70px);
+    height: auto;
+    min-height: 0;
     position: relative;
 }
 
@@ -4697,9 +4832,16 @@ body.mk-printing .mk-print-sheet {
     display: flex;
     flex-direction: column;
     flex: 1;
-    height: 100vh;
+    height: auto;
     overflow: hidden;
+    min-height: 0;
     min-width: 0; /* Prevents overflow in flex layouts */
+}
+
+/* The chart must shrink with short browser viewports instead of being clipped
+   below the dashboard. On tall screens it keeps the existing generous height. */
+#tab-lastgang #chart-timeline {
+    min-height: clamp(260px, calc(100vh - 210px), 520px) !important;
 }
 
 .comparison-grid {

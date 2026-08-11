@@ -9,45 +9,47 @@
     <!-- PapaParse -->
     <script src="lib/papaparse.min.js"></script>
     
-    <link rel="stylesheet" href="styles.css?v=135">
+    <link rel="stylesheet" href="styles.css?v=159">
     <link rel="icon" type="image/svg+xml" href="wattspur-mark.svg">
     <!-- PWA Meta tags -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <script>
+        if (new URLSearchParams(window.location.search).get('tool') === 'lastgang') {
+            document.documentElement.dataset.tool = 'lastgang';
+        }
+    </script>
 </head>
 <body class="landing-home">
     <div id="app">
         <!-- Public beta landing page and upload screen -->
         <div id="upload-screen" class="screen active">
             <header class="landing-header" aria-label="Seitennavigation">
-                    <a class="landing-brand" href="#top" aria-label="Zur Startseite">
+                    <a class="landing-brand" href="index.html#top" aria-label="Zur Werkzeugauswahl">
                     <img class="landing-brand-icon" src="wattspur-mark.svg" alt="" aria-hidden="true">
-                    <span class="landing-brand-copy"><strong>Wattspur</strong><small>Energiewerkzeuge</small></span>
+                    <span class="landing-brand-copy"><strong>Wattspur</strong><span class="landing-brand-meta"><small>Energiewerkzeuge</small><span class="beta-badge landing-brand-beta">Beta</span></span></span>
                 </a>
                     <nav class="landing-links" aria-label="Bereiche">
                         <a href="#modules">Werkzeuge</a>
-                        <a href="#feedback">Feedback</a>
+                        <a href="kontakt.html">Kontakt</a>
                 </nav>
             </header>
 
             <main id="top" class="landing-main">
                 <section class="landing-hero" aria-labelledby="landing-title">
                     <div class="hero-copy">
-                        <h1 id="landing-title"><span class="hero-title-wordmark">Wattspur</span><br>Energie klarer sehen.</h1>
-                        <p>Lokale Werkzeuge für Lastgänge und Messkonzepte – ohne Konto und ohne Upload in eine Cloud.</p>
-                        <div class="landing-actions">
-                            <a class="btn landing-primary" href="#modules">Werkzeuge wählen</a>
-                        </div>
+                        <h1 id="landing-title"><span class="hero-title-row"><span class="hero-title-wordmark">Wattspur</span><img class="hero-trail" src="assets/hero-wattspur-trail.png" alt="" aria-hidden="true" width="2120" height="392"></span><br>Energie klarer sehen.</h1>
+                        <p>Lokale Werkzeuge. Einfache Bedienung.</p>
                     </div>
                 </section>
 
                 <section id="modules" class="landing-section" aria-labelledby="modules-title">
                     <div class="section-heading">
-                        <h2 id="modules-title">Wähle ein Werkzeug.</h2>
+                        <h2 id="modules-title">Wähle ein Werkzeug und leg direkt los.</h2>
                     </div>
                     <div class="module-card-grid">
-                        <article class="landing-module-card">
+                        <a class="landing-module-card" href="lastgang-analyse.html" aria-label="Lastganganalyse öffnen">
                             <span class="landing-module-icon landing-module-icon-analysis" aria-hidden="true">
                                 <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M8 8v32h32"></path>
@@ -56,10 +58,14 @@
                                 </svg>
                             </span>
                             <h3>Lastganganalyse</h3>
-                            <p>CSV- und MSCONS-Dateien lokal prüfen, visualisieren und vergleichen.</p>
-                            <a href="lastgang-analyse.html">Analyse starten →</a>
-                        </article>
-                        <article class="landing-module-card">
+                            <p class="module-card-context">Für Unternehmen und Stadtwerke: CSV- oder MSCONS-Dateien einlesen oder Daten direkt aus Excel per Copy &amp; Paste übernehmen.</p>
+                            <ul class="module-card-points" aria-label="Funktionen der Lastganganalyse">
+                                <li>Visualisieren</li>
+                                <li>Prüfen</li>
+                                <li>Vergleichen</li>
+                            </ul>
+                        </a>
+                        <button type="button" class="landing-module-card landing-card-button" id="btn-open-messkonzept-card" aria-label="Messkonzept-Konfigurator öffnen">
                             <span class="landing-module-icon landing-module-icon-messkonzept" aria-hidden="true">
                                 <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="15" y="5" width="18" height="14" rx="3"></rect>
@@ -70,15 +76,18 @@
                                 </svg>
                             </span>
                             <h3>Messkonzept-Konfigurator</h3>
-                            <p>Anlagen, Zähler und historische Zeitscheiben strukturiert erfassen.</p>
-                            <button type="button" class="landing-card-action" id="btn-open-messkonzept-card">Konfigurator öffnen →</button>
-                        </article>
+                            <p class="module-card-context">Für Bauherren, Installateure und Stadtwerke: Messkonzepte verständlich darstellen und für die Abstimmung exportieren.</p>
+                            <ul class="module-card-points" aria-label="Funktionen des Messkonzept-Konfigurators">
+                                <li>Visualisieren</li>
+                                <li>Prüfen</li>
+                                <li>Exportieren</li>
+                            </ul>
+                        </button>
                     </div>
                 </section>
 
                 <section id="import" class="landing-section import-section" aria-labelledby="import-title">
                     <div class="import-copy">
-                        <span class="landing-kicker">Werkzeug 01 · lokal</span>
                         <h2 id="import-title">Lastganganalyse starten</h2>
                         <p>Die Analyse läuft auf diesem Gerät. Deine Dateien werden nicht an einen Anwendungsserver übertragen.</p>
                         <ul class="plain-check-list">
@@ -86,12 +95,6 @@
                             <li>CSV und MSCONS</li>
                             <li>Keine EDM-Schnittstelle</li>
                         </ul>
-                        <details class="inline-help">
-                            <summary>Hinweis zur Weitergabe</summary>
-                            <div class="privacy-note" role="note">
-                                <strong>Vor einer Weitergabe prüfen:</strong> Zählpunkt-/Marktlokationsnummer, Standort, Firmenname, Dateiname und sonstige Kopfzeilen entfernen. Auch ein Lastprofil kann durch Zeitraum und Verlauf Rückschlüsse auf einen Betrieb zulassen. Die Datei wird hier lokal verarbeitet, aber Exporte und Screenshots können sichtbare Bezeichnungen enthalten.
-                            </div>
-                        </details>
                     </div>
                     <div class="upload-container">
                         <div id="drop-zone" class="drop-zone">
@@ -102,7 +105,7 @@
                         </div>
                         <div class="empty-start-row">
                             <button id="btn-start-empty" class="btn btn-secondary">Mit leerem Lastgang starten</button>
-                            <span>für manuelle Eingaben und Tests</span>
+                            <button id="btn-start-demo" class="btn btn-primary" title="Mit einem synthetischen Jahresprofil für Haushaltsbezug und PV-Einspeisung starten">Demo starten</button>
                         </div>
                         <div id="upload-progress" class="hidden">
                             <div class="spinner"></div>
@@ -123,9 +126,15 @@
                         <ul>
                             <li>Ein Messwert pro Zeile</li>
                             <li>15-Minuten-Werte sind der typische Anwendungsfall</li>
+                            <li>Die Demo-Profile enthalten ein vollständiges Jahr mit 35.040 Werten</li>
                             <li>Die Einheit wird beim Import bestätigt</li>
                             <li>Keine Formeln, verbundenen Zellen oder Summenzeilen verwenden</li>
                         </ul>
+                        <div class="format-downloads" aria-label="CSV-Dateien herunterladen">
+                            <button id="btn-download-csv-template" type="button" class="btn btn-secondary btn-sm" title="Eine leere CSV-Vorlage mit Datum, Uhrzeit und Wert herunterladen">CSV-Vorlage</button>
+                            <button id="btn-download-demo-household" type="button" class="btn btn-secondary btn-sm" title="Synthetisches Jahresprofil 2026 für den Haushaltsbezug herunterladen">Demo: Haushaltsbezug · Jahr</button>
+                            <button id="btn-download-demo-pv" type="button" class="btn btn-secondary btn-sm" title="Synthetisches Jahresprofil 2026 für die PV-Einspeisung herunterladen">Demo: PV-Einspeisung · Jahr</button>
+                        </div>
                     </div>
                 </details>
 
@@ -151,6 +160,9 @@
                                     <li>Keine Garantie für Vollständigkeit oder Fehlerfreiheit</li>
                                 </ul>
                             </div>
+                        </div>
+                        <div class="transparency-privacy-note privacy-note" role="note">
+                            <strong>Vor einer Weitergabe prüfen:</strong> Zählpunkt-/Marktlokationsnummer, Standort, Firmenname, Dateiname und sonstige Kopfzeilen entfernen. Auch ein Lastprofil kann durch Zeitraum und Verlauf Rückschlüsse auf einen Betrieb zulassen. Die Datei wird hier lokal verarbeitet, aber Exporte und Screenshots können sichtbare Bezeichnungen enthalten.
                         </div>
                         <p class="beta-disclaimer"><strong>Hinweis:</strong> Ergebnisse sind unverbindliche Analyse- und Szenariowerte. Vor betrieblichen, vertraglichen oder wirtschaftlichen Entscheidungen müssen Eingangsdaten, Annahmen und Ergebnisse fachlich geprüft werden. Für Entscheidungen allein auf Grundlage dieser Auswertung wird keine Haftung übernommen.</p>
                     </div>
@@ -200,7 +212,6 @@
                     <section class="mk-builder-card" aria-labelledby="mk-builder-title">
                         <div class="mk-builder-toolbar">
                             <div>
-                                <span class="mk-panel-heading-label">Grundtopologie</span>
                                 <h2 id="mk-builder-title">Messbereich festlegen</h2>
                             </div>
                             <div class="mk-toolbar-controls">
@@ -237,21 +248,16 @@
                             </div>
                         </div>
                         <div id="mk-canvas" class="mk-canvas" aria-live="polite"></div>
-                        <div class="mk-canvas-footer"><button type="button" class="btn btn-secondary btn-sm" id="btn-mk-reset">Schema zurücksetzen</button><span id="mk-canvas-status">Bereit für Bausteine.</span></div>
+                        <div class="mk-canvas-footer"><button type="button" class="btn btn-secondary btn-sm" id="btn-mk-reset">Schema zurücksetzen</button></div>
                     </section>
 
                     <aside class="mk-summary-panel" aria-labelledby="mk-summary-title">
-                        <div class="mk-panel-heading"><span id="mk-summary-title">Prüfstatus</span><span id="mk-status-badge" class="mk-status-badge neutral">Start</span></div>
+                        <div class="mk-panel-heading"><span id="mk-summary-title">Technischer Hinweisstatus</span><span id="mk-status-badge" class="mk-status-badge neutral" title="Automatische Orientierung, keine fachliche Freigabe oder Beratung.">Bereit</span></div>
                         <div id="mk-validation-list" class="mk-validation-list"></div>
                         <div class="mk-summary-divider"></div>
                         <div class="mk-panel-heading"><span>Messlogik</span></div>
                         <div id="mk-measurement-summary" class="mk-measurement-summary"></div>
                         <button type="button" class="btn landing-primary mk-export-button" id="btn-mk-export-pdf">Messkonzept als PDF ausgeben</button>
-                        <details class="mk-technical-export">
-                            <summary>Technischer Export</summary>
-                            <p>JSON dient nur als strukturierter Backup-/Importstand für die Weiterentwicklung.</p>
-                            <button type="button" class="btn btn-secondary btn-sm" id="btn-mk-export-json">JSON-Backup speichern</button>
-                        </details>
                     </aside>
                 </div>
             </main>
@@ -290,10 +296,10 @@
 
             <div class="main-workspace">
                 <header class="dashboard-header">
-                    <div class="brand">
+                    <a class="brand brand-link" href="index.html#top" aria-label="Zur Werkzeugauswahl" title="Zur Werkzeugauswahl">
                         <img src="wattspur-mark.svg" alt="">
                         <h2>Wattspur <span class="dashboard-product-label">· Lastganganalyse</span></h2>
-                    </div>
+                    </a>
                     
                     <div class="header-center">
                         <!-- Basis Module Navigation Tabs -->
@@ -1486,7 +1492,7 @@
     <script src="utils.js?v=304"></script>
     <script src="parser.js?v=304"></script>
     <script src="charts.js?v=304"></script>
-    <script src="app.js?v=305"></script>
-    <script src="messkonzept.js?v=18"></script>
+    <script src="app.js?v=309"></script>
+    <script src="messkonzept.js?v=37"></script>
 </body>
 </html>
