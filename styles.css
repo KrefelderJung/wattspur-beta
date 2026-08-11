@@ -1459,12 +1459,36 @@ html[data-tool="lastgang"] .landing-main {
 }
 
 .mk-parallel-feed {
+    position: relative;
     width: 2px;
     height: 1.45rem;
     margin: 0 auto;
     border-radius: 999px;
     background: var(--primary-color);
     transform: translateX(var(--mk-parallel-feed-offset-px, 0px));
+}
+
+/* Alle Übergänge zwischen senkrechter und waagerechter Leitung erhalten
+   denselben kleinen Knotenpunkt wie die Anlagenabgänge. */
+.mk-parallel-feed::after,
+.mk-parallel-branch-connector::before,
+.mk-parallel-branch > .mk-meter-layout::after {
+    content: '';
+    position: absolute;
+    z-index: 3;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--bg-color);
+    border-radius: 50%;
+    background: var(--primary-color);
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
+    box-sizing: border-box;
+}
+
+.mk-parallel-feed::after {
+    left: 50%;
+    bottom: -4px;
+    transform: translateX(-50%);
 }
 
 .mk-parallel-branches {
@@ -1508,6 +1532,11 @@ html[data-tool="lastgang"] .landing-main {
     background: var(--primary-color);
 }
 
+.mk-parallel-branch-connector::before {
+    left: -3px;
+    top: -3px;
+}
+
 .mk-parallel-branch > .mk-meter-layout,
 .mk-parallel-branch > .mk-drop-zone {
     position: relative;
@@ -1522,6 +1551,12 @@ html[data-tool="lastgang"] .landing-main {
 .mk-parallel-branch > .mk-meter-layout:not(.detail-mode) {
     width: 32px;
     justify-items: start;
+}
+
+.mk-parallel-branch > .mk-meter-layout::after {
+    left: 50%;
+    bottom: -4px;
+    transform: translateX(-50%);
 }
 
 /* Im Parallelzweig verbindet die dynamische SVG-Leitung den Zähler direkt
@@ -1972,8 +2007,8 @@ body.mk-modal-open {
     z-index: 2;
     top: calc(0.9rem - 5px);
     left: var(--mk-strand-origin, 50%);
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border: 2px solid var(--bg-color);
     border-radius: 50%;
     background: var(--primary-color);
