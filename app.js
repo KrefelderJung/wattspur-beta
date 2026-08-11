@@ -16,39 +16,6 @@ let profileFilters = [];
 let previousTimelineAggregation = null; // Preserves timeline aggregation when switching tabs
 let currentAgnesMode = 'single';
 
-function createFeedbackTemplate() {
-    return [
-        'Feedback zur Lastgang-Analyse (Beta)',
-        '',
-        '1. Welche Datei bzw. welches Format wurde getestet?',
-        '2. Was hat gut funktioniert?',
-        '3. Wo war die Bedienung unklar oder fehlerhaft?',
-        '4. Welche Auswertung fehlt im Arbeitsalltag?',
-        '5. Würdest du das Tool erneut verwenden? Warum oder warum nicht?',
-        '',
-        'Bitte keine Lastgangdaten oder vertraulichen Unternehmensinformationen mitsenden.'
-    ].join('\n');
-}
-
-async function copyFeedbackTemplate() {
-    const template = createFeedbackTemplate();
-    try {
-        await navigator.clipboard.writeText(template);
-        showToast('Feedback-Leitfragen wurden kopiert.', 'success');
-    } catch (error) {
-        const textarea = document.createElement('textarea');
-        textarea.value = template;
-        textarea.setAttribute('readonly', '');
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-        showToast('Feedback-Leitfragen wurden kopiert.', 'success');
-    }
-}
-
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     screens = {
@@ -373,11 +340,6 @@ function enforceSingleDatasetForProfileComparison() {
 
 // --- Event Listeners ---
 function setupEventListeners() {
-    const btnCopyFeedback = document.getElementById('btn-copy-feedback-template');
-    if (btnCopyFeedback) {
-        btnCopyFeedback.addEventListener('click', copyFeedbackTemplate);
-    }
-
     // AgNes Mode Switcher listeners
     const btnAgnesSingle = document.getElementById('btn-agnes-mode-single');
     const btnAgnesMulti = document.getElementById('btn-agnes-mode-multi');

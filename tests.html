@@ -996,19 +996,25 @@ Datum;Uhrzeit;Verbrauch
                 return response.text();
             }
 
-            const [indexText, appText, exportText, uiText, messkonzeptText, logoText, serviceWorkerText] = await Promise.all([
+            const [indexText, appText, exportText, uiText, messkonzeptText, logoText, serviceWorkerText, stylesText] = await Promise.all([
                 fetchPublishedSource('index.html?beta-copy=1'),
                 fetchPublishedSource('app.js?beta-copy=1'),
                 fetchPublishedSource('export/export.js?beta-copy=1'),
                 fetchPublishedSource('ui/ui.js?beta-copy=1'),
                 fetchPublishedSource('messkonzept.js?beta-copy=1'),
                 fetchPublishedSource('wattspur-mark.svg?beta-copy=1'),
-                fetchPublishedSource('service-worker.js?beta-copy=1')
+                fetchPublishedSource('service-worker.js?beta-copy=1'),
+                fetchPublishedSource('styles.css?beta-copy=1')
             ]);
+            const analysisPageText = await fetchPublishedSource('lastgang-analyse.html?beta-copy=1');
+            assert(stylesText.includes('.mk-parallel-branch .mk-zone-assets.simple-mode') && stylesText.includes('--mk-asset-row-offset: 0;'), 'Parallelzweig startet neben statt auf der Zaehlerachse');
             assert(indexText.includes('öffentliche Beta'), 'Der Einstieg muss die öffentliche Beta kennzeichnen');
-            assert(indexText.includes('Dateien bleiben im Browser'), 'Der Einstieg muss die lokale Verarbeitung erklären');
+            assert(indexText.includes('ohne Upload in eine Cloud'), 'Der Einstieg muss die lokale Verarbeitung erklären');
+            assert(!indexText.includes('class="trust-list"'), 'Der Einstiegsbereich darf keine zusätzliche Hinweiszeile unter dem Hauptbutton anzeigen');
             assert(indexText.includes('Datum;Uhrzeit;Wert'), 'Ein sichtbares CSV-Beispiel muss vorhanden sein');
             assert(indexText.includes('Kapazitätsbestellung'), 'Das Modul muss als Kapazitätsbestellung bezeichnet werden');
+            assert(!indexText.includes('class="module-future"') && !indexText.includes('In Vorbereitung:</strong> Kapazitätsbestellung'), 'Die Werkzeugübersicht darf keinen zusätzlichen Vorbereitungshinweis anzeigen');
+            assert(!indexText.includes('feedback-panel') && indexText.includes('href="kontakt.html"'), 'Die Startseite darf keinen großen Feedback-Block enthalten und muss stattdessen einen Kontaktweg anbieten');
             assert(indexText.includes('Vor einer Weitergabe prüfen'), 'Der Einstieg muss auf die Grenzen einer vollständigen Anonymisierung hinweisen');
             assert(indexText.includes('Dateiname'), 'Der Datenschutz-Hinweis muss auch sichtbare Dateinamen berücksichtigen');
             assert(!indexText.includes('fonts.googleapis.com'), 'Die öffentliche Seite darf keine externen Google Fonts laden');
@@ -1016,6 +1022,9 @@ Datum;Uhrzeit;Verbrauch
             assert(indexText.includes('wattspur-mark.svg'), 'Die Produktmarke muss ein gemeinsames SVG-Zeichen verwenden');
             assert(serviceWorkerText.includes("event.request.mode === 'navigate'") && serviceWorkerText.includes('fetch(event.request).then(response'), 'Seitenaufrufe müssen für neue Veröffentlichungen zuerst frisch geladen und nur offline aus dem Cache bedient werden');
             assert(indexText.includes('Messkonzept-Konfigurator'), 'Das künftige Messkonzept-Werkzeug muss als eigener Einstieg erkennbar sein');
+            assert(!indexText.includes('Was ist geplant?') && !indexText.includes('Geführte Topologien'), 'Die Messkonzept-Karte darf keine zusätzliche Zukunftsbeschreibung anzeigen');
+            assert(indexText.includes('landing-module-icon-analysis') && indexText.includes('landing-module-icon-messkonzept') && !indexText.includes('class="landing-module-card featured"') && stylesText.includes('.landing-module-icon'), 'Die Werkzeugkarten müssen gleich gerahmt und mit passenden Logos versehen sein');
+            assert(indexText.includes('class="landing-home"') && indexText.includes('href="lastgang-analyse.html"') && stylesText.includes('.landing-home #import') && analysisPageText.includes("['import', 'format-example', 'transparency']") && analysisPageText.includes('id="dashboard-mount"'), 'Die Lastganganalyse muss auf einer eigenen Werkzeugseite starten und die Startseite entlasten');
             assert(!indexText.includes('<span class="module-state ready">MVP</span>'), 'Der Konfigurator-Kopfbereich darf kein zusätzliches MVP-Badge anzeigen');
             assert(!indexText.includes('<span class="landing-kicker">Eigenes Schema'), 'Der Konfigurator-Kopfbereich darf keine zusätzliche Schema-Kickerzeile anzeigen');
             assert(indexText.includes('VBEW-inspiriert') && indexText.includes('keine technische Abstimmung') && indexText.includes('class="mk-reference-link"') && !indexText.includes('class="mk-reference"'), 'Hinweise zu Zweck, Grenzen und Quelle müssen in einem kompakten Einführungstext zusammengeführt sein');
@@ -1054,8 +1063,12 @@ Datum;Uhrzeit;Verbrauch
             const styleText = await fetchPublishedSource('styles.css?beta-copy=1');
             assert(styleText.includes('.mk-meter-count-switch') && styleText.includes('.mk-meter-count-divider') && styleText.includes('.mk-topology-btn:disabled') && !styleText.includes('.mk-cascade-controls'), 'Die integrierte Zählerauswahl muss kompakt gestaltet und ohne separate Kaskadenzeile responsiv bleiben');
             assert(messkonzeptText.includes('mkUpdateSimpleAssetStrands') && messkonzeptText.includes('mkCenterParallelViewport') && messkonzeptText.includes('mkViewportLayout') && messkonzeptText.includes('mk-zone-bus-width-px') && styleText.includes('--mk-asset-row-offset') && styleText.includes('.mk-zone-assets.simple-mode .mk-asset-row.primary') && styleText.includes('--mk-zone-bus-width-px'), 'Der erste Anlagenzweig muss am zentralen Knoten beginnen, die Sammelschiene dynamisch bis zum letzten Objekt reichen und breite Parallelansichten zentriert öffnen');
-            assert(styleText.includes('.mk-zone-assets::before') && styleText.includes('padding-left: var(--mk-strand-origin, 50%)') && styleText.includes('.mk-zone-assets') && styleText.includes('min-height: 8.8rem') && styleText.includes('.mk-zone-assets.cascade-link-zone::after') && styleText.includes('top: -2.45rem') && styleText.includes('.mk-zone-assets.simple-mode') && styleText.includes('grid-template-columns: repeat(var(--mk-asset-columns, 3), max-content)') && styleText.includes('overflow-x: auto') && styleText.includes('--mk-stack-origin: 10rem') && styleText.includes('.mk-single-stack') && styleText.includes('calc(var(--mk-stack-origin) - 0.9rem)') && styleText.includes('min-width: max(100%, var(--mk-cascade-min-width, 100%))') && styleText.includes('min-width: max(100%, var(--mk-parallel-min-width, 100%))') && styleText.includes('.mk-parallel-branch .mk-zone-assets') && styleText.includes('--mk-strand-origin: 50%') && styleText.includes('.mk-zone-assets.simple-mode::before') && styleText.includes('.mk-zone-assets::after') && styleText.includes('.mk-zone-junction') && styleText.includes('.mk-asset-row.secondary::before') && styleText.includes('.mk-zone-assets.simple-mode .mk-asset-branch::before') && styleText.includes('.mk-zone-assets.simple-mode .mk-asset-card') && styleText.includes('background: transparent') && styleText.includes('.mk-zone-assets.simple-mode .mk-remove-asset') && styleText.includes('.mk-generation-meter') && styleText.includes('.mk-cascade-level + .mk-cascade-arrow::before') && styleText.includes('.cascade-link-zone') && styleText.includes('.mk-parallel-stack') && styleText.includes('.mk-parallel-branches::before') && styleText.includes('.mk-parallel-branch-connector') && styleText.includes('.mk-palette-label') && styleText.includes('overflow-wrap: anywhere') && styleText.includes('white-space: normal') && !styleText.includes('width: 4.75rem') && styleText.includes('.mk-zone-assets.simple-mode .mk-asset-icon.steuve.mk-device-climate') && !styleText.includes('.mk-zone-assets.detail-mode .mk-asset-card::after') && styleText.includes('.mk-meter-detail-connection') && styleText.includes('.mk-palette-icon.steuve') && styleText.includes('.mk-battery-symbol') && styleText.includes('.mk-device-wallbox') && styleText.includes('.mk-device-heatpump') && styleText.includes('.mk-device-climate') && styleText.includes('.mk-charge-symbol') && styleText.includes('.mk-fan-symbol') && styleText.includes('.mk-palette-icon.nsh') && styleText.includes('.mk-nsh-editor-hint') && styleText.includes('.mk-storage-info::after') && styleText.includes('@media (max-width: 480px)') && styleText.includes('.mk-palette-items') && styleText.includes('grid-template-columns: 1fr'), 'Objekte, Kaskadenstufen und direkte Parallelzweige müssen im einfachen und detaillierten Modus responsiv angebunden bleiben; Leitungen müssen durch die Drop-Zone bis zur nächsten Kaskadenstufe laufen');
+            assert(styleText.includes('.mk-zone-assets::before') && styleText.includes('padding-left: var(--mk-strand-origin, 50%)') && styleText.includes('.mk-zone-assets') && styleText.includes('.mk-zone-assets.cascade-link-zone::after') && styleText.includes('top: -2.45rem') && styleText.includes('.mk-zone-assets.simple-mode') && styleText.includes('grid-template-columns: repeat(var(--mk-asset-columns, 3), max-content)') && styleText.includes('overflow-x: auto') && styleText.includes('--mk-stack-origin: 10rem') && styleText.includes('.mk-single-stack') && styleText.includes('calc(var(--mk-stack-origin) - 0.9rem)') && styleText.includes('min-width: max(100%, var(--mk-cascade-min-width, 100%))') && styleText.includes('min-width: max(100%, var(--mk-parallel-min-width, 100%))') && styleText.includes('.mk-parallel-branch .mk-zone-assets') && styleText.includes('--mk-strand-origin: 50%') && styleText.includes('.mk-zone-assets.simple-mode::before') && styleText.includes('.mk-zone-assets::after') && styleText.includes('.mk-zone-junction') && styleText.includes('.mk-asset-row.secondary::before') && styleText.includes('.mk-zone-assets.simple-mode .mk-asset-branch::before') && styleText.includes('.mk-zone-assets.simple-mode .mk-asset-card') && styleText.includes('background: transparent') && styleText.includes('.mk-zone-assets.simple-mode .mk-remove-asset') && styleText.includes('.mk-generation-meter') && styleText.includes('.mk-cascade-level + .mk-cascade-arrow::before') && styleText.includes('.cascade-link-zone') && styleText.includes('.mk-parallel-stack') && styleText.includes('.mk-parallel-branches::before') && styleText.includes('.mk-parallel-branch-connector') && styleText.includes('.mk-palette-label') && styleText.includes('overflow-wrap: anywhere') && styleText.includes('white-space: normal') && !styleText.includes('width: 4.75rem') && styleText.includes('.mk-zone-assets.simple-mode .mk-asset-icon.steuve.mk-device-climate') && !styleText.includes('.mk-zone-assets.detail-mode .mk-asset-card::after') && styleText.includes('.mk-meter-detail-connection') && styleText.includes('.mk-palette-icon.steuve') && styleText.includes('.mk-battery-symbol') && styleText.includes('.mk-device-wallbox') && styleText.includes('.mk-device-heatpump') && styleText.includes('.mk-device-climate') && styleText.includes('.mk-charge-symbol') && styleText.includes('.mk-fan-symbol') && styleText.includes('.mk-palette-icon.nsh') && styleText.includes('.mk-nsh-editor-hint') && styleText.includes('.mk-storage-info::after') && styleText.includes('@media (max-width: 480px)') && styleText.includes('.mk-palette-items') && styleText.includes('grid-template-columns: 1fr'), 'Objekte, Kaskadenstufen und direkte Parallelzweige müssen im einfachen und detaillierten Modus responsiv angebunden bleiben; Leitungen müssen durch die Drop-Zone bis zur nächsten Kaskadenstufe laufen');
             assert(logoText.includes('#fb923c'), 'Die Verlaufsspur im Wattspur-Logo muss orange markiert sein');
+
+            assert(messkonzeptText.includes('mkUpdateDynamicConnections') && messkonzeptText.includes('mkGetStagePoint') && messkonzeptText.includes('ResizeObserver') && messkonzeptText.includes('mk-canvas-stage'), 'Meter, Knoten und Kaskadenstufen muessen dynamische Verbindungen erhalten');
+            assert(messkonzeptText.includes("mk-drop-zone ${assets.length ? 'filled' : 'empty'}") && styleText.includes('.mk-drop-zone.empty') && styleText.includes('min-height: 0'), 'Ablagebereiche muessen leer kompakt bleiben und mit ihren Objekten wachsen');
+            assert(indexText.includes('data-mk-zoom="out"') && indexText.includes('data-mk-zoom="in"') && indexText.includes('data-mk-zoom="fit"') && messkonzeptText.includes('mkChangeCanvasZoom') && stylesText.includes('.mk-connector-layer') && stylesText.includes('zoom: var(--mk-canvas-zoom'), 'Die Skizze muss sich verkleinern, vergroessern und einpassen lassen');
 
             const publishedCopy = [indexText, appText, exportText, uiText, messkonzeptText].join('\n');
             ['BNetzA Standard', 'Revisionssicheres Audit-Prüfprotokoll', 'gesetzlichen 10%-BNetzA-Mindestwert'].forEach(forbidden => {
@@ -1459,18 +1472,21 @@ Datum;Uhrzeit;Verbrauch
         });
 
         addTest('release', 'Rechtliche Seiten sind erreichbar und im Footer verlinkt', 'Prüft Impressum, Datenschutzerklärung und beide Footer-Links vor einer Veröffentlichung', async () => {
-            const [startseite, impressum, datenschutz] = await Promise.all([
-                fetch('index.html').then(response => response.text()),
-                fetch('impressum.html').then(response => response.text()),
-                fetch('datenschutz.html').then(response => response.text())
+            const [startseite, impressum, datenschutz, kontakt] = await Promise.all([
+                fetch('index.html?contact-check=1').then(response => response.text()),
+                fetch('impressum.html?contact-check=1').then(response => response.text()),
+                fetch('datenschutz.html?contact-check=1').then(response => response.text()),
+                fetch('kontakt.html?contact-check=1').then(response => response.text())
             ]);
 
+            assert(startseite.includes('href="kontakt.html"'), 'Der Footer muss auf den Kontaktweg verlinken');
             assert(startseite.includes('href="impressum.html"'), 'Der Footer muss auf das Impressum verlinken');
             assert(startseite.includes('href="datenschutz.html"'), 'Der Footer muss auf die Datenschutzerklärung verlinken');
             assert(impressum.includes('Salvatore Napolitano'), 'Impressum muss die verantwortliche Person enthalten');
             assert(impressum.includes('Snapolitano250187@gmail.com'), 'Impressum muss eine Kontakt-E-Mail enthalten');
             assert(datenschutz.includes('GitHub Pages'), 'Datenschutzerklärung muss das Hosting benennen');
             assert(datenschutz.includes('lokal im Browser'), 'Datenschutzerklärung muss die lokale Dateiverarbeitung erklären');
+            assert(kontakt.includes('id="contact-form"') && kontakt.includes('mailto:Snapolitano250187@gmail.com'), 'Die Kontaktseite muss ein einfaches lokales Mailformular anbieten');
         });
 
         // --- ENGINE RUNNER ---

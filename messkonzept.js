@@ -38,6 +38,7 @@ const MK_STEUVE_MODULE_OPTIONS = Object.freeze([
 const MK_STORAGE_INFO_TEXT = 'Achtung: Die Registrierung des Stromspeichers im Marktstammdatenregister ist zu prüfen. Beim netzbezogenen Laden ist zusätzlich zu prüfen, ob § 14a EnWG greift; Einspeisung und Bezug sind getrennt zu betrachten. Messkonzept mit dem Verteilnetzbetreiber abstimmen.';
 const MK_BALCONY_INFO_TEXT = 'Balkonkraftwerk / Steckersolargerät: Registrierung im Marktstammdatenregister prüfen. Die vereinfachte Behandlung hängt unter anderem von Leistungsgrenzen und der gewählten EEG-Veräußerungsform ab.';
 const MK_ASSETS_PER_ROW = 3;
+const MK_CANVAS_ZOOM = Object.freeze({ min: 0.4, max: 1.2, step: 0.1 });
 
 const MK_METER_DETAIL_FIELDS = Object.freeze([
     { key: 'maloBezug', label: 'MaLo Bezug', type: 'text' },
@@ -50,6 +51,7 @@ const MK_METER_DETAIL_FIELDS = Object.freeze([
 const mkConfiguratorState = {
     mode: 'single',
     viewMode: 'simple',
+    canvasZoom: 1,
     cascadeLevels: 2,
     nextId: 1,
     assets: [],
@@ -58,6 +60,8 @@ const mkConfiguratorState = {
 };
 
 let mkElements = {};
+let mkGeometryFrame = 0;
+let mkGeometryObserver = null;
 
 function mkEscapeHtml(value) {
     return String(value ?? '')
@@ -383,7 +387,7 @@ function mkRenderDropZone(zone, index) {
     const hasWrappedRows = assets.length > mkGetAssetsPerRow(assets.length);
     const rowsMarkup = assets.length ? mkRenderAssetRows(assets) : '<div class="mk-empty-zone">Noch leer</div>';
     return `
-        <div class="mk-drop-zone ${isRestricted ? 'restricted' : ''}" data-mk-zone="${mkEscapeHtml(zone)}" aria-label="${mkEscapeHtml(mkGetZoneLabel(index))}">
+        <div class="mk-drop-zone ${assets.length ? 'filled' : 'empty'} ${isRestricted ? 'restricted' : ''}" data-mk-zone="${mkEscapeHtml(zone)}" aria-label="${mkEscapeHtml(mkGetZoneLabel(index))}">
             <div class="mk-zone-assets ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}${continuesCascade ? ' cascade-link-zone' : ''}"><span class="mk-zone-junction" aria-hidden="true"></span>${hasWrappedRows ? '<span class="mk-zone-wrap-strand" aria-hidden="true"></span>' : ''}${rowsMarkup}</div>
         </div>
     `;
@@ -412,7 +416,7 @@ function mkRenderMeterLayout(index) {
             ? `<div class="mk-asset-detail-slide" aria-label="Details zu Z${index + 1}">${meterSummary}</div>`
             : '';
         return `
-            <div class="mk-meter-layout detail-mode">
+            <div class="mk-meter-layout detail-mode" data-mk-meter-layout="${index}">
                 <article class="mk-asset-card detail-mode mk-meter-detail-card" data-mk-select-meter="${index}" role="button" tabindex="0" aria-label="Z${index + 1} auswählen">
                     <div class="mk-asset-head">
                         <span class="mk-asset-icon meter">Z${index + 1}</span>
@@ -425,7 +429,7 @@ function mkRenderMeterLayout(index) {
     }
 
     return `
-        <div class="mk-meter-layout">
+        <div class="mk-meter-layout" data-mk-meter-layout="${index}">
             ${mkRenderMeterNode(index)}
             <div class="mk-connection-line" aria-hidden="true"></div>
         </div>
@@ -600,20 +604,29 @@ function mkRenderParallelCanvas() {
     `;
 }
 
+function mkRenderCanvasStage(topologyMarkup) {
+    return `
+        <div class="mk-canvas-stage ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" style="--mk-canvas-zoom: ${mkConfiguratorState.canvasZoom};">
+            <svg class="mk-connector-layer" aria-hidden="true" focusable="false"></svg>
+            <div class="mk-topology-content">${topologyMarkup}</div>
+        </div>
+    `;
+}
+
 function mkRenderCanvas() {
     if (!mkElements.canvas) return;
     if (mkConfiguratorState.mode === 'parallel') {
-        mkElements.canvas.innerHTML = mkRenderParallelCanvas();
+        mkElements.canvas.innerHTML = mkRenderCanvasStage(mkRenderParallelCanvas());
         return;
     }
     if (mkConfiguratorState.mode === 'single') {
         const minimumCanvasWidth = mkGetSimpleCanvasMinimumWidth(mkGetZoneAssets('single-main').length);
-        mkElements.canvas.innerHTML = `
+        mkElements.canvas.innerHTML = mkRenderCanvasStage(`
             <div class="mk-single-stack" style="--mk-cascade-min-width: ${minimumCanvasWidth}px;">
                 ${mkRenderHakMeterRow()}
                 ${mkRenderDropZone('single-main', 0)}
             </div>
-        `;
+        `);
         return;
     }
 
@@ -634,7 +647,7 @@ function mkRenderCanvas() {
             </div>
         `);
     }
-    mkElements.canvas.innerHTML = `<div class="mk-cascade-stack" style="--mk-cascade-min-width: ${minimumCanvasWidth}px;">${levels.join('<div class="mk-cascade-arrow" aria-hidden="true"></div>')}</div>`;
+    mkElements.canvas.innerHTML = mkRenderCanvasStage(`<div class="mk-cascade-stack" style="--mk-cascade-min-width: ${minimumCanvasWidth}px;">${levels.join('<div class="mk-cascade-arrow" aria-hidden="true"></div>')}</div>`);
 }
 
 function mkValidation() {
@@ -785,13 +798,139 @@ function mkUpdateSimpleAssetStrands() {
     });
 }
 
+function mkFindIncomingMeterLayout(zone) {
+    const previous = zone?.previousElementSibling;
+    if (!previous) return null;
+    return previous.matches('.mk-meter-layout')
+        ? previous
+        : previous.querySelector('.mk-meter-layout');
+}
+
+function mkGetStagePoint(element, stageRect, scale, horizontal = 'center', vertical = 'center') {
+    const rect = element.getBoundingClientRect();
+    const horizontalOffset = horizontal === 'left' ? 0 : horizontal === 'right' ? rect.width : rect.width / 2;
+    const verticalOffset = vertical === 'top' ? 0 : vertical === 'bottom' ? rect.height : rect.height / 2;
+    return {
+        x: (rect.left - stageRect.left + horizontalOffset) / scale,
+        y: (rect.top - stageRect.top + verticalOffset) / scale
+    };
+}
+
+function mkBuildDynamicWire(start, end) {
+    if (!Number.isFinite(start?.x) || !Number.isFinite(start?.y) || !Number.isFinite(end?.x) || !Number.isFinite(end?.y)) return '';
+    if (end.y <= start.y + 1) return '';
+    const xDifference = Math.abs(start.x - end.x);
+    const path = xDifference < 1
+        ? `M ${start.x} ${start.y} V ${end.y}`
+        : `M ${start.x} ${start.y} V ${start.y + 14} H ${end.x} V ${end.y}`;
+    return `<path class="mk-dynamic-wire" d="${path}" />`;
+}
+
+function mkUpdateDynamicConnections() {
+    const stage = mkElements.canvas?.querySelector('.mk-canvas-stage');
+    const layer = stage?.querySelector('.mk-connector-layer');
+    if (!stage || !layer || !stage.offsetWidth || !stage.offsetHeight) return;
+
+    const stageRect = stage.getBoundingClientRect();
+    const scale = stage.offsetWidth ? stageRect.width / stage.offsetWidth : 1;
+    if (!Number.isFinite(scale) || scale <= 0) return;
+
+    const width = Math.ceil(Math.max(stage.scrollWidth, stage.offsetWidth));
+    const height = Math.ceil(Math.max(stage.scrollHeight, stage.offsetHeight));
+    const wires = [];
+    const pointFor = (element, horizontal, vertical) => mkGetStagePoint(element, stageRect, scale, horizontal, vertical);
+
+    stage.querySelectorAll('.mk-drop-zone').forEach(zone => {
+        const meterLayout = mkFindIncomingMeterLayout(zone);
+        const junction = zone.querySelector('.mk-zone-junction');
+        if (!meterLayout || !junction) return;
+        wires.push(mkBuildDynamicWire(pointFor(meterLayout, 'center', 'bottom'), pointFor(junction)));
+    });
+
+    if (mkConfiguratorState.mode === 'cascade') {
+        for (let index = 0; index < mkConfiguratorState.cascadeLevels - 1; index += 1) {
+            const junction = stage.querySelector(`[data-mk-zone="cascade-${index}"] .mk-zone-junction`);
+            const nextMeter = stage.querySelector(`[data-mk-meter-layout="${index + 1}"]`);
+            if (!junction || !nextMeter) continue;
+            wires.push(mkBuildDynamicWire(pointFor(junction), pointFor(nextMeter, 'center', 'top')));
+        }
+    }
+
+    layer.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    layer.setAttribute('width', String(width));
+    layer.setAttribute('height', String(height));
+    layer.innerHTML = wires.filter(Boolean).join('');
+}
+
+function mkScheduleConnectorGeometry() {
+    window.cancelAnimationFrame(mkGeometryFrame);
+    mkGeometryFrame = window.requestAnimationFrame(() => {
+        mkGeometryFrame = 0;
+        mkUpdateSimpleAssetStrands();
+        mkUpdateDynamicConnections();
+        mkCenterParallelViewport();
+    });
+}
+
+function mkRenderZoomControls() {
+    const percentage = `${Math.round(mkConfiguratorState.canvasZoom * 100)} %`;
+    if (mkElements.zoomLevel) mkElements.zoomLevel.textContent = percentage;
+    document.querySelectorAll('[data-mk-zoom]').forEach(button => {
+        const action = button.dataset.mkZoom;
+        button.disabled = (action === 'out' && mkConfiguratorState.canvasZoom <= MK_CANVAS_ZOOM.min)
+            || (action === 'in' && mkConfiguratorState.canvasZoom >= MK_CANVAS_ZOOM.max);
+    });
+}
+
+function mkApplyCanvasZoom() {
+    const stage = mkElements.canvas?.querySelector('.mk-canvas-stage');
+    if (stage) stage.style.setProperty('--mk-canvas-zoom', String(mkConfiguratorState.canvasZoom));
+    mkRenderZoomControls();
+    mkScheduleConnectorGeometry();
+}
+
+function mkChangeCanvasZoom(action) {
+    if (action === 'out') {
+        mkConfiguratorState.canvasZoom = Math.max(MK_CANVAS_ZOOM.min, Number((mkConfiguratorState.canvasZoom - MK_CANVAS_ZOOM.step).toFixed(2)));
+        mkApplyCanvasZoom();
+        return;
+    }
+    if (action === 'in') {
+        mkConfiguratorState.canvasZoom = Math.min(MK_CANVAS_ZOOM.max, Number((mkConfiguratorState.canvasZoom + MK_CANVAS_ZOOM.step).toFixed(2)));
+        mkApplyCanvasZoom();
+        return;
+    }
+    if (action === 'reset') {
+        mkConfiguratorState.canvasZoom = 1;
+        mkApplyCanvasZoom();
+        return;
+    }
+    if (action !== 'fit') return;
+
+    mkConfiguratorState.canvasZoom = 1;
+    mkApplyCanvasZoom();
+    window.requestAnimationFrame(() => {
+        const topology = mkElements.canvas?.querySelector('.mk-topology-content');
+        if (!topology || !mkElements.canvas) return;
+        const availableWidth = Math.max(1, mkElements.canvas.clientWidth - 28);
+        const requiredWidth = Math.max(1, topology.scrollWidth);
+        mkConfiguratorState.canvasZoom = Math.min(1, Math.max(MK_CANVAS_ZOOM.min, availableWidth / requiredWidth));
+        mkApplyCanvasZoom();
+    });
+}
+
+function mkObserveConnectorGeometry() {
+    if (!mkElements.canvas || typeof ResizeObserver === 'undefined') return;
+    mkGeometryObserver?.disconnect();
+    mkGeometryObserver = new ResizeObserver(() => mkScheduleConnectorGeometry());
+    mkGeometryObserver.observe(mkElements.canvas);
+}
+
 function mkCenterParallelViewport() {
     if (!mkElements.canvas || mkConfiguratorState.mode !== 'parallel') return;
-    const stack = mkElements.canvas.querySelector('.mk-parallel-stack');
-    if (!stack) return;
-    const layoutKey = `${mkConfiguratorState.mode}:${Math.round(stack.getBoundingClientRect().width)}`;
+    const layoutKey = `${mkConfiguratorState.mode}:${mkConfiguratorState.canvasZoom}:${mkElements.canvas.scrollWidth}`;
     if (mkElements.canvas.dataset.mkViewportLayout === layoutKey) return;
-    mkElements.canvas.scrollLeft = Math.max(0, (stack.getBoundingClientRect().width - mkElements.canvas.clientWidth) / 2);
+    mkElements.canvas.scrollLeft = Math.max(0, (mkElements.canvas.scrollWidth - mkElements.canvas.clientWidth) / 2);
     mkElements.canvas.dataset.mkViewportLayout = layoutKey;
 }
 
@@ -815,10 +954,8 @@ function mkRender() {
         button.setAttribute('aria-pressed', String(active));
     });
     mkRenderCanvas();
-    window.requestAnimationFrame(() => {
-        mkUpdateSimpleAssetStrands();
-        mkCenterParallelViewport();
-    });
+    mkRenderZoomControls();
+    mkScheduleConnectorGeometry();
     mkRefreshInlineStatus();
 }
 
@@ -965,6 +1102,7 @@ function mkShowScreen() {
     if (dashboard) dashboard.classList.add('hidden');
     if (screen) screen.classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.requestAnimationFrame(() => mkRender());
 }
 
 function mkHideScreen() {
@@ -984,7 +1122,8 @@ function mkInitialize() {
         measurementSummary: document.getElementById('mk-measurement-summary'),
         objectModal: document.getElementById('mk-object-modal'),
         objectModalContent: document.getElementById('mk-object-modal-content'),
-        objectModalTitle: document.getElementById('mk-object-modal-title')
+        objectModalTitle: document.getElementById('mk-object-modal-title'),
+        zoomLevel: document.getElementById('mk-zoom-level')
     };
     if (!mkElements.canvas) return;
 
@@ -1002,6 +1141,7 @@ function mkInitialize() {
     document.querySelectorAll('[data-mk-mode]').forEach(button => button.addEventListener('click', () => mkChangeMode(button.dataset.mkMode)));
     document.querySelectorAll('[data-mk-level]').forEach(button => button.addEventListener('click', () => mkChangeCascadeLevels(button.dataset.mkLevel)));
     document.querySelectorAll('[data-mk-view]').forEach(button => button.addEventListener('click', () => mkChangeViewMode(button.dataset.mkView)));
+    document.querySelectorAll('[data-mk-zoom]').forEach(button => button.addEventListener('click', () => mkChangeCanvasZoom(button.dataset.mkZoom)));
     document.getElementById('btn-mk-modal-close')?.addEventListener('click', mkCloseObjectModal);
     document.getElementById('btn-mk-modal-done')?.addEventListener('click', mkCloseObjectModal);
     mkElements.objectModal?.addEventListener('click', event => {
@@ -1080,6 +1220,7 @@ function mkInitialize() {
         if (target.dataset.mkSelectMeter !== undefined) mkOpenObjectModal({ kind: 'meter', index: Number(target.dataset.mkSelectMeter) || 0 });
         if (target.dataset.mkSelectAsset) mkOpenObjectModal({ kind: 'asset', id: target.dataset.mkSelectAsset });
     });
+    mkObserveConnectorGeometry();
     mkReset();
 }
 
