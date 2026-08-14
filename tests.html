@@ -1537,21 +1537,28 @@ Datum;Uhrzeit;Verbrauch
                 if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
                 return response.text();
             };
-            const [startseite, impressum, datenschutz, kontakt] = await Promise.all([
+            const [startseite, impressum, datenschutz, kontakt, lizenz, drittanbieter] = await Promise.all([
                 fetchPage('index.html?contact-check=1'),
                 fetchPage('impressum.html?contact-check=1'),
                 fetchPage('datenschutz.html?contact-check=1'),
-                fetchPage('kontakt.html?contact-check=1')
+                fetchPage('kontakt.html?contact-check=1'),
+                fetchPage('LICENSE.md?contact-check=1'),
+                fetchPage('THIRD-PARTY-NOTICES.md?contact-check=1')
             ]);
 
             assert(startseite.includes('href="kontakt.html"'), 'Der Footer muss auf den Kontaktweg verlinken');
+            assert(startseite.includes('href="LICENSE.md"'), 'Der Footer muss die Lizenz verlinken');
+            assert(startseite.includes('KI-Transparenz'), 'Die Startseite muss den KI-Transparenzhinweis enthalten');
             assert(startseite.includes('href="impressum.html"'), 'Der Footer muss auf das Impressum verlinken');
             assert(startseite.includes('href="datenschutz.html"'), 'Der Footer muss auf die Datenschutzerklärung verlinken');
             assert(impressum.includes('Salvatore Napolitano'), 'Impressum muss die verantwortliche Person enthalten');
             assert(impressum.includes('Snapolitano250187@gmail.com'), 'Impressum muss eine Kontakt-E-Mail enthalten');
+            assert(impressum.includes('Transparenz zur KI-Nutzung'), 'Das Impressum muss den KI-Transparenzhinweis enthalten');
             assert(datenschutz.includes('GitHub Pages'), 'Datenschutzerklärung muss das Hosting benennen');
             assert(datenschutz.includes('lokal im Browser'), 'Datenschutzerklärung muss die lokale Dateiverarbeitung erklären');
             assert(kontakt.includes('id="contact-form"') && kontakt.includes('mailto:Snapolitano250187@gmail.com'), 'Die Kontaktseite muss ein einfaches lokales Mailformular anbieten');
+            assert(lizenz.includes('Wattspur Beta-Evaluierungslizenz') && lizenz.includes('Salvatore Napolitano'), 'Die Lizenz muss den Projektnamen und Rechteinhaber enthalten');
+            assert(drittanbieter.includes('Apache ECharts') && drittanbieter.includes('Papa Parse'), 'Die Drittanbieterhinweise müssen die gebündelten Bibliotheken dokumentieren');
         });
 
         // --- ENGINE RUNNER ---
