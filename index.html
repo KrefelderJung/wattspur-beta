@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wattspur | Energiewerkzeuge im Browser</title>
+    <script src="theme.js?v=1"></script>
     <!-- ECharts -->
     <script src="lib/echarts.min.js"></script>
     <!-- PapaParse -->
     <script src="lib/papaparse.min.js"></script>
     
-    <link rel="stylesheet" href="styles.css?v=160">
+    <link rel="stylesheet" href="styles.css?v=206">
     <link rel="icon" type="image/svg+xml" href="wattspur-mark.svg">
     <!-- PWA Meta tags -->
     <link rel="manifest" href="manifest.json">
@@ -33,6 +34,7 @@
                     <nav class="landing-links" aria-label="Bereiche">
                         <a href="#modules">Werkzeuge</a>
                         <a href="kontakt.html">Kontakt</a>
+                        <button type="button" class="btn btn-icon theme-toggle" data-theme-toggle title="Tag- oder Nachtmodus wählen" aria-label="Tag- oder Nachtmodus wählen"></button>
                 </nav>
             </header>
 
@@ -186,8 +188,9 @@
         <!-- Messkonzept-Konfigurator MVP -->
         <div id="messkonzept-screen" class="screen hidden">
             <header class="mk-header">
-                <button type="button" class="btn btn-secondary btn-sm" id="btn-mk-back">← Zur Werkzeugauswahl</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-mk-back" aria-label="Zur Werkzeugauswahl" title="Zur Werkzeugauswahl">← Zur Werkzeugauswahl</button>
                 <div class="mk-brand"><img class="mk-brand-mark" src="wattspur-mark.svg" alt=""><span><strong>Wattspur</strong><small>Messkonzept-Konfigurator</small></span></div>
+                <button type="button" class="btn btn-icon theme-toggle mk-theme-toggle" data-theme-toggle title="Tag- oder Nachtmodus wählen" aria-label="Tag- oder Nachtmodus wählen"></button>
             </header>
             <main class="mk-main">
                 <div class="mk-intro">
@@ -195,25 +198,41 @@
                     <p>Bausteine anordnen und Messbereiche prüfen. Die Skizze ist VBEW-inspiriert, dient nur zur Orientierung und ersetzt keine technische Abstimmung mit Netzbetreiber, Messstellenbetreiber und Elektrofachbetrieb. <a class="mk-reference-link" href="https://shop.vbew-gmbh.de/produkt/vbew-messkonzepte-handout/" target="_blank" rel="noopener noreferrer" title="Offizielle VBEW-Publikationsseite mit Lizenzhinweisen">VBEW-Referenz &amp; Lizenzhinweise ↗</a></p>
                 </div>
 
+                <section class="mk-project-meta" aria-labelledby="mk-project-meta-title">
+                    <div class="mk-project-meta-heading">
+                        <div>
+                            <span class="mk-panel-heading-label" id="mk-project-meta-title">Projektangaben</span>
+                            <small>Optional · erscheinen im PDF-Export</small>
+                        </div>
+                    </div>
+                    <div class="mk-project-meta-fields">
+                        <label>Projektname<input type="text" data-mk-project-field="name" autocomplete="off" placeholder="z. B. PV-Erweiterung Wohnhaus"></label>
+                        <label>Referenz / Nr.<input type="text" data-mk-project-field="reference" autocomplete="off" placeholder="z. B. Vorgang 2026-001"></label>
+                        <label>Straße<input type="text" data-mk-project-field="street" autocomplete="street-address" placeholder="Straßenname"></label>
+                        <label>Hausnr.<input type="text" data-mk-project-field="houseNumber" autocomplete="address-line2" placeholder="Nr."></label>
+                        <label>PLZ<input type="text" data-mk-project-field="postalCode" inputmode="numeric" autocomplete="postal-code" placeholder="PLZ"></label>
+                        <label>Ort<input type="text" data-mk-project-field="city" autocomplete="address-level2" placeholder="Ort"></label>
+                        <label>Stand der Skizze<input type="text" data-mk-project-field="planStatus" autocomplete="off" placeholder="z. B. Bestand / Planung 2027" title="Kennzeichnet, ob die Skizze den Bestand oder eine Planung beschreibt."></label>
+                    </div>
+                </section>
+
                 <div class="mk-layout">
                     <aside class="mk-palette" aria-label="Bausteine">
                         <div class="mk-palette-heading"><span>Bausteine</span><small>Tippen oder ziehen</small></div>
                         <div class="mk-palette-items">
-                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="generation" title="Erzeugungsanlage einfügen"><span class="mk-palette-icon generation" aria-hidden="true">EA</span><span class="mk-palette-label">Erzeugungsanlage</span></button>
-                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="storage" title="Batteriespeicher einfügen"><span class="mk-palette-icon storage" aria-hidden="true"><span class="mk-battery-symbol"><span class="mk-battery-level"></span></span></span><span class="mk-palette-label">Batteriespeicher</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="meter" title="Zähler vor eine Anlage setzen"><span class="mk-palette-icon meter" aria-hidden="true">Z</span><span class="mk-palette-label">Zähler</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="generation" title="Erzeugungsanlage einfügen"><span class="mk-palette-icon generation" aria-hidden="true">EA</span><span class="mk-palette-label">Erzeugungs&shy;anlage</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="storage" title="Batteriespeicher einfügen"><span class="mk-palette-icon storage" aria-hidden="true"><span class="mk-battery-symbol"><span class="mk-battery-level"></span></span></span><span class="mk-palette-label">Batterie&shy;speicher</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="consumer" title="Sonstigen Verbraucher einfügen"><span class="mk-palette-icon consumer" aria-hidden="true">V</span><span class="mk-palette-label">Sonstige Verbraucher</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wallbox" title="Wallbox einfügen"><span class="mk-palette-icon steuve mk-device-wallbox" aria-hidden="true"><span class="mk-charge-symbol"><span class="mk-charge-bolt">⚡</span><span class="mk-charge-cable"></span></span></span><span class="mk-palette-label">Wallbox</span></button>
-                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wärmepumpe" title="Wärmepumpe einfügen"><span class="mk-palette-icon steuve mk-device-heatpump" aria-hidden="true"><span class="mk-fan-symbol"><span class="mk-fan-blade mk-fan-blade-1"></span><span class="mk-fan-blade mk-fan-blade-2"></span><span class="mk-fan-blade mk-fan-blade-3"></span><span class="mk-fan-hub"></span></span></span><span class="mk-palette-label">Wärmepumpe</span></button>
-                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Klimaanlage" title="Klimaanlage einfügen"><span class="mk-palette-icon steuve mk-device-climate" aria-hidden="true">❄</span><span class="mk-palette-label">Klimaanlage</span></button>
-                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="nsh" title="Nachtspeicherheizung einfügen"><span class="mk-palette-icon nsh" aria-hidden="true">NSH</span><span class="mk-palette-label">Nachtspeicherheizung</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wärmepumpe" title="Wärmepumpe einfügen"><span class="mk-palette-icon steuve mk-device-heatpump" aria-hidden="true"><span class="mk-fan-symbol"><span class="mk-fan-blade mk-fan-blade-1"></span><span class="mk-fan-blade mk-fan-blade-2"></span><span class="mk-fan-blade mk-fan-blade-3"></span><span class="mk-fan-hub"></span></span></span><span class="mk-palette-label">Wärme&shy;pumpe</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Klimaanlage" title="Klimaanlage einfügen"><span class="mk-palette-icon steuve mk-device-climate" aria-hidden="true">❄</span><span class="mk-palette-label">Klima&shy;anlage</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="nsh" title="Nachtspeicherheizung einfügen"><span class="mk-palette-icon nsh" aria-hidden="true">NSH</span><span class="mk-palette-label">Nachtspeicher&shy;heizung</span></button>
                         </div>
                     </aside>
 
-                    <section class="mk-builder-card" aria-labelledby="mk-builder-title">
-                        <div class="mk-builder-toolbar">
-                            <div>
-                                <h2 id="mk-builder-title">Messbereich festlegen</h2>
-                            </div>
+                    <section class="mk-builder-card" aria-label="Messkonzept-Skizze">
+                            <div class="mk-builder-toolbar">
                             <div class="mk-toolbar-controls">
                                 <div class="mk-control-group">
                                     <span class="mk-control-label">Darstellung</span>
@@ -234,11 +253,10 @@
                                 <div class="mk-control-group">
                                     <span class="mk-control-label">Messkonzept</span>
                                     <div class="mk-topology-switch" role="group" aria-label="Messkonzept">
-                                        <button type="button" class="mk-topology-btn active" data-mk-mode="single" aria-pressed="true" title="Ein Messzähler für den Messbereich">Einzähler</button>
-                                        <button type="button" class="mk-topology-btn" data-mk-mode="cascade" aria-pressed="false" title="Mehrere Zähler in Reihe, startet mit zwei Zählern">Mehrzähler</button>
+                                        <button type="button" class="mk-topology-btn active" data-mk-mode="single" aria-pressed="true" title="Ein gemeinsamer Messbereich mit beliebig vielen Unterzählern">Gemeinsame Messung</button>
                                         <button type="button" class="mk-topology-btn" data-mk-mode="parallel" aria-pressed="false" title="Der Hausanschluss teilt sich direkt auf eigene Zählerzweige auf">Parallelmessung</button>
                                         <span class="mk-meter-count-divider" aria-hidden="true"></span>
-                                        <div class="mk-meter-count-switch" role="group" aria-label="Zähleranzahl für Kaskade oder Parallelmessung">
+                                        <div class="mk-meter-count-switch" role="group" aria-label="Zähleranzahl für Parallelmessung">
                                             <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="2" aria-pressed="false" disabled title="Zwei Zähler">2</button>
                                             <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="3" aria-pressed="false" disabled title="Drei Zähler">3</button>
                                             <button type="button" class="mk-topology-btn mk-meter-count-btn" data-mk-level="4" aria-pressed="false" disabled title="Vier Zähler">4</button>
@@ -246,13 +264,37 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="mk-history-actions" aria-label="Messkonzept-Änderungen">
+                                <button type="button" class="mk-history-button" id="btn-mk-undo" title="Letzte Messkonzept-Änderung rückgängig" aria-label="Letzte Messkonzept-Änderung rückgängig" disabled>
+                                    <svg class="mk-history-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M9 7 4 12l5 5"></path>
+                                        <path d="M4 12h9a6 6 0 0 1 6 6"></path>
+                                    </svg>
+                                </button>
+                                <button type="button" class="mk-history-button" id="btn-mk-redo" title="Rückgängig gemachte Messkonzept-Änderung wiederholen" aria-label="Rückgängig gemachte Messkonzept-Änderung wiederholen" disabled>
+                                    <svg class="mk-history-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="m15 7 5 5-5 5"></path>
+                                        <path d="M20 12h-9a6 6 0 0 0-6 6"></path>
+                                    </svg>
+                                </button>
+                                <button type="button" class="mk-reset-button" id="btn-mk-reset" title="Schema zurücksetzen" aria-label="Schema zurücksetzen">
+                                <svg class="mk-reset-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path d="M5 5v5h5"></path>
+                                    <path d="M5.4 10A8 8 0 1 1 7.7 17.6"></path>
+                                </svg>
+                                </button>
+                            </div>
                         </div>
                         <div id="mk-canvas" class="mk-canvas" aria-live="polite"></div>
-                        <div class="mk-canvas-footer"><button type="button" class="btn btn-secondary btn-sm" id="btn-mk-reset">Schema zurücksetzen</button></div>
+                        <details class="mk-notes-panel">
+                            <summary><span class="mk-notes-summary-main"><span class="mk-notes-summary-icon" aria-hidden="true">+</span><span>Kommentar hinzufügen</span></span></summary>
+                            <label for="mk-notes-field">Kommentar</label>
+                            <textarea id="mk-notes-field" data-mk-notes-field rows="4" maxlength="4000" placeholder="Kommentar oder besondere Hinweise …"></textarea>
+                        </details>
                     </section>
 
                     <aside class="mk-summary-panel" aria-labelledby="mk-summary-title">
-                        <div class="mk-panel-heading"><span id="mk-summary-title">Technischer Hinweisstatus</span><span id="mk-status-badge" class="mk-status-badge neutral" title="Automatische Orientierung, keine fachliche Freigabe oder Beratung.">Bereit</span></div>
+                        <div class="mk-panel-heading"><span id="mk-summary-title">Prüfstatus</span><span id="mk-status-badge" class="mk-status-badge neutral">Start</span></div>
                         <div id="mk-validation-list" class="mk-validation-list"></div>
                         <div class="mk-summary-divider"></div>
                         <div class="mk-panel-heading"><span>Messlogik</span></div>
@@ -370,7 +412,7 @@
                     </div>
 
                 <div class="header-actions" style="position: relative;">
-                    <button id="btn-theme-toggle" class="btn btn-icon" title="Design wechseln (Dunkel / Hell)">
+                    <button id="btn-theme-toggle" class="btn btn-icon" data-theme-toggle title="Design wechseln (Dunkel / Hell)">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="4"/>
                             <path d="M12 2v2"/><path d="M12 20v2"/>
@@ -1493,6 +1535,13 @@
     <script src="parser.js?v=304"></script>
     <script src="charts.js?v=304"></script>
     <script src="app.js?v=309"></script>
-    <script src="messkonzept.js?v=37"></script>
+    <script src="js/messkonzept/model.js?v=1"></script>
+    <script src="messkonzept-geometry.js?v=8"></script>
+    <script src="messkonzept-topology.js?v=1"></script>
+    <script src="js/messkonzept/rules.js?v=2"></script>
+    <script src="js/messkonzept/render.js?v=2"></script>
+    <script src="js/messkonzept/connections.js?v=1"></script>
+    <script src="js/messkonzept/export.js?v=1"></script>
+    <script src="messkonzept.js?v=107"></script>
 </body>
 </html>

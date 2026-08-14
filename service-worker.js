@@ -1,4 +1,4 @@
-const APP_VERSION = '2026.08.11-beta.68';
+const APP_VERSION = '2026.08.14-beta.164';
 const CACHE_NAME = `lastgang-analyse-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
@@ -9,13 +9,21 @@ const ASSETS_TO_CACHE = [
     'impressum.html',
     'datenschutz.html',
     'styles.css',
+    'theme.js',
     'assets/hero-wattspur-trail.png',
     'state.js',
     'utils.js',
     'parser.js',
     'charts.js',
     'app.js',
+    'js/messkonzept/model.js',
+    'js/messkonzept/rules.js',
+    'messkonzept-geometry.js',
+    'messkonzept-topology.js',
     'messkonzept.js',
+    'js/messkonzept/render.js',
+    'js/messkonzept/connections.js',
+    'js/messkonzept/export.js',
     'import/parser.js',
     'data-quality/quality.js',
     'energy/energy.js',
@@ -124,26 +132,32 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    const requestUrl = new URL(event.request.url);
+    // Cache-busting query parameters (used by versioned assets and the
+    // client-side test suite) must not be served from an older cache entry.
+    // Otherwise a browser can keep testing or executing stale JavaScript even
+    // after the files on the server have changed.
+    const bypassCache = event.request.cache === 'no-store' || requestUrl.search;
+    const networkResponse = () => fetch(event.request).then(response => {
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+        }
+        if (!bypassCache) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, responseToCache);
+            });
+        }
+        return response;
+    });
+
     event.respondWith(
-        caches.match(event.request)
-            .then(cachedResponse => {
-                if (cachedResponse) {
-                    return cachedResponse;
+        bypassCache
+            ? networkResponse().catch(() => undefined)
+            : caches.match(event.request).then(cachedResponse => cachedResponse || networkResponse().catch(() => {
+                if (event.request.headers.get('accept')?.includes('text/html')) {
+                    return caches.match('./index.html');
                 }
-                return fetch(event.request).then(response => {
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
-                    }
-                    const responseToCache = response.clone();
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, responseToCache);
-                    });
-                    return response;
-                }).catch(() => {
-                    if (event.request.headers.get('accept')?.includes('text/html')) {
-                        return caches.match('./index.html');
-                    }
-                });
-            })
+            }))
     );
 });

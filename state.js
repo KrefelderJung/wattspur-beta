@@ -10,7 +10,7 @@ var chartAgnesCost = null;
 var currentAggregation = '1M'; // 15m, 1h, 1d, 1w, 1M
 var globalDateRange = { start: null, end: null, validMin: null, validMax: null };
 window.globalDateRange = globalDateRange;
-var isDarkMode = true;
+var isDarkMode = document.documentElement.getAttribute('data-theme') !== 'light';
 var isMinimapZooming = false;
 var isProgrammaticZoom = false;
 var currentZoom = 'max';

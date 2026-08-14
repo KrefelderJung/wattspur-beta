@@ -378,29 +378,20 @@ function setupEventListeners() {
         btnAgnesMulti.addEventListener('click', () => switchAgnesMode('multi'));
     }
 
-    // Theme Toggle
-    const btnThemeToggle = document.getElementById('btn-theme-toggle');
-    if (btnThemeToggle) {
-        btnThemeToggle.addEventListener('click', () => {
-            isDarkMode = !isDarkMode;
-            if (isDarkMode) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-            }
-            updateThemeIcon();
-            
-            if (chartTimeline) chartTimeline.dispose();
-            if (chartDailyProfile) chartDailyProfile.dispose();
-            initCharts();
-            
-            if (screens.dashboard && !screens.dashboard.classList.contains('hidden')) {
-                // Re-render checkboxes to update indicators to the new theme's colors
-                renderDatasetCheckboxes(true);
-                updateDashboard();
-            }
-        });
-    }
+    // Theme Toggle: Der gemeinsame Theme-Controller erledigt die Umschaltung
+    // auf Landingpage, Messkonzept und Analyse. Hier werden nur die Charts neu
+    // aufgebaut, weil ihre Farben aus dem aktiven Theme berechnet werden.
+    window.addEventListener('wattspur:themechange', event => {
+        isDarkMode = event.detail?.isDark !== false;
+        updateThemeIcon();
+        if (chartTimeline) chartTimeline.dispose();
+        if (chartDailyProfile) chartDailyProfile.dispose();
+        initCharts();
+        if (screens.dashboard && !screens.dashboard.classList.contains('hidden')) {
+            renderDatasetCheckboxes(true);
+            updateDashboard();
+        }
+    });
 
     // Global prevention of browser default file opening on drag & drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
