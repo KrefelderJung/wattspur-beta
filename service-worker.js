@@ -1,4 +1,4 @@
-const APP_VERSION = '2026.08.14-beta.164';
+const APP_VERSION = '2026.08.15-beta.211';
 const CACHE_NAME = `lastgang-analyse-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
@@ -18,12 +18,24 @@ const ASSETS_TO_CACHE = [
     'app.js',
     'js/messkonzept/model.js',
     'js/messkonzept/rules.js',
+    'js/messkonzept/validation-status.js',
+    'js/messkonzept/layout-calculations.js',
+    'js/messkonzept/layout.js',
     'messkonzept-geometry.js',
     'messkonzept-topology.js',
     'messkonzept.js',
     'js/messkonzept/render.js',
     'js/messkonzept/connections.js',
     'js/messkonzept/export.js',
+    'js/messkonzept/viewport.js',
+    'js/messkonzept/history.js',
+    'js/messkonzept/commands.js',
+    'js/messkonzept/project-meta.js',
+    'js/messkonzept/canvas-renderer.js',
+    'js/messkonzept/drag-drop.js',
+    'js/messkonzept/interaction.js',
+    'js/messkonzept/bootstrap.js',
+    'js/messkonzept/module-contracts.js',
     'import/parser.js',
     'data-quality/quality.js',
     'energy/energy.js',

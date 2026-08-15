@@ -1317,6 +1317,28 @@ function setupEventListeners() {
         });
     }
 
+    // Treat the module rail and the filter sidebar as one continuous
+    // interaction area. Moving left to switch modules must not collapse the
+    // filter sidebar in between (desktop only; mobile uses a bottom module bar).
+    const moduleSidebar = document.querySelector('.module-sidebar');
+    const dashboardScreen = document.getElementById('dashboard-screen');
+    if (sidebar && moduleSidebar && dashboardScreen) {
+        const isLeftNavigationTarget = (target) =>
+            target instanceof Element && Boolean(target.closest('.sidebar, .module-sidebar'));
+
+        document.addEventListener('pointerover', (event) => {
+            if (!window.matchMedia('(min-width: 769px)').matches) return;
+            if (isLeftNavigationTarget(event.target)) sidebar.classList.add('sidebar-hover-expanded');
+        });
+
+        document.addEventListener('pointerout', (event) => {
+            if (!window.matchMedia('(min-width: 769px)').matches) return;
+            if (!isLeftNavigationTarget(event.target)) return;
+            if (isLeftNavigationTarget(event.relatedTarget)) return;
+            sidebar.classList.remove('sidebar-hover-expanded');
+        });
+    }
+
     // Export Handlers (Timeline)
     const btnExportPng = document.getElementById('btn-export-png');
     if (btnExportPng) {
@@ -1516,13 +1538,18 @@ function setupEventListeners() {
 
     // --- Data Editor Event Listeners ---
 
-    function createDemoDatasets() {
-        const demoYear = 2026;
+    function createHouseholdDemoDatasets() {
+        const demoYear = 2021;
         const intervalsPerDay = 96;
         const daysInYear = (Date.UTC(demoYear + 1, 0, 1) - Date.UTC(demoYear, 0, 1)) / 86400000;
         const intervalCount = daysInYear * intervalsPerDay;
-        const point = (dateObj, kw) => ({
+        // Die Demo zeigt bewusst lokale Uhrzeiten an. Für die
+        // Datenqualitätsprüfung erhält jeder Punkt zusätzlich eine
+        // zeitzonenunabhängige Zeitachse, damit Sommer- und Winterzeit keine
+        // künstlichen 15-Minuten-Lücken oder Duplikate erzeugen.
+        const point = (dateObj, kw, sequenceTimestamp) => ({
             timestamp: dateObj.getTime(),
+            timestampUtc: Number.isFinite(sequenceTimestamp) ? sequenceTimestamp : dateObj.getTime(),
             dateObj,
             dateStr: `${String(dateObj.getDate()).padStart(2, '0')}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${dateObj.getFullYear()}`,
             timeStr: `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`,
@@ -1534,6 +1561,8 @@ function setupEventListeners() {
 
         const householdData = [];
         const pvData = [];
+        const wallboxData = [];
+        const heatPumpData = [];
 
         // Deterministisches Rauschen erzeugt wechselnde, reproduzierbare Tage.
         // So bleibt die Demo bei jedem Öffnen gleich, wirkt aber nicht wie eine
@@ -1592,8 +1621,40 @@ function setupEventListeners() {
                 const pvVariation = 0.98 + (0.04 * deterministicNoise((dayIndex * intervalsPerDay) + quarter + 800));
                 const pvKw = Math.pow(solarCurve, 1.55) * 4.8 * pvSeasonFactor * cloudFactor * pvVariation;
 
-                householdData.push(point(dateObj, Number(householdKw.toFixed(3))));
-                pvData.push(point(dateObj, Number(pvKw.toFixed(3))));
+                // Wallbox: vereinfachte, aber plausible Ladevorgänge mit
+                // unterschiedlichen Zeitfenstern für Arbeits- und Ruhetage.
+                const wallboxStart = isRestDay ? 10.0 : 17.0;
+                const wallboxEnd = isRestDay ? 16.0 : 22.5;
+                const wallboxEligible = isRestDay
+                    ? ((dayIndex + 1) % 2 === 0)
+                    : ((dayIndex + 2) % 3 !== 0);
+                const wallboxPosition = (hourValue - wallboxStart) / (wallboxEnd - wallboxStart);
+                const wallboxShape = wallboxPosition > 0 && wallboxPosition < 1
+                    ? Math.sin(Math.PI * wallboxPosition)
+                    : 0;
+                const wallboxVariation = 0.88 + (0.12 * deterministicNoise((dayIndex * intervalsPerDay) + quarter + 1200));
+                const wallboxKw = wallboxEligible
+                    ? Math.max(0, 7.4 * wallboxShape * wallboxVariation)
+                    : 0;
+
+                // Wärmepumpe: saisonale Grundlast mit höherer Aktivität am
+                // Morgen und Abend. Die Werte sind bewusst synthetisch und
+                // dienen der Funktionsdemo, nicht einer Anlagenprognose.
+                const morningHeating = Math.exp(-Math.pow((hourValue - 6.8) / 2.6, 2));
+                const eveningHeating = Math.exp(-Math.pow((hourValue - 18.6) / 3.3, 2));
+                const heatPumpSchedule = 0.48 + (0.28 * morningHeating) + (0.34 * eveningHeating);
+                const heatPumpVariation = 0.94 + (0.08 * deterministicNoise((dayIndex * intervalsPerDay) + quarter + 1600));
+                const heatPumpKw = Math.max(0.08,
+                    (0.16 + (1.42 * winterFactor))
+                    * heatPumpSchedule
+                    * heatPumpVariation
+                );
+
+                const monotonicTimestamp = Date.UTC(demoYear, 0, dayOfYear, hour, minute, 0, 0);
+                householdData.push(point(dateObj, Number(householdKw.toFixed(3)), monotonicTimestamp));
+                pvData.push(point(dateObj, Number(pvKw.toFixed(3)), monotonicTimestamp));
+                wallboxData.push(point(dateObj, Number(wallboxKw.toFixed(3)), monotonicTimestamp));
+                heatPumpData.push(point(dateObj, Number(heatPumpKw.toFixed(3)), monotonicTimestamp));
             }
         }
 
@@ -1610,8 +1671,123 @@ function setupEventListeners() {
         });
 
         return [
-            dataset(`Demo: Haushaltsbezug (Jahresprofil ${demoYear})`, householdData),
-            dataset(`Demo: PV-Einspeisung (Jahresprofil ${demoYear})`, pvData)
+            dataset('Haushalt · Verbrauch', householdData),
+            dataset('PV · Erzeugung', pvData),
+            dataset('Wallbox · Laden', wallboxData),
+            dataset('Wärmepumpe · Verbrauch', heatPumpData)
+        ];
+    }
+
+    function createIndustrialDemoDatasets() {
+        const demoYear = 2021;
+        const intervalsPerDay = 96;
+        const daysInYear = (Date.UTC(demoYear + 1, 0, 1) - Date.UTC(demoYear, 0, 1)) / 86400000;
+        const point = (dateObj, kw, sequenceTimestamp) => ({
+            timestamp: dateObj.getTime(),
+            timestampUtc: Number.isFinite(sequenceTimestamp) ? sequenceTimestamp : dateObj.getTime(),
+            dateObj,
+            dateStr: `${String(dateObj.getDate()).padStart(2, '0')}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${dateObj.getFullYear()}`,
+            timeStr: `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`,
+            rawKw: kw,
+            kw,
+            kvar: null,
+            hasData: true
+        });
+        const deterministicNoise = seed => {
+            const raw = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+            return (raw - Math.floor(raw)) * 2 - 1;
+        };
+        const holidayFn = typeof window !== 'undefined' && typeof window.isNRWHoliday === 'function'
+            ? window.isNRWHoliday
+            : () => false;
+        const productionData = [];
+        const utilityData = [];
+        const processPeakData = [];
+        const totalData = [];
+
+        for (let dayIndex = 0; dayIndex < daysInYear; dayIndex++) {
+            const dayOfYear = dayIndex + 1;
+            const dayDate = new Date(demoYear, 0, dayOfYear, 12, 0, 0, 0);
+            const weekday = dayDate.getDay();
+            const isRestDay = weekday === 0 || weekday === 6 || Boolean(holidayFn(dayDate));
+            const isMaintenance = dayOfYear >= 211 && dayOfYear <= 221;
+            const seasonal = 1 + (0.06 * Math.cos((Math.PI * 2 * (dayOfYear - 15)) / daysInYear));
+
+            for (let quarter = 0; quarter < intervalsPerDay; quarter++) {
+                const hour = Math.floor(quarter / 4);
+                const minute = (quarter % 4) * 15;
+                const dateObj = new Date(demoYear, 0, dayOfYear, hour, minute, 0, 0);
+                const hourValue = hour + (minute / 60);
+                let shiftLevel;
+                if (isRestDay) {
+                    shiftLevel = hourValue >= 8 && hourValue < 16 ? 430 : 360;
+                } else if (hourValue < 5.5) {
+                    shiftLevel = 480;
+                } else if (hourValue < 6) {
+                    shiftLevel = 720;
+                } else if (hourValue < 13.5) {
+                    shiftLevel = 1450;
+                } else if (hourValue < 14) {
+                    shiftLevel = 1180;
+                } else if (hourValue < 21.5) {
+                    shiftLevel = 1530;
+                } else if (hourValue < 22) {
+                    shiftLevel = 1160;
+                } else {
+                    shiftLevel = 930;
+                }
+                if (isMaintenance) shiftLevel *= 0.48;
+
+                const baseLoad = Math.max(250,
+                    (shiftLevel * seasonal)
+                    + (32 * Math.sin((Math.PI * 2 * (quarter % 32)) / 32 + 0.7))
+                    + (28 * deterministicNoise((dayIndex * intervalsPerDay) + quarter + 1200))
+                );
+                let processPeak = 0;
+                const shiftStarts = [23, 55, 87];
+                if (!isRestDay) {
+                    shiftStarts.forEach(shiftStart => {
+                        const distance = Math.abs(quarter - shiftStart);
+                        if (distance <= 2 && deterministicNoise((dayIndex * 7) + shiftStart + 1500) > -0.72) {
+                            processPeak += (260 + (180 * (deterministicNoise((dayIndex * 11) + shiftStart + 1600) + 1)))
+                                * (1 - (0.18 * distance / 2));
+                        }
+                    });
+                    if (quarter % 4 === 0 && deterministicNoise((dayIndex * intervalsPerDay) + quarter + 1800) > 0.96) {
+                        processPeak += 650 + (500 * ((deterministicNoise((dayIndex * intervalsPerDay) + quarter + 1900) + 1) / 2));
+                    }
+                }
+
+                const utilityLoad = Math.max(100,
+                    180 + (0.14 * baseLoad)
+                    + (12 * deterministicNoise((dayIndex * intervalsPerDay) + quarter + 2100))
+                );
+                const totalLoad = baseLoad + utilityLoad + processPeak;
+                const monotonicTimestamp = Date.UTC(demoYear, 0, dayOfYear, hour, minute, 0, 0);
+                productionData.push(point(dateObj, Number(baseLoad.toFixed(3)), monotonicTimestamp));
+                utilityData.push(point(dateObj, Number(utilityLoad.toFixed(3)), monotonicTimestamp));
+                processPeakData.push(point(dateObj, Number(processPeak.toFixed(3)), monotonicTimestamp));
+                totalData.push(point(dateObj, Number(totalLoad.toFixed(3)), monotonicTimestamp));
+            }
+        }
+
+        const dataset = (name, data) => ({
+            name,
+            data,
+            totalRowsCount: data.length,
+            invalidRowsCount: 0,
+            importedUnit: 'kw',
+            isDemo: true,
+            demoYear,
+            intervalMinutes: 15,
+            profileKind: 'synthetic-industrial-year'
+        });
+
+        return [
+            dataset(`Industrieverbrauch Demo · Gesamtlast (Jahresprofil ${demoYear})`, totalData),
+            dataset(`Industrieverbrauch Demo · Produktion (Jahresprofil ${demoYear})`, productionData),
+            dataset(`Industrieverbrauch Demo · Kälte/Druckluft/Pumpen (Jahresprofil ${demoYear})`, utilityData),
+            dataset(`Industrieverbrauch Demo · Prozessspitzen (Jahresprofil ${demoYear})`, processPeakData)
         ];
     }
 
@@ -1643,17 +1819,24 @@ function setupEventListeners() {
         };
     }
 
-    function openDatasetsInDashboard(datasets, options = {}) {
+function openDatasetsInDashboard(datasets, options = {}) {
         allDatasets = datasets;
         currentDatasetId = 0;
         activeDatasetIds = [0];
         rawData = datasets[0]?.data || [];
         cachedAggregations = {};
+        // Jeder neue Lastgang startet mit der automatisch passenden
+        // Granularität. Eine zuvor manuell gewählte Aggregation darf den
+        // ersten Dashboard-Aufbau nicht übersteuern.
+        isManualAggregation = false;
 
         const allData = datasets.flatMap(dataset => dataset.data || []);
         const validDates = allData.map(point => point.dateObj).filter(date => date instanceof Date && Number.isFinite(date.getTime()));
-        const minDate = new Date(Math.min(...validDates.map(date => date.getTime())));
-        const maxDate = new Date(Math.max(...validDates.map(date => date.getTime())));
+        const validTimestamps = validDates.map(date => date.getTime());
+        const minTimestamp = validTimestamps.reduce((min, timestamp) => Math.min(min, timestamp), Infinity);
+        const maxTimestamp = validTimestamps.reduce((max, timestamp) => Math.max(max, timestamp), -Infinity);
+        const minDate = new Date(minTimestamp);
+        const maxDate = new Date(maxTimestamp);
         globalDateRange.validMin = minDate;
         globalDateRange.validMax = maxDate;
         globalDateRange.start = minDate;
@@ -1689,12 +1872,32 @@ function setupEventListeners() {
             if (editorTabBtn) editorTabBtn.click();
         } else {
             updateDashboard();
+            // ECharts wurde beim Seitenstart noch im ausgeblendeten Upload-
+            // Bildschirm initialisiert und kennt dort noch keine Höhe. Nach
+            // dem Sichtbarmachen des Dashboards muss der Chart einmal neu
+            // vermessen werden, sonst bleibt seine Zeichenfläche leer.
+            resizeDashboardChartsWhenVisible();
         }
 
         if (options.message) showToast(options.message, 'success');
     }
 
-    window.createDemoDatasets = createDemoDatasets;
+    function resizeDashboardChartsWhenVisible() {
+        const resize = () => {
+            if (typeof handleChartsResize === 'function') handleChartsResize();
+        };
+        resize();
+        if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(resize);
+        } else {
+            setTimeout(resize, 0);
+        }
+    }
+
+    // Compatibility alias for older local test pages; the UI uses explicit scenario names.
+    window.createDemoDatasets = createHouseholdDemoDatasets;
+    window.createHouseholdDemoDatasets = createHouseholdDemoDatasets;
+    window.createIndustrialDemoDatasets = createIndustrialDemoDatasets;
 
     function formatCsvDate(date) {
         return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
@@ -1743,18 +1946,18 @@ function setupEventListeners() {
     const btnDownloadDemoHousehold = document.getElementById('btn-download-demo-household');
     if (btnDownloadDemoHousehold) {
         btnDownloadDemoHousehold.addEventListener('click', () => {
-            const householdDataset = createDemoDatasets()[0];
-            downloadCsvText(createLoadProfileCsv(householdDataset), 'demo-haushaltsbezug-jahresprofil-2026.csv');
-            showToast('Synthetisches Jahresprofil für den Haushaltsbezug heruntergeladen.', 'success');
+            const householdDataset = createHouseholdDemoDatasets()[0];
+            downloadCsvText(createLoadProfileCsv(householdDataset), 'demo-hausverbrauch-jahresprofil-2021.csv');
+            showToast('Synthetisches Jahresprofil für den Hausverbrauch heruntergeladen.', 'success');
         });
     }
 
-    const btnDownloadDemoPv = document.getElementById('btn-download-demo-pv');
-    if (btnDownloadDemoPv) {
-        btnDownloadDemoPv.addEventListener('click', () => {
-            const pvDataset = createDemoDatasets()[1];
-            downloadCsvText(createLoadProfileCsv(pvDataset), 'demo-pv-einspeisung-jahresprofil-2026.csv');
-            showToast('Synthetisches Jahresprofil für die PV-Einspeisung heruntergeladen.', 'success');
+    const btnDownloadDemoIndustrial = document.getElementById('btn-download-demo-industrial');
+    if (btnDownloadDemoIndustrial) {
+        btnDownloadDemoIndustrial.addEventListener('click', () => {
+            const industrialDataset = createIndustrialDemoDatasets()[0];
+            downloadCsvText(createLoadProfileCsv(industrialDataset), 'demo-industrieverbrauch-jahresprofil-2021.csv');
+            showToast('Synthetisches Jahresprofil für den Industrieverbrauch heruntergeladen.', 'success');
         });
     }
 
@@ -1764,17 +1967,27 @@ function setupEventListeners() {
         btnStartEmpty.addEventListener('click', () => {
             openDatasetsInDashboard([createEmptyDataset()], {
                 openEditor: true,
-                message: 'Leerer Lastgang geöffnet. Füge deine Daten aus Excel ein.'
+                message: 'Dateneditor geöffnet. Füge Messwerte aus Excel oder einer anderen Datei ein.'
             });
         });
     }
 
-    const btnStartDemo = document.getElementById('btn-start-demo');
-    if (btnStartDemo) {
-        btnStartDemo.addEventListener('click', () => {
-            openDatasetsInDashboard(createDemoDatasets(), {
+    const btnStartHouseholdDemo = document.getElementById('btn-start-household-demo');
+    if (btnStartHouseholdDemo) {
+        btnStartHouseholdDemo.addEventListener('click', () => {
+            openDatasetsInDashboard(createHouseholdDemoDatasets(), {
                 activateAll: true,
-                message: 'Jahres-Demo geladen: Haushaltsbezug und PV-Einspeisung.'
+                message: 'Hausverbrauch-Demo geladen: Haushalt, PV, Wallbox und Wärmepumpe.'
+            });
+        });
+    }
+
+    const btnStartIndustrialDemo = document.getElementById('btn-start-industrial-demo');
+    if (btnStartIndustrialDemo) {
+        btnStartIndustrialDemo.addEventListener('click', () => {
+            openDatasetsInDashboard(createIndustrialDemoDatasets(), {
+                activateAll: true,
+                message: 'Industrieverbrauch-Demo geladen: Produktionslast und Prozessspitzen.'
             });
         });
     }
@@ -1916,6 +2129,15 @@ function getFilteredData(datasetId = 0) {
     
     if (startIdx > endIdx || startIdx >= data.length || endIdx < 0) return [];
     return data.slice(startIdx, endIdx + 1);
+}
+
+// Für synthetische Profile kann die lokale Anzeigezeit bei der
+// Sommerzeitumstellung doppelte oder fehlende Uhrzeiten enthalten. Wenn ein
+// Datensatz eine normierte UTC-Prüfzeit mitliefert, wird sie ausschließlich
+// für Lücken- und Duplikatprüfungen verwendet.
+function getQualityTimestamp(point) {
+    const timestampUtc = Number(point?.timestampUtc);
+    return Number.isFinite(timestampUtc) ? timestampUtc : Number(point?.timestamp);
 }
 
 function aggregateData(data, aggLevel, datasetId = 0) {
@@ -2182,7 +2404,7 @@ function updateDashboard() {
             const toleranceMs15 = 60 * 1000;
             let missingCount = 0;
             for (let i = 1; i < filteredData.length; i++) {
-                const diff = filteredData[i].timestamp - filteredData[i - 1].timestamp;
+                const diff = getQualityTimestamp(filteredData[i]) - getQualityTimestamp(filteredData[i - 1]);
                 if (diff > stepMs15 + toleranceMs15) {
                     missingCount += Math.max(0, Math.round(diff / stepMs15) - 1);
                 }
@@ -2192,10 +2414,11 @@ function updateDashboard() {
             let duplicateCount = 0;
             const seenTimestamps = new Set();
             filteredData.forEach(pt => {
-                if (seenTimestamps.has(pt.timestamp)) {
+                const qualityTimestamp = getQualityTimestamp(pt);
+                if (seenTimestamps.has(qualityTimestamp)) {
                     duplicateCount++;
                 } else {
-                    seenTimestamps.add(pt.timestamp);
+                    seenTimestamps.add(qualityTimestamp);
                 }
             });
             totalDuplicateCount += duplicateCount;
@@ -4774,7 +4997,7 @@ function updateAgnesOptimization(activeFilteredDatasets) {
             const stepMs = 15 * 60 * 1000;
             const toleranceMs = 60 * 1000;
             for (let i = 1; i < data.length; i++) {
-                const diff = data[i].timestamp - data[i - 1].timestamp;
+                const diff = getQualityTimestamp(data[i]) - getQualityTimestamp(data[i - 1]);
                 if (diff > stepMs + toleranceMs) {
                     missingPoints += Math.max(0, Math.round(diff / stepMs) - 1);
                 }
@@ -4792,11 +5015,12 @@ function updateAgnesOptimization(activeFilteredDatasets) {
                 }
                 if (d.kw < 0) negativePoints++;
                 if (d.kw > 100000) spikePoints++;
-                if (Number.isFinite(d.timestamp)) {
-                    if (seenTs.has(d.timestamp)) {
+                const qualityTimestamp = getQualityTimestamp(d);
+                if (Number.isFinite(qualityTimestamp)) {
+                    if (seenTs.has(qualityTimestamp)) {
                         duplicatePoints++;
                     } else {
-                        seenTs.add(d.timestamp);
+                        seenTs.add(qualityTimestamp);
                     }
                 }
             });
@@ -5607,8 +5831,8 @@ function renderQualityLog(activeFilteredDatasets) {
             let gapEnd = null;
 
             for (let i = 1; i < filteredData.length; i++) {
-                const prevTs = filteredData[i - 1].timestamp;
-                const currTs = filteredData[i].timestamp;
+                const prevTs = getQualityTimestamp(filteredData[i - 1]);
+                const currTs = getQualityTimestamp(filteredData[i]);
                 const diff = currTs - prevTs;
 
                 if (diff > stepMs + toleranceMs) {

@@ -14,7 +14,6 @@
         const getElements = options.getElements || (() => ({}));
         const escapeHtml = options.escapeHtml || (value => String(value ?? ''));
         const validate = options.validate || (() => []);
-        const getMeasurementSummaryMarkup = options.getMeasurementSummaryMarkup || (() => '');
         const renderMeterDetailsSummary = options.renderMeterDetailsSummary || (() => '');
         const renderAssetSummary = options.renderAssetSummary || (() => '');
         const getMeterNumber = options.getMeterNumber || (() => '—');
@@ -73,7 +72,6 @@
             const elements = getElements();
             const topology = elements.canvas?.innerHTML || '<p class="mk-print-muted">Keine Skizze vorhanden.</p>';
             const checks = validate().map(check => `<li class="${check.level}">${escapeHtml(check.text)}</li>`).join('');
-            const logic = getMeasurementSummaryMarkup();
             return `
         <section class="mk-print-sheet" aria-label="Messkonzept-Export">
             <header class="mk-print-header">
@@ -84,7 +82,7 @@
             <p class="mk-print-notice">Dieser Export dokumentiert den zum Ausgabezeitpunkt erfassten Stand. Spätere Änderungen am Konzept sind in dieser Datei nicht enthalten. Die Skizze ist eine unverbindliche Orientierung und ersetzt keine fachliche Prüfung.</p>
             <section class="mk-print-topology"><h2>Messskizze</h2>${topology}</section>
             ${renderNotes()}
-            <section class="mk-print-status"><div><h3>Prüfstatus</h3><ul>${checks}</ul></div><div><h3>Messlogik</h3>${logic}</div></section>
+            <section class="mk-print-status"><h3>Prüfstatus</h3><ul>${checks}</ul></section>
             ${renderExportDetails()}
             <footer class="mk-print-footer">Wattspur Beta · lokal im Browser erstellt · Stand ${escapeHtml(stand.label)}</footer>
         </section>

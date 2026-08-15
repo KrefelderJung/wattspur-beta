@@ -19,7 +19,25 @@
 
     function getAssetMeters(assets, assetId) {
         if (!assetId) return [];
-        return getMeters(assets).filter(meter => meter.meterScope === 'asset' && meter.targetAssetId === assetId);
+        const target = (assets || []).find(asset => asset?.id === assetId && asset.type !== 'meter');
+        const targetMeterId = String(target?.meterId || '');
+        const candidates = getMeters(assets).filter(meter => meter.meterScope === 'asset' && meter.targetAssetId === assetId);
+        if (!candidates.length) return [];
+
+        // Ein Asset kann beim Wechsel von einer gemeinsamen Sammelschiene auf
+        // einen eigenen Zähler seinen bisherigen Gruppen-Zähler als
+        // parentMeter behalten. Dieser alte Zähler darf aber nicht weiterhin
+        // als eigener Inline-Zähler des Assets gerendert werden. Das aktuelle
+        // meterId-Feld des Assets ist die fachliche Quelle der Wahrheit.
+        if (targetMeterId) {
+            const active = candidates.filter(meter => String(meter.id) === targetMeterId);
+            if (active.length) return active;
+        }
+
+        // Rückwärtskompatibilität für alte gespeicherte Zustände ohne
+        // meterId: In diesem Fall ist der zuletzt angelegte Zielzähler der
+        // aktive Inline-Zähler.
+        return targetMeterId ? [] : candidates.slice(-1);
     }
 
     function getMeterForAsset(assets, asset) {

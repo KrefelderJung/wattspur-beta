@@ -29,7 +29,7 @@ Hinweise nur anhand ihres Textes suchen zu müssen.
 | `MK-ASSET-002` | Eine SteuVE hat eine eingetragene Leistung über `4,2 kW`. | `warning` | §14a-EnWG-Einordnung, Anmeldung und passendes Modul prüfen. |
 | `MK-ASSET-003` | Mindestens eine Nachtspeicherheizung ist vorhanden. | `warning` | Bei unbekanntem Datum oder Inbetriebnahme vor 2024 historische Tarif-/Messbedingungen berücksichtigen; ab 2024 nicht automatisch als aktuelle SteuVE behandeln. |
 | `MK-SINGLE-001` | Im Modus „Gemeinsame Messung“ liegen SteuVE und weitere Verbraucher gemeinsam im Messbereich. | `warning` | Tarif- und Messabgrenzung fachlich prüfen. |
-| `MK-SINGLE-002` | Mindestens eine Erzeugungsanlage ist mit eigener Erzeugungsmessung markiert. | `ok` | Kennzeichnung im Messlogik-Status bestätigen. |
+| `MK-SINGLE-002` | Mindestens eine Erzeugungsanlage ist mit eigener Erzeugungsmessung markiert. | `ok` | Kennzeichnung im Prüfstatus bestätigen. |
 | `MK-SINGLE-003` | Mehr als eine Erzeugungsanlage vorhanden und keine besitzt einen eigenen Erzeugungszähler. | `warning` | Energieträger, Vergütung und Zusammenfassung prüfen. |
 | `MK-PARALLEL-001` | Der Parallelmodus ist aktiv. | `ok` | Anzahl der vorbereiteten, direkt verzweigten Zähler anzeigen. |
 | `MK-PARALLEL-002` | Ein vorbereiteter Parallelzweig enthält noch keinen Baustein. | `warning` | Dem betreffenden Zähler ist noch kein Messbereich zugeordnet. |

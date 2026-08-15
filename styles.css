@@ -524,19 +524,63 @@ html[data-tool="lastgang"] .landing-main {
     color: var(--warning-color);
 }
 
-.empty-start-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+.demo-entry-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
     margin-top: 0.8rem;
-    color: var(--text-muted);
-    font-size: 0.75rem;
 }
 
-.empty-start-row .btn {
-    min-height: 40px;
+.demo-entry-row .btn {
+    width: 100%;
+    min-height: 42px;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.25;
+}
+
+.demo-entry-btn {
+    border: 1px solid transparent;
+    color: #0f172a;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.14);
+}
+
+.demo-entry-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.22);
+}
+
+.demo-entry-btn:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--secondary-color) 70%, white);
+    outline-offset: 2px;
+}
+
+.demo-entry-editor {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #ffffff;
+}
+
+.demo-entry-household {
+    background: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.demo-entry-industrial {
+    background: var(--warning-color);
+    border-color: var(--warning-color);
+}
+
+[data-theme="dark"] .demo-entry-editor {
+    color: #082f49;
+}
+
+@media (max-width: 720px) {
+    .demo-entry-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 .format-example {
@@ -1018,6 +1062,54 @@ html[data-tool="lastgang"] .landing-main {
     color: var(--text-muted);
     font-size: 0.68rem;
     font-weight: 500;
+}
+
+.mk-palette-info-button {
+    width: 1.35rem;
+    height: 1.35rem;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    color: var(--text-muted);
+    background: transparent;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.mk-palette-info-button:hover,
+.mk-palette-info-button:focus-visible,
+.mk-palette-info-button[aria-expanded="true"] {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.mk-palette-info {
+    margin: -0.15rem 0 0.85rem;
+    padding: 0.7rem 0.75rem;
+    border: 1px solid rgba(56, 189, 248, 0.32);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    background: rgba(56, 189, 248, 0.08);
+    font-size: 0.72rem;
+    line-height: 1.45;
+}
+
+.mk-palette-info strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--text-main);
+    font-size: 0.75rem;
+}
+
+.mk-palette-info p + p {
+    margin-top: 0.35rem;
 }
 
 .mk-palette-items {
@@ -1541,11 +1633,13 @@ html[data-tool="lastgang"] .landing-main {
     background: var(--primary-color);
 }
 
-/* Alle Übergänge zwischen senkrechter und waagerechter Leitung erhalten
-   denselben kleinen Knotenpunkt wie die Anlagenabgänge. */
+/* Sichtbare Knoten markieren nur echte Richtungswechsel der Leitung. Der
+   Ausgang eines Basiszählers bleibt eine klare senkrechte Leitung; ein
+   zusätzlicher Punkt direkt an der Kartenkante wäre dort nur dekorativ und
+   würde in Parallel- und gemeinsamer Messung unterschiedliche Topologien
+   vortäuschen. */
 .mk-parallel-feed::after,
-.mk-parallel-branch-connector::before,
-.mk-parallel-branch > .mk-meter-layout::after {
+.mk-parallel-branch-connector::before {
     content: '';
     position: absolute;
     z-index: 3;
@@ -1609,12 +1703,17 @@ html[data-tool="lastgang"] .landing-main {
 }
 
 .mk-parallel-branch-connector::before {
+    /* Kein dekorativer Punkt unter dem Basiszähler: Ein Knoten wird nur
+       an einem tatsächlichen Leitungsübergang bzw. Sammelschienenanfang
+       dargestellt. Die gemeinsame Messung folgt derselben Regel. */
+    display: none;
     left: -3px;
     top: -3px;
 }
 
 .mk-parallel-branch > .mk-meter-layout,
-.mk-parallel-branch > .mk-drop-zone {
+.mk-parallel-branch > .mk-drop-zone,
+.mk-single-stack .mk-supply-column > .mk-meter-layout:not(.detail-mode) {
     position: relative;
     z-index: 1;
 }
@@ -1633,12 +1732,6 @@ html[data-tool="lastgang"] .landing-main {
 .mk-parallel-branch > .mk-meter-layout:not(.detail-mode) {
     width: 32px;
     justify-items: start;
-}
-
-.mk-parallel-branch > .mk-meter-layout::after {
-    left: 50%;
-    bottom: -4px;
-    transform: translateX(-50%);
 }
 
 /* Im Parallelzweig verbindet die dynamische SVG-Leitung den Zähler direkt
@@ -1667,7 +1760,10 @@ html[data-tool="lastgang"] .landing-main {
 
 /* Der Parallelzweig beginnt neben dem Zählerstrang, nicht auf ihm. */
 .mk-parallel-branch .mk-zone-assets.simple-mode {
-    --mk-asset-row-offset: 0.8rem;
+    /* Die Reihe beginnt erst hinter der 16px-Messachse plus sichtbarem
+       Kartenabstand. Mit nur 0.8rem lag die erste Karte teilweise links
+       auf dem senkrechten Hauptstrang. */
+    --mk-asset-row-offset: calc(16px + 0.8rem);
     --mk-strand-origin: 16px;
     padding-left: 0;
 }
@@ -1895,15 +1991,18 @@ html[data-tool="lastgang"] .landing-main {
     display: grid;
     place-items: center;
     padding: 0;
-    border: 0;
+    border: 1px solid rgba(56, 189, 248, 0.48);
     border-radius: 9px;
     color: #0c4a6e;
     background: #bae6fd;
-    font-size: 0.7rem;
+    font-size: 0.58rem;
     font-weight: 900;
 }
 
 .mk-connection-line {
+    /* Der SVG-Router zeichnet MK -> SK fuer alle Modi. Eine zusaetzliche
+       HTML-Linie verlaengert den ersten Zaehlersprung kuenstlich. */
+    display: none;
     width: 2px;
     /* MK -> SK am Basiszaehler; zentral ueber die Layout-Geometrie steuerbar. */
     height: var(--mk-meter-to-junction-link-px, 11px);
@@ -1958,6 +2057,61 @@ html[data-tool="lastgang"] .landing-main {
     border-top: 1px solid var(--border-color);
     color: var(--text-muted);
     font-size: 0.72rem;
+}
+
+.mk-help-dialog {
+    width: min(100%, 660px);
+}
+
+.mk-help-dialog-content {
+    color: var(--text-main);
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.mk-help-intro {
+    margin: 0 0 1rem;
+    color: var(--text-main);
+}
+
+.mk-help-steps {
+    display: grid;
+    gap: 0.7rem;
+    margin: 0;
+    padding-left: 1.55rem;
+}
+
+.mk-help-steps li {
+    padding: 0.7rem 0.8rem 0.7rem 0.35rem;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 28%, var(--border-color));
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--primary-color) 8%, var(--surface-color));
+}
+
+.mk-help-steps strong,
+.mk-help-steps span {
+    display: block;
+}
+
+.mk-help-steps strong {
+    color: var(--primary-color);
+    font-size: 0.86rem;
+}
+
+.mk-help-steps span {
+    margin-top: 0.18rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+    .mk-help-dialog-content {
+        font-size: 0.88rem;
+    }
+
+    .mk-help-steps {
+        gap: 0.55rem;
+        padding-left: 1.25rem;
+    }
 }
 
 .mk-modal-close {
@@ -2030,12 +2184,7 @@ body.mk-modal-open {
 
 .mk-meter-layout[data-mk-base-meter-target] {
     border-radius: 0.65rem;
-    transition: background 140ms ease, box-shadow 140ms ease;
-}
-
-.mk-meter-layout.mk-base-meter-target-active {
-    background: rgba(56, 189, 248, 0.1);
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.72);
+    transition: outline 140ms ease, background 140ms ease;
 }
 
 .mk-zone-assets {
@@ -2078,7 +2227,7 @@ body.mk-modal-open {
 .mk-meter-rail.root-rail > .mk-meter-rail.meter-group-rail {
     margin-top: calc(
         var(--mk-meter-rail-top-gap-px, 16px)
-        - var(--mk-root-rail-junction-inset-px, 7px)
+        - var(--mk-root-rail-junction-inset-px, 14px)
     );
 }
 
@@ -2106,6 +2255,7 @@ body.mk-modal-open {
 }
 
 .mk-rail-meter-link {
+    display: none;
     /* Die Linie setzt die eigene Mittelachse des Unterzählers fort. Eine
        Zentrierung über die gesamte Schiene erzeugte sonst einen freistehenden
        Abschnitt zwischen Zähler und Anlagen. */
@@ -2114,8 +2264,6 @@ body.mk-modal-open {
     width: 2px;
     /* MK -> SK: kuerzerer, zentral definierter Zuleiter bis zum naechsten
        Sammelschienenknoten. */
-    height: var(--mk-meter-to-sub-bus-link-height-px, 14px);
-    flex: 0 0 var(--mk-meter-to-sub-bus-link-height-px, 14px);
     background: var(--primary-color);
 }
 
@@ -2284,7 +2432,10 @@ body.mk-modal-open {
 }
 
 .mk-zone-assets.simple-mode .mk-asset-row.primary {
-    margin-left: var(--mk-asset-row-offset);
+    margin-left: calc(
+        var(--mk-asset-row-offset) +
+        var(--mk-primary-rail-clearance-shift-px, 0px)
+    );
 }
 
 .mk-zone-wrap-strand {
@@ -2346,6 +2497,13 @@ body.mk-modal-open {
     background: var(--primary-color);
     box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
     transform: translateX(-50%);
+}
+
+/* Technischer Anker für eine reine Zählerkette: Er bleibt vermessbar und
+   drop-fähig, erzeugt aber keinen dekorativen Punkt ohne Sammelschiene. */
+.mk-zone-junction-structural {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* Ein einzelnes Objekt wird direkt vom Zähler geführt. Der interne
@@ -2868,8 +3026,7 @@ body.mk-modal-open {
 .mk-status-badge.warning { color: #78350f; background: #fde68a; }
 .mk-status-badge.error { color: #7f1d1d; background: #fecaca; }
 
-.mk-validation-list,
-.mk-measurement-summary {
+.mk-validation-list {
     display: grid;
     gap: 0.55rem;
 }
@@ -2893,24 +3050,8 @@ body.mk-modal-open {
 .mk-validation-item.warning span { color: var(--warning-color); }
 .mk-validation-item.error span { color: #f87171; }
 
-.mk-validation-item p,
-.mk-measurement-summary p {
+.mk-validation-item p {
     margin: 0;
-}
-
-.mk-summary-divider {
-    margin: 1rem 0;
-    border-top: 1px solid var(--border-color);
-}
-
-.mk-measurement-summary {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    line-height: 1.45;
-}
-
-.mk-measurement-summary b {
-    color: var(--text-main);
 }
 
 .mk-export-button {
@@ -2929,8 +3070,7 @@ body.mk-modal-open {
         grid-column: 1 / -1;
     }
 
-    .mk-summary-panel .mk-validation-list,
-    .mk-summary-panel .mk-measurement-summary {
+    .mk-summary-panel .mk-validation-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -2957,8 +3097,7 @@ body.mk-modal-open {
         grid-column: auto;
     }
 
-    .mk-summary-panel .mk-validation-list,
-    .mk-summary-panel .mk-measurement-summary {
+    .mk-summary-panel .mk-validation-list {
         grid-template-columns: 1fr;
     }
 }
@@ -3668,14 +3807,16 @@ body.mk-modal-open {
 }
 
 .sidebar:hover,
-.sidebar.expanded {
+.sidebar.expanded,
+.sidebar.sidebar-hover-expanded {
     width: 300px;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
     gap: 0.65rem;
 }
 
 [data-theme="dark"] .sidebar:hover,
-[data-theme="dark"] .sidebar.expanded {
+[data-theme="dark"] .sidebar.expanded,
+[data-theme="dark"] .sidebar.sidebar-hover-expanded {
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -3691,7 +3832,8 @@ body.mk-modal-open {
 }
 
 .sidebar:hover .filter-section,
-.sidebar.expanded .filter-section {
+.sidebar.expanded .filter-section,
+.sidebar.sidebar-hover-expanded .filter-section {
     background-color: var(--bg-color);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -3742,7 +3884,8 @@ body.mk-modal-open {
 }
 
 .sidebar:hover .section-title,
-.sidebar.expanded .section-title {
+.sidebar.expanded .section-title,
+.sidebar.sidebar-hover-expanded .section-title {
     opacity: 1;
     visibility: visible;
 }
@@ -3759,7 +3902,8 @@ body.mk-modal-open {
 }
 
 .sidebar:hover .section-content,
-.sidebar.expanded .section-content {
+.sidebar.expanded .section-content,
+.sidebar.sidebar-hover-expanded .section-content {
     opacity: 1;
     visibility: visible;
     max-height: 400px;
@@ -3966,7 +4110,8 @@ body.mk-modal-open {
 }
 
 .sidebar:hover .tab-text,
-.sidebar.expanded .tab-text {
+.sidebar.expanded .tab-text,
+.sidebar.sidebar-hover-expanded .tab-text {
     opacity: 1;
     visibility: visible;
 }
@@ -3993,7 +4138,8 @@ body.mk-modal-open {
 }
 
 .sidebar:hover .btn-sidebar-toggle,
-.sidebar.expanded .btn-sidebar-toggle {
+.sidebar.expanded .btn-sidebar-toggle,
+.sidebar.sidebar-hover-expanded .btn-sidebar-toggle {
     opacity: 1;
     visibility: visible;
 }
@@ -5118,8 +5264,57 @@ body.mk-modal-open {
 .mk-project-meta-heading {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0;
+    cursor: pointer;
+    list-style: none;
+}
+
+.mk-project-meta > summary::-webkit-details-marker {
+    display: none;
+}
+
+.mk-project-meta > summary::before {
+    content: '+';
+    display: grid;
+    flex: 0 0 1.45rem;
+    place-items: center;
+    width: 1.45rem;
+    height: 1.45rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 50%;
+    color: var(--bg-color);
+    background: var(--primary-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 18%, transparent);
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.mk-project-meta > summary::after,
+.mk-project-meta[open] > summary::after {
+    display: none;
+}
+
+.mk-project-meta[open] > summary {
     margin-bottom: 0.65rem;
+}
+
+.mk-project-meta[open] > summary::before {
+    content: '−';
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 28%, transparent);
+}
+
+.mk-project-meta > summary:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--primary-color) 65%, transparent);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+}
+
+.mk-project-meta-summary-copy {
+    display: grid;
+    min-width: 0;
 }
 
 .mk-project-meta-heading small {
@@ -5129,13 +5324,97 @@ body.mk-modal-open {
     font-size: 0.7rem;
 }
 
-.mk-project-meta-fields {
+.mk-project-meta-groups {
     display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(4.8rem, 0.6fr) minmax(4.6rem, 0.55fr) minmax(0, 0.9fr) minmax(0, 1.2fr);
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+}
+
+.mk-project-meta-group {
+    min-width: 0;
+    min-inline-size: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.55rem 0.65rem 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    border-radius: var(--radius-sm);
+    background: rgba(15, 23, 42, 0.26);
+}
+
+.mk-project-meta-group legend {
+    padding: 0 0.3rem;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mk-project-meta-group-fields {
+    display: grid;
     gap: 0.55rem;
 }
 
-.mk-project-meta-fields label {
+.mk-project-meta-group--project .mk-project-meta-group-fields {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr) minmax(18rem, 3fr);
+}
+
+.mk-project-meta-group--location .mk-project-meta-group-fields {
+    grid-template-columns: minmax(0, 5fr) minmax(8rem, 2fr) minmax(8rem, 2fr) minmax(0, 3fr);
+}
+
+.mk-project-meta-group-fields > label,
+.mk-project-meta-group-fields > .mk-plan-status-field {
+    grid-column: span 1;
+}
+
+.mk-plan-status-field {
+    display: grid;
+    grid-column: span 1;
+    gap: 0.25rem;
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.mk-plan-status-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.2rem;
+    min-width: 0;
+    padding: 0.2rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-color);
+}
+
+.mk-plan-status-button {
+    min-width: 0;
+    min-height: 2rem;
+    padding: 0.35rem 0.4rem;
+    border: 0;
+    border-radius: calc(var(--radius-sm) - 2px);
+    color: var(--text-muted);
+    background: transparent;
+    font: inherit;
+    font-size: 0.72rem;
+    line-height: 1.15;
+    cursor: pointer;
+}
+
+.mk-plan-status-button:hover,
+.mk-plan-status-button:focus-visible {
+    color: var(--text-main);
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.mk-plan-status-button.is-active {
+    color: #082f49;
+    background: var(--primary-color);
+}
+
+.mk-project-meta-group-fields label {
     display: grid;
     gap: 0.25rem;
     min-width: 0;
@@ -5144,7 +5423,7 @@ body.mk-modal-open {
     font-weight: 700;
 }
 
-.mk-project-meta-fields input {
+.mk-project-meta-group-fields input {
     width: 100%;
     min-height: 2rem;
     box-sizing: border-box;
@@ -5157,7 +5436,7 @@ body.mk-modal-open {
     font-size: 0.78rem;
 }
 
-.mk-project-meta-fields input:focus,
+.mk-project-meta-group-fields input:focus,
 .mk-notes-panel textarea:focus {
     outline: 2px solid color-mix(in srgb, var(--primary-color) 65%, transparent);
     outline-offset: 1px;
@@ -5339,6 +5618,7 @@ body.mk-modal-open {
 .mk-meter-group-target-active {
     outline: 2px dashed var(--primary-color);
     outline-offset: 0.3rem;
+    border-radius: 0.75rem;
     background: rgba(56, 189, 248, 0.08) !important;
 }
 
@@ -5348,12 +5628,12 @@ body.mk-modal-open {
     background: rgba(56, 189, 248, 0.14) !important;
 }
 
-.mk-meter-group-target-active {
-    border-radius: 9px;
-}
-
 [data-theme="light"] .mk-project-meta {
     background: var(--surface-color);
+}
+
+[data-theme="light"] .mk-project-meta-group {
+    background: var(--bg-color);
 }
 
 [data-theme="light"] .mk-notes-panel,
@@ -5371,20 +5651,41 @@ body.mk-modal-open {
         justify-content: flex-start;
     }
 
-    .mk-project-meta-fields {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .mk-project-meta-groups {
+        grid-template-columns: 1fr;
+    }
+
+    /* Bei mittleren Breiten bleiben die beiden Gruppen untereinander,
+       erhalten aber ein vertrautes, platzsparendes Eingaberaster. */
+    .mk-project-meta-group--project .mk-project-meta-group-fields {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(12rem, 1.2fr);
+    }
+
+    .mk-project-meta-group--location .mk-project-meta-group-fields {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 641px) {
+    .mk-plan-status-button {
+        white-space: nowrap;
     }
 }
 
 @media (max-width: 640px) {
-    .mk-project-meta-fields {
+    .mk-project-meta-group-fields,
+    .mk-project-meta-group--project .mk-project-meta-group-fields,
+    .mk-project-meta-group--location .mk-project-meta-group-fields {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .mk-project-meta-fields label:first-child,
-    .mk-project-meta-fields label:nth-child(2),
-    .mk-project-meta-fields label:last-child {
-        grid-column: span 2;
+    .mk-project-meta-group-fields > label,
+    .mk-project-meta-group-fields > .mk-plan-status-field {
+        grid-column: span 1;
+    }
+
+    .mk-project-meta-group-fields {
+        gap: 0.45rem;
     }
 
     .mk-notes-panel summary {
@@ -5834,7 +6135,8 @@ body.mk-printing .mk-print-sheet {
     .header-center,
     .sidebar,
     .sidebar:hover,
-    .sidebar.expanded {
+    .sidebar.expanded,
+    .sidebar.sidebar-hover-expanded {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
     }
@@ -5867,7 +6169,8 @@ body.mk-printing .mk-print-sheet {
 
     .sidebar,
     .sidebar:hover,
-    .sidebar.expanded {
+    .sidebar.expanded,
+    .sidebar.sidebar-hover-expanded {
         position: relative;
         inset: auto;
         width: 100%;
@@ -5888,7 +6191,8 @@ body.mk-printing .mk-print-sheet {
 
     .sidebar .filter-section,
     .sidebar:hover .filter-section,
-    .sidebar.expanded .filter-section {
+    .sidebar.expanded .filter-section,
+    .sidebar.sidebar-hover-expanded .filter-section {
         width: 270px;
         min-width: 270px;
         height: fit-content;
@@ -5904,16 +6208,19 @@ body.mk-printing .mk-print-sheet {
     .sidebar .section-title,
     .sidebar:hover .section-title,
     .sidebar.expanded .section-title,
+    .sidebar.sidebar-hover-expanded .section-title,
     .sidebar .section-content,
     .sidebar:hover .section-content,
-    .sidebar.expanded .section-content {
+    .sidebar.expanded .section-content,
+    .sidebar.sidebar-hover-expanded .section-content {
         opacity: 1;
         visibility: visible;
     }
 
     .sidebar .section-content,
     .sidebar:hover .section-content,
-    .sidebar.expanded .section-content {
+    .sidebar.expanded .section-content,
+    .sidebar.sidebar-hover-expanded .section-content {
         max-height: 150px;
         overflow: visible;
     }

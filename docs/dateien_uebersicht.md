@@ -11,8 +11,8 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`index.html`** | `/` | Das visuelle HTML5-Grundgerüst der Anwendung (Struktur für Upload, Dashboard, Editor, AgNes, Modals). |
 | **`styles.css`** | `/` | Modernes CSS3-Designsystem (Darkmode, Glasmorphismus, Layout-Grid, Ampel-Badges, Buttons, Tabellen). |
 | **`manifest.json`** | `/` | Web App Manifest (PWA) für die Installation als eigenständige App auf Desktop und Smartphone. |
-| **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.07.24.1`). Speichert alle Modulpfade lokal im Browser für 100% Offlinebetrieb. |
-| **`tests.html`** | `/` | Automatische Test-Engine im Browser. Führt 75 Unit-, Integrations- und Regressionstests aus. |
+| **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.08.14-beta.192`). Speichert alle Modulpfade lokal im Browser für den Offlinebetrieb. |
+| **`tests.html`** | `/` | Automatische Test-Engine im Browser. Führt 130 Unit-, Integrations- und Regressionstests aus. |
 | **`js/app.js`** | `js/` | Schlanker Anwendungsstarter (`initializeApp()`). Verbindet Controller und startet die App beim Laden. |
 
 ---
@@ -99,3 +99,28 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`agnes-export.js`** | Erzeugt das **AgNes-Berechnungsprotokoll als CSV** inkl. Sweep-Verlauf. |
 | **`report-export.js`** | Bereitet den Druckbericht vor und löst den Browser-Druckdialog aus. |
 | **`project-export.js`** | Revisionsnahes Speichern & Laden von **`.lastgang`-Projektdateien** (JSON). |
+
+---
+
+## 🧩 9. Modulbereich `js/messkonzept/` (Messkonzept-Konfigurator)
+
+| Datei | Funktion |
+| :--- | :--- |
+| **`model.js`** | DOM-freies Zustandsmodell für Messobjekte, Projektangaben, Historie und Moduswechsel. |
+| **`rules.js`** | Versionierter, DOM-freier Regelkatalog für Zähler, Anlagen, Speicher, NSH und Parallelmessung. |
+| **`validation-status.js`** | Verbindet den versionierten Regelkatalog mit der kompakten Prüfstatus-Anzeige. |
+| **`render.js`** | Erzeugt Karten-, Rail- und Objekt-Markup ohne DOM-Messungen. |
+| **`layout-calculations.js`** | Reine, DOM-freie Berechnungen für Reihenbreiten, Rail-Tiefe und Paralleltracks. |
+| **`layout.js`** | Berechnet Rail-Breiten, Abstände, Kollisionen und Parallelzweig-Layout. |
+| **`connections.js`** | Zeichnet dynamische Leitungen und Knoten aus semantischen DOM-Ankern. |
+| **`viewport.js`** | Kapselt Zoom, Pan, ResizeObserver und die Topografie-Bedienung. |
+| **`history.js`** | Kapselt Undo/Redo und die dazugehörige Schaltflächen-Synchronisation. |
+| **`commands.js`** | Bündelt Zustandsänderungen wie Reset, Moduswechsel, Kaskadenstufen, Anlagenanlage und Verschieben. |
+| **`project-meta.js`** | Synchronisiert Projektname, Referenz, Skizzenstand, Standort und Kommentar mit dem Zustand. |
+| **`canvas-renderer.js`** | Komponiert Canvas, HAK-/Zählerstruktur und Objekt-Modal aus injizierten Render- und Zustandsfunktionen. |
+| **`drag-drop.js`** | Fachliche Drag-and-Drop- und Löschlogik über injizierte Befehls-Callbacks. |
+| **`interaction.js`** | DOM-Verkabelung für Dialoge, Felder, Buttons und Tastaturinteraktion. |
+| **`bootstrap.js`** | Sammelt statische DOM-Anker und verbindet Resize-/Lebenszyklus-Ereignisse mit dem Einstiegspunkt. |
+| **`export.js`** | Erzeugt die verständliche PDF-/Druckansicht aus dem aktuellen Zustand. |
+
+Der Einstiegspunkt [`messkonzept.js`](../messkonzept.js) orchestriert diese Module weiterhin. Zustandsänderungen werden über `commands.js` geführt; weitere Auslagerungen sollten diese Grenze beibehalten und nicht erneut DOM-, Geometrie- und Fachlogik vermischen.

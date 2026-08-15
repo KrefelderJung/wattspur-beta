@@ -33,13 +33,24 @@
         railSiblingClearancePx: 18,
         // Rueckwaertskompatibler Name fuer bestehende Aufrufer und Tests.
         meterToBusGapPx: 14,
-        meterToSubBusLinkHeightPx: 14,
+        // Parallelzweige besitzen einen 16px breiten Zaehlerknoten. Die
+        // Anlagenreihe braucht zusaetzlich 0.8rem sichtbaren Abstand, damit
+        // die erste Karte nicht links in den senkrechten Hauptstrang ragt.
+        parallelMeterAxisOffsetPx: 16,
+        parallelAssetClearancePx: 12.8,
+        // Gemeinsamer Mindestabstand zwischen dem senkrechten Messstrang und
+        // der ersten Karte eines aufgeklappten Anlagen-Rails. Dieser Wert ist
+        // bewusst eine eigene Regel: Die Kartenbreite und die Zahl der
+        // Unterzaehler duerfen die Messachse nicht wieder ueberdecken.
+        primaryRailClearancePx: 12.8,
         busToAssetGapPx: 28,
         // Der HTML-Knoten liegt innerhalb der gepaddeten Zonenflaeche. Der
         // erste Unterzaehler wuerde dadurch sonst um diese sichtbare
         // Knoten-Inset-Laenge weiter entfernt stehen als Z3/Z4 unter einem
         // Zusatzzaehler. Die Korrektur macht SK-Z -> ZK in jeder Ebene gleich.
-        rootRailJunctionInsetPx: 7
+        // Der Root-Inset gleicht den 0.9rem Zonenabstand aus. Dadurch gilt
+        // fuer den ersten und jeden weiteren ZK-Abgang derselbe 16px-Standard.
+        rootRailJunctionInsetPx: 14
     });
 
     function getStageScale(stage) {

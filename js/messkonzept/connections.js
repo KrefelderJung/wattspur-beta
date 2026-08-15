@@ -54,7 +54,16 @@
                 const rows = directRows(rail);
                 const entries = rows.flatMap(topologyBranchEntries);
                 const children = childRails(rail);
-                if (!entries.length && !children.length) return;
+                if (!entries.length && !children.length) {
+                    // Eine leere Kaskadenstufe bleibt fachlich sichtbar. Auch
+                    // ohne Anlagen markiert ihr Knoten den Übergang zur
+                    // nächsten Messstufe; ein leerer Anlagenzähler dagegen
+                    // bleibt bewusst ohne dekorativen Punkt.
+                    if (railMeter?.meterScope === 'base' && feedPoint) {
+                        dynamicNodes.push({ x: feedPoint.x, y: feedPoint.y });
+                    }
+                    return;
+                }
 
                 // Ein Zusatzzaehler mit genau einer Anlage ist noch keine
                 // Sammelschiene. Er bleibt als gerader Abgang vom Zaehler zur
@@ -84,11 +93,14 @@
                     return meterTop && meterBottom ? { child, meter, meterTop, meterBottom } : null;
                 }).filter(Boolean);
                 const pointForEntry = entry => {
-                    const isRailOwner = railMeter?.targetAssetId === entry.asset.id;
-                    const anchor = isRailOwner
-                        ? entry.branch.querySelector('.mk-asset-card') || entry.anchor
-                        : entry.anchor;
-                    return pointFor(anchor, 'center', 'top');
+                    // Der elektrische Anschlussanker ist immer maßgeblich:
+                    // besitzt der Anlagenast einen eigenen Zähler, endet die
+                    // Sammelschienenleitung am Zähler. Das gilt auch dann,
+                    // wenn dieselbe Anlage zugleich der Zielpunkt eines
+                    // übergeordneten Gruppen-Zählers ist. Die frühere
+                    // Besitzer-Sonderregel nahm dort fälschlich die Karte
+                    // und ließ den String durch den eigenen Zähler laufen.
+                    return pointFor(entry.anchor, 'center', 'top');
                 };
                 const rowEntries = rows.map(row => topologyBranchEntries(row));
                 const assetPoints = (rowEntries[0] || []).map(pointForEntry).filter(Boolean);
@@ -132,16 +144,51 @@
                     // waagerechte Strecke entsteht erst unterhalb des Zählers.
                     const childFeedPoint = { x: meterTop.x, y: feedPoint.y };
                     wires.push(buildWire(childFeedPoint, meterTop));
-                    const childRow = child.querySelector(':scope > .mk-asset-row');
+                    // Ein Anlagenzähler mit genau einer Anlage hat keinen
+                    // eigenen Sammelschienenbus. Seine direkte Leitung vom
+                    // Zähler zur Anlage übernimmt bereits die vollständige
+                    // Strecke unterhalb des Zählers. Eine zusätzliche
+                    // meterBottom → childBusFeedPoint-Leitung würde exakt
+                    // dieselbe Achse noch einmal zeichnen und den String
+                    // scheinbar durch den Zähler laufen lassen.
+                    if (child.classList.contains('single-asset-rail')) {
+                        drawRail(child, meterBottom);
+                        return;
+                    }
+                    const childRows = [...child.children].filter(element => element.matches('.mk-asset-row'));
+                    // Die Bus-Höhe muss sich am tatsächlichen elektrischen
+                    // Anschluss jedes Astes orientieren. Bei einem eigenen
+                    // Zähler liegt dieser Anschluss am oberen Rand des
+                    // Inline-Zählers – nicht am Kartenrand darunter. Wenn
+                    // alle Anlagen einer unteren Sammelschiene eigene Zähler
+                    // haben, würde die bisherige Kartenreferenz den gesamten
+                    // Bus künstlich nach unten verschieben.
+                    const childAssetBranches = childRows.flatMap(row => [...row.children]
+                        .filter(element => element.matches('.mk-asset-branch')));
+                    const childBranchAnchors = childAssetBranches
+                        .map(branch => getAssetBranchAnchor(branch))
+                        .filter(Boolean);
+                    const childAnchorTops = childBranchAnchors
+                        .map(anchor => pointFor(anchor, 'center', 'top'))
+                        .filter(Boolean);
+                    const childRow = childRows[0] || null;
                     const childRailTop = pointFor(childRow || child, 'left', 'top');
-                    const childFirstBranch = child.querySelector(':scope > .mk-asset-row > .mk-asset-branch');
-                    const childFirstAssetTop = childFirstBranch
-                        ? pointFor(getAssetBranchAnchor(childFirstBranch), 'center', 'top')
-                        : null;
+                    // Fallback-Anker fuer eine bewusst leere oder noch nicht
+                    // vermessene Reihe; gefuellte Rails verwenden immer den
+                    // hoechsten elektrischen Anschluss aus childAnchorTops.
+                    const childFirstAssetTop = childAnchorTops[0] || null;
                     const minimumChildBusY = meterBottom.y + geometry.meterToSubBusGapPx;
-                    const standardChildBusY = childFirstAssetTop
-                        ? childFirstAssetTop.y - geometry.busToAssetGapPx
-                        : childRailTop?.y || null;
+                    // Die Unter-Sammelschiene richtet sich am hoechsten sichtbaren
+                    // Anschluss-Oberrand aus. So gilt derselbe Abstand für
+                    // ungezählte Anlagen und Anlagen mit vorgeschaltetem
+                    // Zähler; die Kartenhöhe ist für die Messleitung nicht
+                    // mehr ausschlaggebend.
+                    const minimumChildAnchorTop = childAnchorTops.length
+                        ? Math.min(...childAnchorTops.map(point => point.y))
+                        : null;
+                    const standardChildBusY = Number.isFinite(minimumChildAnchorTop)
+                        ? minimumChildAnchorTop - geometry.busToAssetGapPx
+                        : childFirstAssetTop?.y || childRailTop?.y || null;
                     const childBusY = Number.isFinite(standardChildBusY)
                         ? Math.max(standardChildBusY, minimumChildBusY)
                         : minimumChildBusY;

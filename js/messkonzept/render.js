@@ -95,18 +95,30 @@
                 : '';
             const railAssets = rail.assets || [];
             const railChildren = rail.children || [];
-            const isSingleAssetRail = Boolean(rail.meterId && railAssets.length === 1 && railChildren.length === 0);
-            const geometry = getLayoutGeometry();
-            const railAttributes = ` data-mk-meter-rail="${escapeHtml(rail.meterId || 'root')}" data-mk-depth="${rail.depth}"${rail.meterId ? ` data-mk-parent-meter="${escapeHtml(parentMeter)}" style="--mk-meter-rail-top-gap-px: ${geometry.meterRailTopGapPx}px; --mk-meter-to-sub-bus-link-height-px: ${geometry.meterToSubBusLinkHeightPx}px; --mk-meter-rail-node-center-offset-px: ${geometry.meterRailNodeCenterOffsetPx}px;"` : ` data-mk-root-rail="true" style="--mk-root-rail-junction-inset-px: ${geometry.rootRailJunctionInsetPx}px;"`}`;
-            const meterAttributes = rail.meterId ? ` data-mk-meter-group="${escapeHtml(rail.meterId)}"` : '';
             const railMeter = rail.meterId ? getAdditionalMeters().find(meter => meter.id === rail.meterId) : null;
+            // Nur ein anlagenbezogener Zähler mit genau einer Anlage darf
+            // ohne eigenen Sammelschienenknoten direkt zur Anlage führen.
+            // Ein Kaskadenzähler markiert dagegen immer eine Messstufe und
+            // benötigt deshalb auch bei einer oder keiner Anlage seinen
+            // standardisierten Schienenknoten.
+            const isSingleAssetRail = Boolean(
+                railMeter?.meterScope === 'asset'
+                && railAssets.length === 1
+                && railChildren.length === 0
+            );
+            const geometry = getLayoutGeometry();
+            const railAttributes = ` data-mk-meter-rail="${escapeHtml(rail.meterId || 'root')}" data-mk-depth="${rail.depth}"${rail.meterId ? ` data-mk-parent-meter="${escapeHtml(parentMeter)}" style="--mk-meter-rail-top-gap-px: ${geometry.meterRailTopGapPx}px; --mk-meter-rail-node-center-offset-px: ${geometry.meterRailNodeCenterOffsetPx}px;"` : ` data-mk-root-rail="true" style="--mk-root-rail-junction-inset-px: ${geometry.rootRailJunctionInsetPx}px;"`}`;
+            const meterAttributes = rail.meterId ? ` data-mk-meter-group="${escapeHtml(rail.meterId)}"` : '';
             const isAssetGroupRail = Boolean(railMeter?.meterScope === 'asset');
             const railRoleLabel = isAssetGroupRail ? 'gemeinsamer Messpunkt' : 'Kaskadenstufe';
             const railDropHint = railMeter && canBuildCascadeAfterMeter(railMeter)
                 ? 'Weitere Anlagen oder Zähler hierher ziehen'
                 : 'Weitere Anlagen hierher ziehen · keine weitere Kaskadenstufe';
+            // Die Leitung unter einem Rail-Zähler wird ausschließlich vom
+            // SVG-Router gezeichnet. Ein zusätzlicher HTML-Strich würde bei
+            // Unterkaskaden dieselbe Strecke doppelt überlagern.
             const railMeterMarkup = railMeter
-                ? `<div class="mk-rail-meter-node" data-mk-meter-rail-node="${escapeHtml(railMeter.id)}" data-mk-meter-role="${isAssetGroupRail ? 'asset-group' : 'cascade'}" data-mk-meter-target="${escapeHtml(railMeter.id)}" data-mk-meter-group-target="${escapeHtml(railMeter.id)}" title="Z${getMeterNumber(railMeter)} · ${railRoleLabel} · ${railDropHint}"><span class="mk-generation-meter mk-rail-meter" data-mk-select-meter="${getMeterDetailIndex(railMeter)}" role="button" tabindex="0" aria-label="Z${getMeterNumber(railMeter)} auswählen"><b>Z${getMeterNumber(railMeter)}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${escapeHtml(railMeter.id)}" title="Z${getMeterNumber(railMeter)} entfernen" aria-label="Zähler Z${getMeterNumber(railMeter)} entfernen">×</button></div><span class="mk-rail-meter-link" aria-hidden="true"></span>`
+                ? `<div class="mk-rail-meter-node" data-mk-meter-rail-node="${escapeHtml(railMeter.id)}" data-mk-meter-role="${isAssetGroupRail ? 'asset-group' : 'cascade'}" data-mk-meter-target="${escapeHtml(railMeter.id)}" data-mk-meter-group-target="${escapeHtml(railMeter.id)}" title="Z${getMeterNumber(railMeter)} · ${railRoleLabel} · ${railDropHint}"><span class="mk-generation-meter mk-rail-meter" data-mk-select-meter="${getMeterDetailIndex(railMeter)}" role="button" tabindex="0" aria-label="Z${getMeterNumber(railMeter)} auswählen"><b>Z${getMeterNumber(railMeter)}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${escapeHtml(railMeter.id)}" title="Z${getMeterNumber(railMeter)} entfernen" aria-label="Zähler Z${getMeterNumber(railMeter)} entfernen">×</button></div>`
                 : '';
             const railJunctionMarkup = railMeter && !isSingleAssetRail
                 ? `<span class="mk-rail-junction-anchor" data-mk-node-kind="SK" data-mk-rail-junction="${escapeHtml(railMeter.id)}" aria-hidden="true"><span class="mk-rail-junction"></span></span>`

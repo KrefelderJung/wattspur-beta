@@ -57,7 +57,7 @@
             nextId: 1,
             assets: [],
             meterDetails: {},
-            project: { name: '', reference: '', street: '', houseNumber: '', postalCode: '', city: '', planStatus: '' },
+            project: { name: '', reference: '', street: '', houseNumber: '', postalCode: '', city: '', planStatus: 'Aktuell' },
             notes: '',
             selectedObject: null
         };

@@ -10,7 +10,7 @@
     <!-- PapaParse -->
     <script src="lib/papaparse.min.js"></script>
     
-    <link rel="stylesheet" href="styles.css?v=206">
+    <link rel="stylesheet" href="styles.css?v=221">
     <link rel="icon" type="image/svg+xml" href="wattspur-mark.svg">
     <!-- PWA Meta tags -->
     <link rel="manifest" href="manifest.json">
@@ -105,9 +105,10 @@
                             <p>oder antippen, um eine oder mehrere Dateien auszuwählen</p>
                             <input type="file" id="file-input" accept=".csv,.txt,.mscons" multiple style="display: none;">
                         </div>
-                        <div class="empty-start-row">
-                            <button id="btn-start-empty" class="btn btn-secondary">Mit leerem Lastgang starten</button>
-                            <button id="btn-start-demo" class="btn btn-primary" title="Mit einem synthetischen Jahresprofil für Haushaltsbezug und PV-Einspeisung starten">Demo starten</button>
+                        <div class="demo-entry-row" aria-label="Schnelleinstiege">
+                            <button id="btn-start-empty" class="btn demo-entry-btn demo-entry-editor" title="Eigene oder kopierte Messwerte im Dateneditor bearbeiten">Dateneditor</button>
+                            <button id="btn-start-household-demo" class="btn demo-entry-btn demo-entry-household" title="Synthetisches Jahresprofil für Haushalt und PV laden">Hausverbrauch-Demo</button>
+                            <button id="btn-start-industrial-demo" class="btn demo-entry-btn demo-entry-industrial" title="Synthetisches Jahresprofil für einen energieintensiven Produktionsbetrieb laden">Industrieverbrauch-Demo</button>
                         </div>
                         <div id="upload-progress" class="hidden">
                             <div class="spinner"></div>
@@ -134,8 +135,8 @@
                         </ul>
                         <div class="format-downloads" aria-label="CSV-Dateien herunterladen">
                             <button id="btn-download-csv-template" type="button" class="btn btn-secondary btn-sm" title="Eine leere CSV-Vorlage mit Datum, Uhrzeit und Wert herunterladen">CSV-Vorlage</button>
-                            <button id="btn-download-demo-household" type="button" class="btn btn-secondary btn-sm" title="Synthetisches Jahresprofil 2026 für den Haushaltsbezug herunterladen">Demo: Haushaltsbezug · Jahr</button>
-                            <button id="btn-download-demo-pv" type="button" class="btn btn-secondary btn-sm" title="Synthetisches Jahresprofil 2026 für die PV-Einspeisung herunterladen">Demo: PV-Einspeisung · Jahr</button>
+                            <button id="btn-download-demo-household" type="button" class="btn btn-secondary btn-sm" title="Synthetisches Jahresprofil 2021 für den Hausverbrauch herunterladen">CSV: Hausverbrauch</button>
+                            <button id="btn-download-demo-industrial" type="button" class="btn btn-secondary btn-sm" title="Synthetisches Jahresprofil 2021 für einen energieintensiven Produktionsbetrieb herunterladen">CSV: Industrieverbrauch</button>
                         </div>
                     </div>
                 </details>
@@ -200,27 +201,67 @@
                     <p>Bausteine anordnen und Messbereiche prüfen. Die Skizze ist VBEW-inspiriert, dient nur zur Orientierung und ersetzt keine technische Abstimmung mit Netzbetreiber, Messstellenbetreiber und Elektrofachbetrieb. <a class="mk-reference-link" href="https://shop.vbew-gmbh.de/produkt/vbew-messkonzepte-handout/" target="_blank" rel="noopener noreferrer" title="Offizielle VBEW-Publikationsseite mit Lizenzhinweisen">VBEW-Referenz &amp; Lizenzhinweise ↗</a></p>
                 </div>
 
-                <section class="mk-project-meta" aria-labelledby="mk-project-meta-title">
-                    <div class="mk-project-meta-heading">
-                        <div>
+                <details class="mk-project-meta" aria-labelledby="mk-project-meta-title">
+                    <summary class="mk-project-meta-heading" title="Projektangaben ein- oder ausblenden">
+                        <span class="mk-project-meta-summary-copy">
                             <span class="mk-panel-heading-label" id="mk-project-meta-title">Projektangaben</span>
                             <small>Optional · erscheinen im PDF-Export</small>
-                        </div>
+                        </span>
+                    </summary>
+                    <div class="mk-project-meta-groups">
+                        <fieldset class="mk-project-meta-group mk-project-meta-group--project">
+                            <legend>Projekt &amp; Stand</legend>
+                            <div class="mk-project-meta-group-fields">
+                                <label>Projektname<input type="text" data-mk-project-field="name" autocomplete="off" placeholder="z. B. PV-Erweiterung Wohnhaus"></label>
+                                <label>Referenz / Nr.<input type="text" data-mk-project-field="reference" autocomplete="off" placeholder="z. B. Vorgang 2026-001"></label>
+                                <div class="mk-plan-status-field">
+                                    <span class="mk-project-field-label" id="mk-plan-status-label">Stand der Skizze</span>
+                                    <div class="mk-plan-status-buttons" role="group" aria-labelledby="mk-plan-status-label">
+                                        <button type="button" class="mk-plan-status-button" data-mk-plan-status="Vor dem Umbau" aria-pressed="false">Vor dem Umbau</button>
+                                        <button type="button" class="mk-plan-status-button is-active" data-mk-plan-status="Aktuell" aria-pressed="true">Aktuell</button>
+                                        <button type="button" class="mk-plan-status-button" data-mk-plan-status="In Planung" aria-pressed="false">In Planung</button>
+                                    </div>
+                                    <input type="hidden" data-mk-project-field="planStatus" value="Aktuell">
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="mk-project-meta-group mk-project-meta-group--location">
+                            <legend>Standort</legend>
+                            <div class="mk-project-meta-group-fields">
+                                <label>Straße<input type="text" data-mk-project-field="street" autocomplete="street-address" placeholder="Straßenname"></label>
+                                <label>Hausnr.<input type="text" data-mk-project-field="houseNumber" autocomplete="address-line2" placeholder="Nr."></label>
+                                <label>PLZ<input type="text" data-mk-project-field="postalCode" inputmode="numeric" autocomplete="postal-code" placeholder="PLZ"></label>
+                                <label>Ort<input type="text" data-mk-project-field="city" autocomplete="address-level2" placeholder="Ort"></label>
+                            </div>
+                        </fieldset>
                     </div>
-                    <div class="mk-project-meta-fields">
-                        <label>Projektname<input type="text" data-mk-project-field="name" autocomplete="off" placeholder="z. B. PV-Erweiterung Wohnhaus"></label>
-                        <label>Referenz / Nr.<input type="text" data-mk-project-field="reference" autocomplete="off" placeholder="z. B. Vorgang 2026-001"></label>
-                        <label>Straße<input type="text" data-mk-project-field="street" autocomplete="street-address" placeholder="Straßenname"></label>
-                        <label>Hausnr.<input type="text" data-mk-project-field="houseNumber" autocomplete="address-line2" placeholder="Nr."></label>
-                        <label>PLZ<input type="text" data-mk-project-field="postalCode" inputmode="numeric" autocomplete="postal-code" placeholder="PLZ"></label>
-                        <label>Ort<input type="text" data-mk-project-field="city" autocomplete="address-level2" placeholder="Ort"></label>
-                        <label>Stand der Skizze<input type="text" data-mk-project-field="planStatus" autocomplete="off" placeholder="z. B. Bestand / Planung 2027" title="Kennzeichnet, ob die Skizze den Bestand oder eine Planung beschreibt."></label>
-                    </div>
-                </section>
+                </details>
 
                 <div class="mk-layout">
-                    <aside class="mk-palette" aria-label="Bausteine">
-                        <div class="mk-palette-heading"><span>Bausteine</span><small>Tippen oder ziehen</small></div>
+                    <aside class="mk-palette" aria-label="Messobjekte">
+                        <div class="mk-palette-heading">
+                            <span>Messobjekte</span>
+                            <button type="button" class="mk-palette-info-button" id="btn-mk-palette-info" aria-controls="mk-palette-info" aria-expanded="false" title="Aufbau des Messkonzepts erklären" aria-label="Aufbau des Messkonzepts erklären">i</button>
+                        </div>
+                        <div id="mk-palette-info-copy" class="mk-palette-info hidden" role="note" aria-hidden="true">
+                            <strong>Messkonzept aufbauen</strong>
+                            <p>Ziehe einen Zähler auf einen anderen Zähler, um eine Zählerkaskade aufzubauen.</p>
+                            <p>Ziehe eine Anlage auf den gewünschten Zähler, um sie dahinter anzuschließen. Weitere Anlagen können ebenfalls direkt auf diesen Zähler gezogen werden.</p>
+                        </div>
+                        <div id="mk-palette-info" class="mk-object-modal hidden" aria-hidden="true">
+                            <div class="mk-object-dialog mk-help-dialog" role="dialog" aria-modal="true" aria-labelledby="mk-palette-info-title">
+                                <div class="mk-object-dialog-header"><div><span class="landing-kicker">Messobjekte</span><h2 id="mk-palette-info-title">Messkonzept aufbauen</h2></div><button type="button" class="mk-modal-close" id="btn-mk-palette-info-close" title="Hinweis schließen" aria-label="Hinweis schließen">×</button></div>
+                                <div class="mk-object-dialog-content mk-help-dialog-content">
+                                    <p class="mk-help-intro">Die Bausteine bilden die technische Struktur ab. Ziehe sie auf das passende Ziel oder öffne ein Objekt für weitere Angaben.</p>
+                                    <ol class="mk-help-steps">
+                                        <li><strong>Zählerkaskade</strong><span>Ziehe einen Zähler auf einen anderen Zähler, um eine Zählerkaskade aufzubauen.</span></li>
+                                        <li><strong>Zähler und Anlage verknüpfen</strong><span>Beide Richtungen sind möglich: Ziehe einen Zähler auf eine Anlage, um ihn davor zu setzen. Ziehe eine Anlage auf einen Zähler, um sie dahinter anzuschließen. Weitere Anlagen können ebenfalls auf diesen Zähler gezogen werden, wenn sie gemeinsam dahinter gemessen werden sollen.</span></li>
+                                        <li><strong>Informationen ergänzen</strong><span>Klicke Zähler oder Anlagen an, um Angaben für Kunde, Elektriker, Netzbetreiber und interne Abstimmung zu hinterlegen.</span></li>
+                                    </ol>
+                                </div>
+                                <div class="mk-object-dialog-footer"><span>Die Angaben bleiben lokal im Browser.</span><button type="button" class="btn landing-primary" id="btn-mk-palette-info-done">Schließen</button></div>
+                            </div>
+                        </div>
                         <div class="mk-palette-items">
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="meter" title="Zähler vor eine Anlage setzen"><span class="mk-palette-icon meter" aria-hidden="true">Z</span><span class="mk-palette-label">Zähler</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="generation" title="Erzeugungsanlage einfügen"><span class="mk-palette-icon generation" aria-hidden="true">EA</span><span class="mk-palette-label">Erzeugungs&shy;anlage</span></button>
@@ -298,9 +339,6 @@
                     <aside class="mk-summary-panel" aria-labelledby="mk-summary-title">
                         <div class="mk-panel-heading"><span id="mk-summary-title">Prüfstatus</span><span id="mk-status-badge" class="mk-status-badge neutral">Start</span></div>
                         <div id="mk-validation-list" class="mk-validation-list"></div>
-                        <div class="mk-summary-divider"></div>
-                        <div class="mk-panel-heading"><span>Messlogik</span></div>
-                        <div id="mk-measurement-summary" class="mk-measurement-summary"></div>
                         <button type="button" class="btn landing-primary mk-export-button" id="btn-mk-export-pdf">Messkonzept als PDF ausgeben</button>
                     </aside>
                 </div>
@@ -1537,13 +1575,25 @@
     <script src="parser.js?v=304"></script>
     <script src="charts.js?v=304"></script>
     <script src="app.js?v=309"></script>
-    <script src="js/messkonzept/model.js?v=1"></script>
-    <script src="messkonzept-geometry.js?v=8"></script>
+    <script src="js/messkonzept/model.js?v=2"></script>
+    <script src="messkonzept-geometry.js?v=9"></script>
     <script src="messkonzept-topology.js?v=1"></script>
     <script src="js/messkonzept/rules.js?v=2"></script>
-    <script src="js/messkonzept/render.js?v=2"></script>
-    <script src="js/messkonzept/connections.js?v=1"></script>
+    <script src="js/messkonzept/layout-calculations.js?v=1"></script>
+    <script src="js/messkonzept/validation-status.js?v=1"></script>
+    <script src="js/messkonzept/layout.js?v=2"></script>
+    <script src="js/messkonzept/render.js?v=3"></script>
+    <script src="js/messkonzept/connections.js?v=3"></script>
     <script src="js/messkonzept/export.js?v=1"></script>
-    <script src="messkonzept.js?v=107"></script>
+    <script src="js/messkonzept/viewport.js?v=1"></script>
+    <script src="js/messkonzept/history.js?v=1"></script>
+    <script src="js/messkonzept/commands.js?v=1"></script>
+    <script src="js/messkonzept/project-meta.js?v=1"></script>
+    <script src="js/messkonzept/canvas-renderer.js?v=1"></script>
+    <script src="js/messkonzept/drag-drop.js?v=1"></script>
+    <script src="js/messkonzept/interaction.js?v=5"></script>
+    <script src="js/messkonzept/bootstrap.js?v=2"></script>
+    <script src="js/messkonzept/module-contracts.js?v=1"></script>
+    <script src="messkonzept.js?v=111"></script>
 </body>
 </html>

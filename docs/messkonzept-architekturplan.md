@@ -41,7 +41,7 @@ js/
 │  ├─ geometry.js       # Koordinaten; Nachfolger von messkonzept-geometry.js
 │  ├─ render.js         # HTML für Schienen, Zähler und Anlagenkarten
 │  ├─ connections.js    # SVG-Leitungen und Knotenpunkte
-│  ├─ validation.js     # Prüfstatus und Messlogik-Zusammenfassung
+│  ├─ validation-status.js # Prüfstatus-Anzeige auf Basis des Regelkatalogs
 │  ├─ interaction.js    # Drag & Drop, Auswahl, Modal, Zoom und Pan
 │  ├─ export.js         # Druck-/PDF-Ausgabe
 │  └─ bootstrap.js      # DOM-Verkabelung und Render-Zyklus
@@ -102,11 +102,12 @@ Diese Schicht arbeitet nur mit benannten Ankern:
 Die Leitungsfunktion erhält eine Liste solcher Knoten und verbindet sie. Sie
 liest keine fachlichen Beziehungen aus zufälliger DOM-Reihenfolge.
 
-### Phase 4 – `validation.js` und `export.js`
+### Phase 4 – `validation-status.js` und `export.js`
 
-Prüfstatus, Messlogik-Zusammenfassung und PDF-/Druckexport werden anschließend
-aus dem Hauptmodul entfernt. Beide Schichten dürfen nur lesend auf den Zustand
-zugreifen.
+Prüfstatus und PDF-/Druckexport werden aus dem Hauptmodul entfernt. Beide
+Schichten dürfen nur lesend auf den Zustand zugreifen. Eine separate
+Messlogik-Zusammenfassung wird nicht mehr als UI- oder PDF-Bereich geführt,
+weil sie neben der Skizze keinen zusätzlichen Prüfwert liefert.
 
 ### Phase 5 – `interaction.js` und dünner Einstiegspunkt
 
@@ -196,9 +197,58 @@ Browser mit einem simulierten Druckdialog auf Aufbau und Bereinigung geprüft.
 Die Arbeit bleibt lokal; eine Veröffentlichung auf GitHub Pages ist damit
 ausdrücklich noch nicht erfolgt.
 
+## Aktualisierter Architekturstatus (14.08.2026)
+
+`js/messkonzept/layout.js` ist jetzt als sechste aktive Schicht eingebunden. Das
+Modul kapselt die berechenbare Layoutlogik für Sammelschienen und Parallelzweige:
+Breiten, Zeilenaufteilung, reservierte Messplätze, Einzel-Rails,
+Kollisionsverschiebungen und die dynamische Parallelbusbreite. Es greift nicht
+auf `mkConfiguratorState` oder `mkElements` zu, sondern erhält Zustand, DOM-
+Anker, Topologie und Geometriekonstanten über eine injizierte API.
+
+`messkonzept.js` enthält dafür nur noch kleine Kompatibilitätsadapter. Die
+Darstellung und die fachliche Zählerbaumlogik bleiben unverändert; die
+Zuständigkeit ist nun klar getrennt: `render.js` erzeugt Markup, `layout.js`
+misst und positioniert, `connections.js` zeichnet die Leitungen. Für jede
+Sammelschiene prüft `layout.js` zusätzlich den realen Abstand zwischen dem
+senkrechten Messstrang und der ersten Anlagenkarte. Bei einer Kaskade wird nur
+der notwendige Versatz gesetzt; die Unter-Rails werden erst danach an die neue
+Kartenposition ausgerichtet. So bleibt die Regel in gemeinsamer Messung und
+Parallelmessung identisch und wächst mit der tatsächlichen Skizzenbreite.
+
+Der Cache wurde auf `2026.08.14-beta.176` angehoben. Die Browser-Test-Suite
+umfasst jetzt 119 Tests und ist vollständig grün. Der neue Regressionstest
+prüft zusätzlich den einheitlichen Zählerkarten- und Anschlussstandard in
+gemeinsamer Messung und Parallelmessung. Der Architekturtest prüft nun auch
+die gekapselte Bootstrap-/DOM-Verkabelung: statische DOM-Anker, DOM-Ready,
+Resize-Debounce sowie die Lade- und Cache-Reihenfolge liegen in
+`js/messkonzept/bootstrap.js`. `messkonzept.js` erhält die gesammelten
+Elemente nur noch über diese Schnittstelle und enthält keine eigene statische
+DOM-Suche oder DOM-Ready-Verkabelung mehr.
+
 ## Nächster konkreter Schritt
 
-Als nächstes sollte die Interaktionsschicht (`interaction.js`) folgen. Sie soll
-Drag & Drop, Modals, Zoom, Pan und Undo/Redo bündeln, ohne selbst Rails oder
-PDF-Markup zu erzeugen. Danach bleibt `messkonzept.js` als dünner Bootstrap-
-Einstiegspunkt übrig.
+Als nächstes kann die Editor-/Bootstrap-Grenze weiter verschlankt werden.
+Die bereits ausgelagerten Interaktionsmodule (`interaction.js`, `drag-drop.js`,
+`viewport.js` und `history.js`) können über eine klar benannte Start-API
+verkabelt werden. Danach kann der Objekt-Editor als eigene Schicht folgen,
+bevor `messkonzept.js` nur noch fachliche Orchestrierung und Kompatibilitäts-
+adapter enthält.
+
+## Aktualisierter Architekturstatus – Canvas-Komposition (14.08.2026)
+
+`js/messkonzept/canvas-renderer.js` ist als siebte aktive Schicht eingebunden.
+Das Modul komponiert die sichtbare Messskizze, HAK-/Zählerstruktur,
+Parallelzweige und das Objekt-Modal. Es kennt weder die globalen
+Konfiguratorvariablen noch SVG-Geometrie oder direkte DOM-Messungen. Zustand,
+fachliche Hilfsfunktionen und bestehende Karten-/Dropzone-Renderer werden über
+eine injizierte Factory-Schnittstelle bereitgestellt.
+
+`messkonzept.js` enthält für diese Funktionen nur noch Kompatibilitätsadapter.
+Damit ist die Grenze künftig eindeutig: `render.js` erzeugt einzelne Karten und
+Rails, `canvas-renderer.js` setzt diese zu einer Oberfläche zusammen,
+`layout.js` berechnet Maße und `connections.js` zeichnet die Leitungen. Ein
+Regressionstest prüft die Modul-Isolation, die Lade-/Cache-Reihenfolge und eine
+einfache Canvas-Komposition ohne globale Konfiguratorvariablen. Der Cache steht
+auf `2026.08.14-beta.193`; die Änderungen bleiben lokal und wurden nicht
+veröffentlicht.
