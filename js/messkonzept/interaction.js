@@ -48,9 +48,13 @@
 
         function handleCanvasKeydown(event) {
             if (!['Enter', ' '].includes(event.key)) return;
-            const target = event.target.closest?.('[data-mk-select-meter], [data-mk-select-asset]');
+            const target = event.target.closest?.('[data-mk-select-hak], [data-mk-select-meter], [data-mk-select-asset]');
             if (!target) return;
             event.preventDefault();
+            if (target.dataset.mkSelectHak !== undefined) {
+                call('openObjectModal', { kind: 'hak' });
+                return;
+            }
             if (target.dataset.mkSelectMeter !== undefined) {
                 call('openObjectModal', { kind: 'meter', index: Number(target.dataset.mkSelectMeter) || 0 });
             }
@@ -83,7 +87,10 @@
             if (!documentRef || !elements.canvas) return;
             initialized = true;
 
-            bindClick('btn-open-messkonzept-card', () => call('showScreen'));
+            bindClick('btn-open-messkonzept-card', event => {
+                event.preventDefault();
+                call('showScreen');
+            });
             bindClick('btn-mk-back', () => call('hideScreen'));
             bindClick('btn-mk-start-free', () => call('startFree'));
             bindClick('btn-mk-change-start', () => call('showStartPanel'));
@@ -177,14 +184,6 @@
             });
             elements.objectModal?.addEventListener('click', event => {
                 if (event.target === elements.objectModal) call('closeModal');
-            });
-            elements.objectModal?.addEventListener('input', event => {
-                call('updateAssetField', event);
-                call('updateMeterDetailField', event);
-            });
-            elements.objectModal?.addEventListener('change', event => {
-                call('updateAssetField', event);
-                call('updateMeterDetailField', event);
             });
             documentRef.addEventListener('keydown', handleGlobalKeydown);
             documentRef.addEventListener('keydown', event => {

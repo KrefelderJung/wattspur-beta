@@ -1,6 +1,6 @@
 # Architekturplan Messkonzept-Konfigurator
 
-Stand: 14.08.2026 · nur lokale Architekturarbeit
+Stand: 17.08.2026 · nur lokale Architekturarbeit
 
 ## Kurzentscheidung
 
@@ -161,7 +161,7 @@ Modul greift nicht auf `document`, CSS-Messungen oder SVG zu. Der Einstiegspunkt
 reicht ihm nur die fachlichen Hilfsfunktionen und bleibt damit kompatibel zur
 bestehenden Topologie.
 
-`js/messkonzept/rules.js` führt mit `2026-08-17-beta.4` einen versionierten
+`js/messkonzept/rules.js` führt mit `2026-08-17-beta.7` einen versionierten
 Regelkatalog ein. Jede aktive Prüfung liefert neben Stufe und Text eine stabile
 Regel-ID, die im [Regelwerk](messkonzept-regelwerk.md), in der UI und in den
 Regressionstests wiederverwendet wird. Das Regelwerk dokumentiert bewusst auch
@@ -175,8 +175,8 @@ Verbindungsmodul weder `mkConfiguratorState` noch `mkElements` und kann nicht
 mehr versehentlich fachliche Zustände verändern. Die bisherige Geometrie bleibt
 bewusst unverändert; lediglich die Zuständigkeit ist verschoben.
 
-Der Cache wurde auf `2026.08.14-beta.163` angehoben und enthält das neue
-Verbindungsmodul. Der HTTP-Testlauf umfasst jetzt 110 Tests und ist vollständig
+Der Cache wurde auf `2026.08.18-beta.308` angehoben und enthält das neue
+Verbindungsmodul sowie die überarbeitete Trafo-Darstellung. Der HTTP-Testlauf umfasst jetzt 110 Tests und ist vollständig
 grün. Zusätzlich prüft ein Architekturtest, dass die Leitungslogik nicht in
 `messkonzept.js` zurückwandert, das Modul offline gecacht wird und keine globalen
 Zustandsvariablen verwendet. Die Arbeit bleibt lokal; eine Veröffentlichung auf
@@ -235,14 +235,21 @@ Resize-Debounce sowie die Lade- und Cache-Reihenfolge liegen in
 Elemente nur noch über diese Schnittstelle und enthält keine eigene statische
 DOM-Suche oder DOM-Ready-Verkabelung mehr.
 
+## Erledigter Auslagerungsplan
+
+Die ursprünglich geplante Editor-/Bootstrap-Grenze ist umgesetzt. `interaction.js`,
+`drag-drop.js`, `viewport.js`, `history.js`, `canvas-renderer.js`, `editor.js`
+und `start-flow.js` werden über benannte APIs verkabelt. `messkonzept.js` bleibt
+als Orchestrator zurück und enthält weiterhin die fachlichen Kompatibilitäts-
+adapter.
+
 ## Nächster konkreter Schritt
 
-Als nächstes kann die Editor-/Bootstrap-Grenze weiter verschlankt werden.
-Die bereits ausgelagerten Interaktionsmodule (`interaction.js`, `drag-drop.js`,
-`viewport.js` und `history.js`) können über eine klar benannte Start-API
-verkabelt werden. Danach kann der Objekt-Editor als eigene Schicht folgen,
-bevor `messkonzept.js` nur noch fachliche Orchestrierung und Kompatibilitäts-
-adapter enthält.
+Als nächstes sollte der zentrale Render-Zyklus aus `messkonzept.js` in ein
+kleines UI-Orchestrierungsmodul ausgelagert werden. Dabei dürfen weder
+Messlogik noch Geometrie verschoben werden. Ziel ist eine feste, testbare
+Reihenfolge für Projektfelder, Schalter, Canvas, Leitungsbeobachtung, Zoom,
+Prüfstatus und Verlauf.
 
 ## Aktualisierter Architekturstatus – Canvas-Komposition (14.08.2026)
 
@@ -295,3 +302,160 @@ Messungen, zwei parallele Zweitzähler und zwei Kaskaden. Der browserfreie
 `tests/preset-loader-test.js` prüft insbesondere, dass „Haushalt“ intern ein
 `consumer` bleibt und dass PV sowie Speicher in der Kaskade tatsächlich hinter
 dem erzeugten Z2 hängen. Der Cache steht auf `2026.08.16-beta.217`.
+
+## Aktualisierter Architekturstatus – Objekteditor (17.08.2026)
+
+Die Eingaben im Objekt-Dialog sind nun in `js/messkonzept/editor.js`
+gekapselt. Das Modul verarbeitet Asset- und Zählerdetailfelder, aktualisiert
+keine Leitungsgeometrie und kennt keine globalen Konfiguratorvariablen. Es
+erhält Zustand, Historie, Rendering und fachliche Hilfsfunktionen über
+injizierte Callbacks.
+
+`interaction.js` bleibt damit auf Bedienereignisse wie Öffnen, Schließen,
+Tastatur und Drag-and-drop beschränkt. `messkonzept.js` verkabelt die Module
+über `MK_EDITOR` und bleibt fachlicher Orchestrator. Ein Browser-Regressionstest
+prüft die Start- und Cache-Reihenfolge, die Modul-Isolation und eine echte
+Asset-Feldänderung im ausgelagerten Editor.
+
+## Aktualisierter Architekturstatus – Startfluss (17.08.2026)
+
+Der Weg von der Werkzeugauswahl in die Messkonzept-Vorlagen oder in die freie
+Skizze liegt jetzt in `js/messkonzept/start-flow.js`. Die Schicht baut die
+Vorlagenkarten, öffnet und schließt den Konfigurator und blendet den Editor ein
+oder aus. Reset, Vorlagenladung, Historie und Rendern werden über Callbacks
+angefordert. Dadurch bleiben die fachlichen Zähler- und Leitungsregeln im
+Modell beziehungsweise in den Befehls- und Layoutmodulen.
+
+Der Browser-Test prüft zusätzlich die Reihenfolge von Reset, Verlaufslöschung
+und Rendern beim freien Einstieg. So wird verhindert, dass die Startauswahl
+später wieder direkt mit fachlicher Messlogik vermischt wird.
+
+## Aktualisierter Architekturstatus – Kennungen und Nummerierung (17.08.2026)
+
+Die fortlaufende Vergabe von Zusatz-Zählern und Erzeugungskennungen liegt jetzt
+in `js/messkonzept/identifiers.js`. Das Modul erhält Zustand und Topologie über
+Adapter und kennt weder DOM noch Kartenmarkup. Dadurch greifen Editor, einfache
+Ansicht, Detailansicht und PDF auf dieselbe Nummernquelle zurück. Ein Browser-
+Regressionstest prüft Parallel-Grundzähler, Zusatz-Zähler und PV-Kennung in
+einem gemeinsamen Szenario.
+
+## Aktualisierter Architekturstatus – Prüfstatus-Verkabelung (17.08.2026)
+
+Der Prüfstatus bleibt in `rules.js` und `validation-status.js` gekapselt. Der
+Einstiegspunkt verwendet die Controller-API jetzt direkt für Bewertung und
+Aktualisierung. Die früheren `mkValidation`-, `mkRenderValidation`- und
+`mkRefreshInlineStatus`-Zwischenadapter wurden entfernt. Dadurch gibt es nur
+noch eine sichtbare Grenze zwischen fachlichen Regeln, Statusdarstellung und
+der übrigen UI-Verkabelung.
+
+## Aktualisierter Architekturstatus – Render-Zyklus (17.08.2026)
+
+`js/messkonzept/render-cycle.js` kapselt nun den vollständigen UI-Renderlauf.
+Der Controller kennt nur injizierte Adapter und hält die Reihenfolge der
+Aktualisierungen stabil: Projektangaben, Modus- und Ansichtsbuttons, Canvas,
+Leitungsbeobachtung, Zoom, Geometrie-Nachlauf, Prüfstatus und Verlauf.
+`messkonzept.js` bleibt damit Orchestrator und Fachadapter, enthält aber keine
+zweite Kopie der Schalter- oder Renderreihenfolge mehr. Ein Browser-Test prüft
+den Ablauf, die Modul-Isolation, die Ladeposition und den Offline-Cache.
+
+## Aktualisierter Architekturstatus – Zähler-Drop-Regeln (17.08.2026)
+
+Die Regeln für zusätzliche Kaskadenstufen und eigene Anlagenzähler liegen jetzt
+in `js/messkonzept/meter-policy.js`. Dadurch ist nachvollziehbar getrennt, wann
+ein Basiszähler eine weitere Stufe erhalten darf, wann eine Anlage einen
+Einzelzähler bekommt und welche Elternbeziehung beim Drop erhalten bleibt.
+Die Schicht verändert keinen Zustand selbst. Ein Browser-Test deckt Basis-
+zähler, erweiterte Sammelschienen und bereits isolierte Einzelzähler ab.
+
+## Aktualisierter Architekturstatus – Objekt-Darstellung (17.08.2026)
+
+`js/messkonzept/asset-display.js` bündelt die sichtbaren Labels, die fachlichen
+SteuVE- und NSH-Hinweise, die Erzeugungskennungen sowie die Batterie-,
+Wallbox-, Wärmepumpen- und Anlagen-Icons. Das Modul erhält seine fachlichen
+Adapter über eine kleine Controller-API und kennt weder DOM noch Layout oder
+Leitungsgeometrie. So können Symbol- und Textanpassungen unabhängig von der
+Messlogik getestet werden. Ein Browser-Regressionstest prüft die API, die
+Wallbox-Darstellung mit Kabel und Stecker, die Lade-Reihenfolge und den
+Offline-Cache-Eintrag.
+
+## Aktualisierter Architekturstatus – Drag-and-Drop-Verkabelung (17.08.2026)
+
+`js/messkonzept/drag-drop.js` war bereits die vollständige Quelle für
+Palette-Drag, Canvas-Drop, Positionswechsel und Löschen. Die letzten
+Fallback-Kopien dieser Ereignislogik wurden aus `messkonzept.js` entfernt.
+Der Einstiegspunkt reicht jetzt ausschließlich an diese API weiter. Ein
+Browser-Test prüft ausdrücklich, dass keine zweite Fallback-Implementierung
+zurückkehrt.
+
+## Aktualisierter Architekturstatus – Geometrie-Nachlauf (17.08.2026)
+
+`js/messkonzept/geometry-runtime.js` kapselt jetzt die zeitliche Orchestrierung
+der Leitungsgeometrie. Nach einem Renderlauf werden Root-Sammelschienen,
+verschachtelte Unter-Rails, Parallelbus, dynamische Verbindungen und die
+Viewport-Zentrierung immer in derselben Reihenfolge ausgeführt. Das verhindert,
+dass ein späterer Kollisionsversatz mit einer veralteten Kartenposition arbeitet.
+Die Runtime kennt weder DOM-Suche noch Messobjekte. Sie erhält Layout-,
+Verbindungs- und Viewport-Schritte ausschließlich über Callbacks. Ein
+Browser-Test prüft direkten und geplanten Lauf, die Reihenfolge, die
+Ladeposition und den Offline-Cache.
+
+## Aktualisierter Architekturstatus – Messbereich-Komposition (17.08.2026)
+
+`js/messkonzept/zone-renderer.js` übernimmt jetzt die Komposition einer
+Messbereichs-Drop-Zone. Dazu gehören der sichtbare oder strukturelle
+Sammelschienenknoten, die Rail-Struktur und die Objekt-Markup-Verankerung.
+Topologie, Layout, Beschriftung und der bestehende Rail-Renderer werden über
+Callbacks eingespeist. Der Einstiegspunkt enthält nur noch einen dünnen
+Adapter. Ein Browser-Test prüft die Markup-Anker, die Modul-Isolation, die
+Ladeposition und den Offline-Cache.
+
+## Aktualisierter Architekturstatus – Lastgang-Dateneditor (17.08.2026)
+
+Der Tabellen- und Massendateneditor liegt jetzt in
+`js/lastgang/data-editor.js`. Dort sind Seitenwechsel, Zellbearbeitung,
+Zwischenablage, Massendatenimport und die Bearbeitungssperre gebündelt. `app.js`
+bleibt für den Lastgang-Bereich der Orchestrator und ruft nur die dokumentierte
+API `WattspurLastgangDataEditor` auf. Dadurch kann eine spätere Reparatur am
+Editor nicht mehr versehentlich die Diagramm- oder Kapazitätslogik duplizieren.
+
+Die Auslagerung ist bewusst schrittweise: Der Editor nutzt vorerst die
+bestehenden State- und Dashboard-Adapter, damit sich das Nutzerverhalten nicht
+ändert. Ein isolierter Node-Test prüft die API und eine echte Zelländerung ohne
+Browser-DOM. Der Offline-Cache wurde auf `2026.08.18-beta.308` angehoben und
+enthält die neue Datei. Als nächster sinnvoller Schritt bleibt die spätere
+Injektion dieser Adapter; dafür besteht aktuell kein Änderungsdruck.
+
+## Aktualisierter Architekturstatus – Netzanschluss als bearbeitbares Objekt (17.08.2026)
+
+Der HAK bleibt ein fester Topologiebaustein und wird nicht als Anlage im
+Zählerbaum gespeichert. Sein Zusatzstatus liegt im Modell unter
+`state.hak.voltageLevel` mit den Werten `low` und `medium`. Der
+Canvas-Renderer stellt `low` als HAK und `medium` als Transformator zwischen
+Mittel- und Niederspannung dar. Die Auswahl ist historienfähig und wird im
+Gesamtexport als Spannungsebene dokumentiert. Die Darstellung ist eine
+Orientierung. Die konkrete Anschlussart richtet sich nach Netzbetreiber, TAB
+und den jeweils geltenden technischen Anschlussregeln.
+
+## Aktualisierter Architekturstatus – Technische Anlagenstammdaten (17.08.2026)
+
+PV- und Windanlagen können neben der Nennleistung nun optional die zugeordnete
+Wechselrichterleistung dokumentieren. Für Speicher stehen Kapazität, maximale
+Ladeleistung, maximale Entladeleistung und die Wechselrichterleistung zur
+Verfügung. Die Felder sind technische Dokumentation und werden nicht als
+automatische Entscheidung für EEG, § 14a EnWG oder ein Messkonzept verwendet.
+Mehrere Wechselrichter werden als gemeinsame Gesamtleistung erfasst. Die
+Erfassung bleibt bewusst optional, damit einfache Nutzer nicht mit
+Ingenieursdaten blockiert werden.
+
+Bei Wärmepumpen wird die elektrische Gesamtleistung einschließlich Heizstab
+oder Zusatzheizung in einem einzigen Feld erfasst. Eine separate
+Heizstababfrage wurde bewusst entfernt, damit Eingabe und §14a-Prüfung immer
+denselben Gesamtwert verwenden.
+
+## Aktualisierter Architekturstatus – Trafo als Leitungsobjekt (17.08.2026)
+
+Bei Mittelspannung wird der Netzanschluss im Canvas jetzt als zentrales
+Doppelring-Symbol ohne rechteckige Zusatzbeschriftung dargestellt. Der
+Leitungsanker bleibt auf derselben Mittelachse wie HAK und Zähler, sodass die
+Abgänge linear in die Messskizze laufen. Die Bezeichnung „Trafo“ bleibt für
+Tooltip, Barrierefreiheit und den Objekteditor erhalten.

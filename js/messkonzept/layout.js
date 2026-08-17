@@ -36,6 +36,9 @@
                 layoutGeometry: geometry,
                 assetsPerRowDefault
             });
+        if (!calculations) {
+            throw new Error('WattspurMesskonzeptLayout: layout-calculations.js muss vor layout.js geladen werden.');
+        }
 
         const getAssetOrder = assetId => {
             const assets = getState()?.assets || [];
@@ -43,99 +46,27 @@
         };
 
         function getAssetsPerRow(assetCount = assetsPerRowDefault) {
-            if (calculations) return calculations.getAssetsPerRow(assetCount);
-            const isNarrowViewport = typeof window !== 'undefined'
-                && window.matchMedia?.('(max-width: 480px)').matches;
-            const normalizedAssetCount = Math.max(1, Number(assetCount) || 0);
-            if (getViewMode() === 'detail') {
-                return isNarrowViewport ? 1 : assetsPerRowDefault;
-            }
-            // Die einfache Skizze bildet eine elektrische Parallelschaltung ab.
-            // Sie bleibt daher unabhängig von der Bildschirmbreite horizontal;
-            // Zoom und Verschieben übernehmen die Bedienung bei breiten Rails.
-            return normalizedAssetCount;
+            return calculations.getAssetsPerRow(assetCount);
         }
 
         function getSimpleCanvasMinimumWidth(assetCount) {
-            if (calculations) return calculations.getSimpleCanvasMinimumWidth(assetCount);
-            return 128 + (Math.max(1, Number(assetCount) || 0) * 66);
+            return calculations.getSimpleCanvasMinimumWidth(assetCount);
         }
 
         function getWidestRailCellCount(zone) {
-            if (calculations) return calculations.getWidestRailCellCount(zone);
-            const tree = getMeterTree(zone);
-            const countRailCells = rail => {
-                if (!rail) return 0;
-                const directCellCount = getRailEntries(rail).length;
-                const childCellCount = (rail.children || []).reduce(
-                    (maximum, child) => Math.max(maximum, countRailCells(child)),
-                    0
-                );
-                return Math.max(directCellCount, childCellCount);
-            };
-            return Math.max(0, countRailCells(tree));
+            return calculations.getWidestRailCellCount(zone);
         }
 
         function getParallelBranchWidth(assetCount) {
-            if (calculations) return calculations.getParallelBranchWidth(assetCount);
-            const normalizedAssetCount = Math.max(0, Number(assetCount) || 0);
-            const columns = getAssetsPerRow(Math.max(1, normalizedAssetCount));
-            const viewMode = getViewMode();
-            const isSimple = viewMode === 'simple';
-            const cardWidth = isSimple ? 56 : 132;
-            const cardGap = isSimple ? 9.6 : 16;
-            const leftOffset = isSimple
-                ? (Number(geometry.parallelMeterAxisOffsetPx) || 0)
-                    + (Number(geometry.parallelAssetClearancePx) || 0)
-                : 0;
-            const rightPadding = isSimple ? 13 : 20;
-            const dropZonePadding = isSimple ? 32 : 40;
-            const rowWidth = normalizedAssetCount
-                ? (columns * cardWidth) + (Math.max(0, columns - 1) * cardGap)
-                : 0;
-            // Die Breite enthält Anlagenreihe, Messachse und Ablagebereich.
-            const contentWidth = rowWidth + leftOffset + rightPadding + dropZonePadding;
-            const minimumWidth = normalizedAssetCount
-                ? (isSimple ? 148 : 300)
-                : (isSimple ? 148 : 206);
-            return Math.max(minimumWidth, contentWidth);
+            return calculations.getParallelBranchWidth(assetCount);
         }
 
         function getZoneMeterDepth(zone) {
-            if (calculations) return calculations.getZoneMeterDepth(zone);
-            const getDepth = rail => rail.children.reduce(
-                (maximum, child) => Math.max(maximum, getDepth(child)),
-                rail.depth || 0
-            );
-            return getDepth(getMeterTree(zone));
+            return calculations.getZoneMeterDepth(zone);
         }
 
         function getParallelLayoutMetrics(meterCount) {
-            if (calculations) return calculations.getParallelLayoutMetrics(meterCount);
-            const branchCount = Math.max(1, Number(meterCount) || 1);
-            // Die tatsächliche HTML-Ausdehnung wird nach dem Rendern vermessen.
-            // Eine pauschale Einrückung würde Nachbarzweige unnötig verschieben.
-            const railIndent = 0;
-            const branchWidths = Array.from({ length: branchCount }, (_, index) => {
-                const zone = `parallel-${index}`;
-                // Die Breite richtet sich nach der breitesten sichtbaren
-                // Sammelschiene, nicht nach allen Anlagen des Zweigs. Anlagen
-                // in tieferen Rails dürfen den Basiszähler nicht künstlich
-                // vom HAK wegspreizen. Die anschließende DOM-Messung erweitert
-                // den Track bei echten Kollisionen weiterhin automatisch.
-                return getParallelBranchWidth(getWidestRailCellCount(zone))
-                    + (getZoneMeterDepth(zone) * railIndent);
-            });
-            const branchGap = 16;
-            const minimumBranchWidth = Math.max(...branchWidths);
-            return {
-                branchCount,
-                branchWidths,
-                minimumBranchWidth,
-                gridTemplateColumns: branchWidths.map(width => `${width}px`).join(' '),
-                minimumCanvasWidth: branchWidths.reduce((total, width) => total + width, 0)
-                    + (Math.max(0, branchCount - 1) * branchGap) + 12
-            };
+            return calculations.getParallelLayoutMetrics(meterCount);
         }
 
         function getParallelCanvasMinimumWidth(meterCount) {
@@ -143,45 +74,11 @@
         }
 
         function getReservedMeterSlots(rail) {
-            if (calculations) return calculations.getReservedMeterSlots(rail);
-            const visibleAssetIds = new Set((rail.assets || []).map(asset => asset.id));
-            return (rail.children || [])
-                .map(child => ({
-                    child,
-                    meter: getAdditionalMeters().find(meter => meter.id === child.meterId)
-                }))
-                .filter(entry => entry.child.meterScope === 'asset'
-                    && entry.meter?.id
-                    && (entry.meter.targetAssetId
-                        || (Number.isFinite(Number(entry.meter.railAnchorOrder))
-                            && Number(entry.meter.railAnchorOrder) >= 0)))
-                .map(entry => ({
-                    id: entry.meter.id,
-                    targetAssetId: entry.meter.targetAssetId || '',
-                    order: Number.isFinite(Number(entry.meter.railAnchorOrder))
-                        && Number(entry.meter.railAnchorOrder) >= 0
-                        ? Number(entry.meter.railAnchorOrder)
-                        : getAssetOrder(entry.meter.targetAssetId)
-                }))
-                .filter(slot => slot.order >= 0
-                    && (!slot.targetAssetId || !visibleAssetIds.has(slot.targetAssetId)));
+            return calculations.getReservedMeterSlots(rail);
         }
 
         function getRailEntries(rail) {
-            if (calculations) return calculations.getRailEntries(rail);
-            const entries = (rail.assets || []).map(asset => ({
-                kind: 'asset',
-                asset,
-                order: getAssetOrder(asset.id)
-            }));
-            const slots = getReservedMeterSlots(rail)
-                .map(slot => ({ kind: 'reserved-slot', slot, order: slot.order }));
-            return [...entries, ...slots].sort((first, second) => {
-                if (first.order !== second.order) return first.order - second.order;
-                // Bei gleicher Position bleibt das reservierte Feld vor einer
-                // sichtbaren Karte, damit die alte Anlagenachse erhalten bleibt.
-                return first.kind === second.kind ? 0 : first.kind === 'reserved-slot' ? -1 : 1;
-            });
+            return calculations.getRailEntries(rail);
         }
 
         function updateSimpleAssetStrands() {

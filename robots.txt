@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /tests.html
+Disallow: /Backup/
+Disallow: /docs/
+
+Sitemap: https://wattspur.de/sitemap.xml

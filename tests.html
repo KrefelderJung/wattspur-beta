@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lastgang Analyse App - Test Suite</title>
+    <meta name="robots" content="noindex,nofollow">
     <style>
         :root {
             --bg-color: #0f172a;
@@ -1022,8 +1023,11 @@ Datum;Uhrzeit;Verbrauch
             ]);
             const analysisPageText = await fetchPublishedSource('lastgang-analyse.html?beta-copy=1');
             const messkonzeptExportText = await fetchPublishedSource('js/messkonzept/export.js?beta-copy=1');
-            const domainText = `${messkonzeptText}\n${dragDropText}\n${canvasText}`;
-            const modelAwareText = `${domainText}\n${modelText}\n${rulesText}`;
+            const renderCycleText = await fetchPublishedSource('js/messkonzept/render-cycle.js?beta-copy=1');
+            const identifiersText = await fetchPublishedSource('js/messkonzept/identifiers.js?beta-copy=1');
+            const assetDisplayText = await fetchPublishedSource('js/messkonzept/asset-display.js?beta-copy=1');
+            const domainText = `${messkonzeptText}\n${dragDropText}\n${canvasText}\n${assetDisplayText}`;
+            const modelAwareText = `${domainText}\n${modelText}\n${rulesText}\n${identifiersText}\n${assetDisplayText}`;
             const renderAwareText = `${domainText}\n${renderText}`;
 assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="#modules">Werkzeuge</a>') && !indexText.includes('<nav class="landing-links" aria-label="Bereiche">') && indexText.includes('<footer class="landing-footer">') && indexText.includes('<a href="kontakt.html">Kontakt</a>'), 'Die Kopfzeile soll keine redundanten Bereichs- oder Kontaktlinks enthalten; der Kontaktweg bleibt im Footer erreichbar');
             assert(indexText.includes('<a class="landing-brand" href="index.html#top" aria-label="Zur Werkzeugauswahl">'), 'Das Logo im Lastganganalyse-Einstieg muss zurück zur Werkzeugauswahl führen');
@@ -1046,7 +1050,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             assert(indexText.includes('Messkonzept-Konfigurator'), 'Das künftige Messkonzept-Werkzeug muss als eigener Einstieg erkennbar sein');
             assert(!indexText.includes('Was ist geplant?') && !indexText.includes('Geführte Topologien'), 'Die Messkonzept-Karte darf keine zusätzliche Zukunftsbeschreibung anzeigen');
             assert(indexText.includes('landing-module-icon-analysis') && indexText.includes('landing-module-icon-messkonzept') && !indexText.includes('class="landing-module-card featured"') && stylesText.includes('.landing-module-icon'), 'Die Werkzeugkarten müssen gleich gerahmt und mit passenden Logos versehen sein');
-            assert(indexText.includes('class="landing-home"') && indexText.includes('href="lastgang-analyse.html"') && indexText.includes("dataset.tool = 'lastgang'") && stylesText.includes('html[data-tool="lastgang"]') && analysisPageText.includes('index.html?tool=lastgang') && !analysisPageText.includes('analysis-fragments-mount'), 'Die Lastganganalyse muss als eigene Werkzeugroute ohne Quelltextabruf starten und die vollständige App für lokale HTML-Aufrufe nutzen');
+            assert(indexText.includes('class="landing-home"') && indexText.includes('href="lastgang-analyse.html"') && indexText.includes("dataset.tool = 'lastgang'") && stylesText.includes('html[data-tool="lastgang"]') && analysisPageText.includes('index.html#lastgang') && !analysisPageText.includes('index.html?tool=lastgang') && !analysisPageText.includes('analysis-fragments-mount'), 'Die Lastganganalyse muss über eine stabile Einstiegsseite und einen Hash-Einstieg ohne Query-Parameter erreichbar sein');
             assert(indexText.includes('class="beta-badge landing-brand-beta"') && indexText.includes('Lokale Werkzeuge. Einfache Bedienung.') && indexText.includes('class="module-card-points"') && indexText.includes('CSV- oder MSCONS-Dateien') && indexText.includes('Für Bauherren, Installateure und Stadtwerke'), 'Der Einstieg muss ein dezentes Beta-Badge, aktive Werkzeugpunkte und konkrete Zielgruppen zeigen');
             assert(!indexText.includes('Werkzeuge wählen') && indexText.includes('<a class="landing-module-card" href="lastgang-analyse.html"') && indexText.includes('class="landing-module-card landing-card-button"') && !indexText.includes('Analyse starten →') && !indexText.includes('Konfigurator öffnen →') && !stylesText.includes('.landing-card-action'), 'Die vollständigen Werkzeugkarten müssen direkt erreichbar sein und dürfen keine doppelten Aktionszeilen enthalten');
             assert(!indexText.includes('<span class="module-state ready">MVP</span>'), 'Der Konfigurator-Kopfbereich darf kein zusätzliches MVP-Badge anzeigen');
@@ -1074,12 +1078,12 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             assert(indexText.includes('btn-mk-export-pdf') && !indexText.includes('Technischer Export') && !indexText.includes('btn-mk-export-json') && !messkonzeptText.includes('function mkDownloadJson') && !stylesText.includes('.mk-technical-export'), 'Der öffentliche Konfigurator zeigt nur den verständlichen PDF-Export; der interne JSON-Export bleibt verborgen und entfernt');
             assert(messkonzeptText.includes('function mkRenderAssetRail') && messkonzeptText.includes('mkBuildZoneMeterTree(zone)') && renderAwareText.includes('data-mk-meter-rail') && messkonzeptText.includes('parentMeterId'), 'Direkte Anlagen und Zusatz-Zählergruppen müssen über einen fachlichen Zählerbaum statt nur nach Eingabereihenfolge angeordnet werden');
             assert(indexText.includes('js/messkonzept/render.js') && renderText.includes('function createRenderer') && renderText.includes('function renderAsset(') && renderText.includes('function renderAssetRail(') && !renderText.includes('document.') && !renderText.includes('getBoundingClientRect') && messkonzeptText.includes('const MK_RENDER = window.WattspurMesskonzeptRender.createRenderer') && messkonzeptText.includes('return MK_RENDER.renderAsset(asset, options)') && messkonzeptText.includes('return MK_RENDER.renderAssetRail(rail, isRoot)'), 'Anlagenkarten und Messschienen müssen über ein DOM-freies Render-Modul erzeugt werden; Geometrie bleibt davon getrennt');
-            assert(indexText.includes('data-mk-level') && messkonzeptText.includes('meterCountMode') && messkonzeptText.includes('button.disabled = !meterCountMode') && modelAwareText.includes('mapAssetZoneForMode') && modelAwareText.includes('previousMode') && messkonzeptText.includes("mode === 'parallel'") && messkonzeptText.includes('mkRenderParallelCanvas') && !messkonzeptText.includes("['single', 'cascade', 'parallel']") && !messkonzeptText.includes("mode === 'cascade'") && !messkonzeptText.includes('mkElements.cascadeControls'), 'Die Zähleranzahl ist nur in der Parallelmessung aktiv; Einzähler bleibt der zentrale dynamische Messmodus');
+            assert(indexText.includes('data-mk-level') && indexText.includes('js/messkonzept/render-cycle.js') && renderCycleText.includes('meterCountMode') && renderCycleText.includes('button.disabled = !meterCountMode') && modelAwareText.includes('mapAssetZoneForMode') && modelAwareText.includes('previousMode') && messkonzeptText.includes("mode === 'parallel'") && messkonzeptText.includes('mkRenderParallelCanvas') && !messkonzeptText.includes("['single', 'cascade', 'parallel']") && !messkonzeptText.includes("mode === 'cascade'") && !messkonzeptText.includes('mkElements.cascadeControls'), 'Die Zähleranzahl ist nur in der Parallelmessung aktiv; Einzähler bleibt der zentrale dynamische Messmodus');
              assert(domainText.includes('data-mk-base-meter-target') && canvasText.includes('Anlagen oder Zusatzzähler hinter Z') && canvasText.includes('getBaseMeterZone') && domainText.includes('baseMeterTarget') && domainText.includes('baseMeterIndex') && stylesText.includes('.mk-meter-layout[data-mk-base-meter-target]') && stylesText.includes('.mk-meter-drop-target-active') && !stylesText.includes('.mk-base-meter-target-active') && stylesText.includes('.mk-drop-zone.empty') && stylesText.includes('width: 0 !important'), 'Anlagen und Zusatzzähler müssen direkt hinter Z1/Z2/Z3/Z4 abgelegt werden können; leere generische Einfügebereiche dürfen nicht mehr sichtbar sein');
             assert(stylesText.includes('.mk-drop-zone {') && stylesText.includes('border: 0') && stylesText.includes('background: transparent') && stylesText.includes('[data-theme="light"] .mk-drop-zone') && stylesText.includes('.mk-drop-zone.restricted') && stylesText.includes('.mk-drop-zone.dragover'), 'Interne Ablagecontainer dürfen keine sichtbaren gestrichelten Rahmen oder Flächen mehr anzeigen');
             assert(messkonzeptText.includes('mkChangeViewMode') && messkonzeptText.includes('viewMode') && messkonzeptExportText.includes('renderAssetSummary(asset, true)'), 'Einfach-/Detailansicht muss im Zustand und in der Darstellung berücksichtigt werden');
             assert(messkonzeptText.includes('mk-zone-assets ${mkConfiguratorState.viewMode === \'detail\' ? \'detail-mode\' : \'simple-mode\'}') && modelAwareText.includes("label: 'Steuerbare Anlage'") && messkonzeptText.includes('mkGetSteuveRegime'), 'Die Einzeldarstellung muss zwischen einfachem und detailliertem Strang unterscheiden; die rechtliche Einordnung bleibt im Objekt');
-             assert(modelAwareText.includes('generationDisplay') && modelAwareText.includes("{ value: 'PV', label: generationDisplay.PV.label }") && modelAwareText.includes("{ value: 'KWK', label: generationDisplay.KWK.label }") && modelAwareText.includes("{ value: 'Wind', label: generationDisplay.Wind.label }") && modelAwareText.includes("{ value: 'Balkonkraftwerk', label: generationDisplay.Balkonkraftwerk.label }") && modelAwareText.includes("label: 'BHKW'") && modelAwareText.includes("prefix: 'BHKW'") && modelAwareText.includes("prefix: 'WE'") && modelAwareText.includes('Balkonkraftwerk / Steckersolargerät') && modelAwareText.includes('balconyInfoText') && !messkonzeptText.includes('mkGetGenerationIconClass') && messkonzeptText.includes('mk-charge-symbol') && messkonzeptText.includes('mk-charge-plug') && indexText.includes('mk-charge-plug') && stylesText.includes('.mk-charge-cable') && stylesText.includes('width: 9px;') && stylesText.includes('height: 11px;') && stylesText.includes('.mk-charge-plug') && stylesText.includes('width: 8px;') && stylesText.includes('height: 6px;') && stylesText.includes('transform: rotate(14deg);') && messkonzeptText.includes('mk-fan-symbol') && canvasText.includes('data-mk-field="steuveType"') && messkonzeptText.includes('data-mk-field="steuveModule"') && messkonzeptText.includes('mkRenderSteuveNotice') && messkonzeptText.includes('generationMeter') && messkonzeptText.includes('mk-generation-meter') && modelAwareText.includes("consumer: { label: 'Sonstige Verbraucher', short: 'V'") && modelAwareText.includes("storage: { label: 'Batteriespeicher', short: '▤'") && modelAwareText.includes("nsh: { label: 'Nachtspeicherheizung'") && messkonzeptText.includes('mkRenderAssetIcon') && messkonzeptText.includes('mkGetGenerationDisplay') && messkonzeptText.includes('mkSyncGenerationName') && renderAwareText.includes('mk-storage-info'), 'Erzeugungsanlagen müssen mit verständlichen sichtbaren Kennungen (PV, BHKW, WE) erscheinen; das Wallbox-Symbol muss zusätzlich ein sichtbares Kabel mit Stecker zeigen; interne Typen und technische Hinweise bleiben erhalten');
+             assert(modelAwareText.includes('generationDisplay') && modelAwareText.includes("{ value: 'PV', label: generationDisplay.PV.label }") && modelAwareText.includes("{ value: 'KWK', label: generationDisplay.KWK.label }") && modelAwareText.includes("{ value: 'Wind', label: generationDisplay.Wind.label }") && modelAwareText.includes("{ value: 'Balkonkraftwerk', label: generationDisplay.Balkonkraftwerk.label") && modelAwareText.includes("label: 'BHKW'") && modelAwareText.includes("prefix: 'BHKW'") && modelAwareText.includes("prefix: 'WE'") && modelAwareText.includes('Balkonkraftwerk / Steckersolargerät') && modelAwareText.includes('balconyInfoText') && !messkonzeptText.includes('mkGetGenerationIconClass') && assetDisplayText.includes('mk-charge-symbol') && assetDisplayText.includes('mk-charge-plug') && indexText.includes('mk-charge-plug') && stylesText.includes('.mk-charge-cable') && stylesText.includes('stroke-width: 2.1') && stylesText.includes('.mk-charge-plug') && stylesText.includes('stroke-width: 1.7') && stylesText.includes('.mk-charge-pin') && assetDisplayText.includes('mk-fan-symbol') && canvasText.includes('data-mk-field="steuveType"') && assetDisplayText.includes('data-mk-field="steuveModule"') && messkonzeptText.includes('mkRenderSteuveNotice') && modelAwareText.includes('generationMeter') && assetDisplayText.includes('mk-generation-meter') && modelAwareText.includes("consumer: { label: 'Sonstige Verbraucher', short: 'V'") && modelAwareText.includes("storage: { label: 'Batteriespeicher', short: '▤'") && modelAwareText.includes("nsh: { label: 'Nachtspeicherheizung'") && messkonzeptText.includes('mkRenderAssetIcon') && messkonzeptText.includes('mkGetGenerationDisplay') && messkonzeptText.includes('mkSyncGenerationName') && renderAwareText.includes('mk-storage-info'), 'Erzeugungsanlagen müssen mit verständlichen sichtbaren Kennungen (PV, BHKW, WE) erscheinen; das Wallbox-Symbol muss zusätzlich ein sichtbares Kabel mit Stecker zeigen; interne Typen und technische Hinweise bleiben erhalten');
              assert(canvasText.includes('mk-nsh-editor-hint') && rulesText.includes('historische Tarif- und Messbedingungen') && rulesText.includes('Nachtspeicherheizung erkannt') && rulesText.includes('Netzbetreiber und Messstellenbetreiber abstimmen'), 'Die Nachtspeicherheizung muss bei möglicher historischer Behandlung einen sichtbaren Abstimmungshinweis ausgeben');
             assert(modelAwareText.includes('MK_STORAGE_INFO_TEXT') && renderText.includes('mk-storage-info') && modelAwareText.includes('Marktstammdatenregister') && modelAwareText.includes('EnWG greift'), 'Speicher müssen einen separaten Hinweis zu MaStR, möglicher §14a-Relevanz und Netzbetreiber-Abstimmung erhalten');
             assert(messkonzeptText.includes('mkGetConfiguredMeterCount') && messkonzeptText.includes('mkGetGenerationMeterNumber') && renderText.includes('Z${generationMeterNumber}') && !renderText.includes('<b>ZE</b>'), 'Eigene Erzeugungszähler müssen passend zur vorhandenen Zähleranzahl fortlaufend als Z2, Z3 usw. nummeriert werden');
@@ -1090,7 +1094,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
              assert(canvasText.includes('mk-ownership-marker') && (await fetchPublishedSource('styles.css?beta-copy=1')).includes('width: 4.5rem'), 'Die Eigentumsgrenze muss als langer, gut erkennbarer Marker gestaltet sein');
              assert(canvasText.includes('HAK = Hausanschlusskasten') && canvasText.includes('mk-ownership-label'), 'HAK und Eigentumsgrenze müssen verständlich beschriftet sein');
             assert(renderAwareText.includes('draggable="true"') && renderAwareText.includes('data-mk-drag-asset'), 'Bausteinkarten müssen direkt ziehbar sein');
-            assert(messkonzeptText.includes('mkSwapAssetPositions') && messkonzeptText.includes('data-mk-position-target') && messkonzeptText.includes('mk-position-drop-target-active') && messkonzeptText.includes('mk-meter-drop-hitbox') && stylesText.includes('.mk-position-drop-target-active') && stylesText.includes('.mk-meter-drop-hitbox'), 'Objektpositionen müssen tauschbar sein und Zusatzähler eine ausreichend große Drop-Fläche erhalten');
+            assert(messkonzeptText.includes('mkSwapAssetPositions') && messkonzeptText.includes('data-mk-position-target') && messkonzeptText.includes('mk-position-drop-target-active') && assetDisplayText.includes('mk-meter-drop-hitbox') && stylesText.includes('.mk-position-drop-target-active') && stylesText.includes('.mk-meter-drop-hitbox'), 'Objektpositionen müssen tauschbar sein und Zusatzähler eine ausreichend große Drop-Fläche erhalten');
             assert(!messkonzeptText.includes("button.addEventListener('click', () => mkAddAsset(button.dataset.mkType))"), 'Bausteine dürfen nicht mehr ungefragt per Klick in den Standardbereich eingefügt werden');
             assert(!messkonzeptText.includes('mk-drag-handle') && !(await fetchPublishedSource('styles.css?beta-copy=1')).includes('mk-drag-handle'), 'Ein separates Pfeil-Drag-Icon darf nicht mehr gerendert werden');
             assert((await fetchPublishedSource('styles.css?beta-copy=1')).includes('position: absolute') && (await fetchPublishedSource('styles.css?beta-copy=1')).includes('background: transparent'), 'Das Löschen-Icon muss dezent oben rechts ohne graue Box erscheinen');
@@ -1250,21 +1254,33 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
 
         addTest('architecture', 'Messkonzept-Startvorlagen als bearbeitbare Zustände', 'Prüft Katalog, Loader, Ladereihenfolge und Offline-Cache der neuen Vorlagenauswahl', async function() {
             if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
-            const [indexText, presetsText, loaderText, serviceWorkerText, specificationText, messkonzeptText, stylesText] = await Promise.all([
+            const [indexText, presetsText, loaderText, serviceWorkerText, specificationText, startFlowText, stylesText] = await Promise.all([
                 fetch(`index.html?preset-test=${Date.now()}`).then(response => response.text()),
                 fetch(`js/messkonzept/presets.js?preset-test=${Date.now()}`).then(response => response.text()),
                 fetch(`js/messkonzept/preset-loader.js?preset-test=${Date.now()}`).then(response => response.text()),
                 fetch(`service-worker.js?preset-test=${Date.now()}`).then(response => response.text()),
                 fetch(`docs/messkonzept-startvorlagen.md?preset-test=${Date.now()}`).then(response => response.text()),
-                fetch(`messkonzept.js?preset-test=${Date.now()}`).then(response => response.text()),
+                fetch(`js/messkonzept/start-flow.js?preset-test=${Date.now()}`).then(response => response.text()),
                 fetch(`styles.css?preset-test=${Date.now()}`).then(response => response.text())
             ]);
             assert(indexText.includes('id="mk-start-panel"') && indexText.includes('id="btn-mk-start-free"') && indexText.includes('data-mk-preset-group="cascade"'), 'Die kompakte Startauswahl muss im Messkonzept vorhanden sein');
             assert(presetsText.includes('WattspurMesskonzeptPresets') && presetsText.includes('parallel-heatpump') && presetsText.includes('Eine Wallbox/Wärmepumpe kann ohne zusätzliche Mess- und Steuertechnik in der Parallelmessung nicht gezielt mit PV-Strom versorgt werden.') && presetsText.includes('kein Umbau für einen zweiten Zähler') && presetsText.includes('Produkt des gewählten Energieversorgers') && presetsText.includes('Modul 1 und optional Modul 3') && presetsText.includes('Modul 2 setzt einen separaten Zählpunkt voraus') && presetsText.includes('Wärmepumpenprivilegierung nach § 22 EnFG') && presetsText.includes('Eine separate Messung kann die Voraussetzungen für eine günstigere Konzessionsabgabe schaffen') && presetsText.includes('Preisvorteil ist nicht automatisch garantiert') && presetsText.includes("label: 'Wärmepumpenprivilegierung nach § 22 EnFG'") && presetsText.includes('Geeignet, wenn Wärmepumpe oder Wallbox separat gemessen') && presetsText.includes('PV-Strom kann im gemeinsamen Stromfluss auch die Wärmepumpe oder Wallbox versorgen') && presetsText.includes('Differenzbildung: Bezug an Z1 minus Bezug an Z2') && !presetsText.includes('nicht automatisch enthalten; häufig wird dafür ein eigener Zählpunkt verlangt') && !presetsText.includes('–') && !presetsText.includes('—') && !indexText.includes('class="mk-start-note"'), 'Der Vorlagenkatalog muss Zielgruppe, Nutzen, Differenzbildung, Netzentgeltmodule, Wärmepumpenprivilegierung, mögliche Konzessionsabgaben und Tarifunsicherheit verständlich erklären und die Infoboxen ohne Gedankenstriche formulieren; der Parallelhinweis bleibt ausschließlich über den Infobutton erreichbar');
-            assert(indexText.match(/class="mk-start-group-info"/g)?.length === 3 && indexText.includes('data-mk-preset-info') && presetsText.includes('GROUP_INFO') && presetsText.includes('Konzessionsabgaben') && messkonzeptText.includes('mkRenderPresetInfo') && stylesText.includes('.mk-start-info-panel') && stylesText.includes('@media (max-width: 640px)'), 'Jede Messkonzept-Gruppe muss kompakte, aufklappbare Fachhinweise mit einer mobilen Darstellung anbieten');
+            assert(indexText.match(/class="mk-start-group-info"/g)?.length === 3 && indexText.includes('data-mk-preset-info') && presetsText.includes('GROUP_INFO') && presetsText.includes('Konzessionsabgaben') && startFlowText.includes('renderPresetInfo') && startFlowText.includes('renderPresetCards') && stylesText.includes('.mk-start-info-panel') && stylesText.includes('@media (max-width: 640px)'), 'Jede Messkonzept-Gruppe muss kompakte, aufklappbare Fachhinweise mit einer mobilen Darstellung anbieten');
             assert(loaderText.includes('WattspurMesskonzeptPresetLoader') && loaderText.includes('function applyPreset') && loaderText.includes('parentBaseMeterIndex: 0') && loaderText.includes('household.meterId = meter.id'), 'Der Loader muss bearbeitbare Modellzustände und die senkrechte Z1-Z2-Kaskadenbeziehung erzeugen');
-            assert(serviceWorkerText.includes("'js/messkonzept/presets.js'") && serviceWorkerText.includes("'js/messkonzept/preset-loader.js'"), 'Die Vorlagenmodule müssen offline gecacht werden');
+            assert(serviceWorkerText.includes("'js/messkonzept/presets.js'") && serviceWorkerText.includes("'js/messkonzept/preset-loader.js'") && serviceWorkerText.includes("'js/messkonzept/start-flow.js'"), 'Die Vorlagenmodule müssen offline gecacht werden');
             assert(specificationText.includes('Akzeptanzkriterien') && specificationText.includes('Haushalt'), 'Die Vorlagenspezifikation muss mit ausgeliefert werden');
+        });
+
+        addTest('architecture', '§14a Wärmepumpe inklusive Heizstab', 'Prüft, dass die 4,2-kW-Regel die elektrische Gesamtleistung einer Wärmepumpe berücksichtigt', async function() {
+            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
+            const source = await fetch(`tests/steuve-total-power-test.js?steuve-total-power-test=${Date.now()}`).then(response => response.text());
+            assert(source.includes('4.3') && source.includes('Gesamtleistung') && source.includes('einschließlich Heizstab') && !source.includes('heatingRodPower'), 'Der Gesamtleistungs-Regeltest muss Grenzwert und verständlichen Hinweis abdecken');
+        });
+
+        addTest('architecture', 'Stecker-PV-Wechselrichtergrenze', 'Prüft die 800-VA-Grenze und die Summierung mehrerer Stecker-PV-Geräte am selben Messpunkt', async function() {
+            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
+            const source = await fetch(`tests/stecker-pv-limit-test.js?stecker-pv-limit-test=${Date.now()}`).then(response => response.text());
+            assert(source.includes('800 VA') && source.includes('0,8 kVA') && source.includes('801 VA') && source.includes('Summierung'), 'Der Stecker-PV-Test muss Grenzwert, Einheitenumrechnung und Messpunkt-Summierung abdecken');
         });
 
         addTest('ui', 'Vorlagen-Infoboxen schließen per Klick', 'Prueft, dass eine geoeffnete Fachinfo durch einen Klick auf den Inhalt oder ausserhalb geschlossen wird', async function() {
@@ -1301,16 +1317,18 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
 
         addTest('release', 'Projekt-Qualitäts-Gate und Teststandard vorhanden', 'Prüft, dass die übergreifenden Veröffentlichungstests und ihre verständliche Anleitung mit ausgeliefert werden', async function() {
             if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
-            const [qualityText, standardText, architectureText, presetTestText, z5TestText] = await Promise.all([
+            const [qualityText, standardText, architectureText, presetTestText, z5TestText, seoTestText] = await Promise.all([
                 fetch(`tests/project-quality-test.js?quality-gate-test=${Date.now()}`).then(response => response.text()),
                 fetch(`docs/projekt-teststandard.md?quality-gate-test=${Date.now()}`).then(response => response.text()),
                 fetch(`tests/architecture-smoke-test.js?quality-gate-test=${Date.now()}`).then(response => response.text()),
                 fetch(`tests/preset-loader-test.js?quality-gate-test=${Date.now()}`).then(response => response.text()),
-                fetch(`tests/z5-second-asset-test.js?quality-gate-test=${Date.now()}`).then(response => response.text())
+                fetch(`tests/z5-second-asset-test.js?quality-gate-test=${Date.now()}`).then(response => response.text()),
+                fetch(`tests/seo-test.js?quality-gate-test=${Date.now()}`).then(response => response.text())
             ]);
             assert(qualityText.includes('Projekt-Qualitäts-Gate') && qualityText.includes('networkApiPattern') && qualityText.includes('new Function(source)'), 'Der projektweite Qualitäts-Gate-Test muss Syntax, lokale Verarbeitung und Release-Dateien prüfen');
             assert(standardText.includes('Regel- und Rechentests') && standardText.includes('Browser- und Bedienungstests') && standardText.includes('Release- und Sicherheits-Gates'), 'Der Teststandard muss die fünf verständlichen Testebenen beschreiben');
             assert(architectureText.includes('requiredFiles') && presetTestText.includes('buildPresetState') && z5TestText.includes('rootAnchor') && z5TestText.includes('isMeterExpanded'), 'Die bestehenden Architektur-, Vorlagen- und Zähler-Rail-Regressionstests müssen weiterhin als eigene Testdateien vorhanden sein');
+            assert(seoTestText.includes('canonical') && seoTestText.includes('robots.txt') && seoTestText.includes('sitemap.xml'), 'Der SEO-Test muss stabile URLs, Meta-Daten und die Suchmaschinen-Freigaben abdecken');
         });
 
         addTest('release', 'PDF-Export enthält den vollständigen Projektstand', 'Prüft Projektfelder, Skizzenstand, Kommentar, Prüfstatus und sichere Textmaskierung in der Druckansicht', async function() {
@@ -1367,8 +1385,10 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             const dashboardStart = indexText.indexOf('<div id="dashboard-screen"');
             const messkonzeptMarkup = indexText.slice(mkStart, dashboardStart > mkStart ? dashboardStart : indexText.length);
             const buttons = [...messkonzeptMarkup.matchAll(/<button\b[^>]*>/gi)].map(match => match[0]);
+            const unexpectedButtonTypes = buttons.filter(button => !/type=["'](?:button|submit)["']/i.test(button)
+                || (/type=["']submit["']/i.test(button) && !button.includes('mk-decision-submit')));
             assert(indexText.includes('<meta name="viewport" content="width=device-width, initial-scale=1.0">'), 'Die Anwendung braucht den mobilen Viewport-Meta-Tag');
-            assert(buttons.length > 15 && buttons.every(button => /type=["']button["']/i.test(button)), 'Messkonzept-Schaltflächen müssen ausdrücklich als Button typisiert sein und dürfen kein Formular versehentlich absenden');
+            assert(buttons.length > 15 && unexpectedButtonTypes.length === 0, 'Messkonzept-Schaltflächen müssen ausdrücklich als Button typisiert sein und dürfen kein Formular versehentlich absenden');
             assert(messkonzeptMarkup.includes('role="dialog"') && messkonzeptMarkup.includes('aria-modal="true"') && messkonzeptMarkup.includes('aria-labelledby="mk-object-modal-title"') && messkonzeptMarkup.includes('aria-label="Messobjekte"'), 'Objektdialog und Bausteinleiste brauchen verständliche Screenreader-Anker');
             assert(stylesText.includes('@media (max-width: 480px)') && stylesText.includes('@media (max-width: 820px)'), 'Die mobile Darstellung muss eigene Breakpoints für Smartphone und Tablet besitzen');
             assert(!/\b(?:fetch|XMLHttpRequest|WebSocket|sendBeacon)\s*\(/.test(coreText), 'Der Messkonzept-Kern darf keine versteckten Netzwerkaufrufe enthalten');
@@ -1774,13 +1794,14 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
                 skipTest('Ueber file:// uebersprungen: Quelltexttest benoetigt HTTP/HTTPS.');
             }
             const fetchSource = async path => (await fetch(new URL(path, window.location.href), { cache: 'no-store' })).text();
-            const [messkonzeptText, layoutText, styleText] = await Promise.all([
+            const [messkonzeptText, layoutText, layoutCalculationsText, styleText] = await Promise.all([
                 fetchSource('messkonzept.js?parallel-knoten=1'),
                 fetchSource('js/messkonzept/layout.js?parallel-knoten=1'),
+                fetchSource('js/messkonzept/layout-calculations.js?parallel-knoten=1'),
                 fetchSource('styles.css?parallel-knoten=1')
             ]);
-            const layoutAwareText = `${messkonzeptText}\n${layoutText}`;
-            assert(layoutAwareText.includes("viewMode === 'simple'") && layoutAwareText.includes('minimumBranchWidth') && layoutAwareText.includes('const minimumWidth = normalizedAssetCount') && styleText.includes('.mk-parallel-branch .mk-connection-line') && styleText.includes('.mk-parallel-branch .mk-zone-assets::after') && styleText.includes('z-index: 2') && styleText.includes('.mk-parallel-branch .mk-empty-zone') && styleText.includes('.mk-parallel-branch > .mk-drop-zone.empty'), 'Parallelzweige muessen ueber einen einzigen dynamischen Zaehlerknoten verbunden sein und leer kompakt starten');
+            const layoutAwareText = `${messkonzeptText}\n${layoutText}\n${layoutCalculationsText}`;
+            assert(layoutAwareText.includes("getViewMode() === 'simple'") && layoutAwareText.includes('minimumBranchWidth') && layoutAwareText.includes('function getParallelBranchWidth') && layoutAwareText.includes('const rowWidth = normalizedAssetCount') && styleText.includes('.mk-parallel-branch .mk-connection-line') && styleText.includes('.mk-parallel-branch .mk-zone-assets::after') && styleText.includes('z-index: 2') && styleText.includes('.mk-parallel-branch .mk-empty-zone') && styleText.includes('.mk-parallel-branch > .mk-drop-zone.empty'), 'Parallelzweige muessen ueber einen einzigen dynamischen Zaehlerknoten verbunden sein und leer kompakt starten');
         });
 
         addTest('ui', 'Magnetische-Objektleitungen', 'Prueft dynamische Verbindungen von Knotenpunkten zu Anlagenobjekten', async function() {
@@ -1804,17 +1825,18 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
                 skipTest('Ueber file:// uebersprungen: Quelltexttest benoetigt HTTP/HTTPS.');
             }
             const fetchSource = async path => (await fetch(new URL(path, window.location.href), { cache: 'no-store' })).text();
-            const [messkonzeptText, layoutText, connectionsText, renderText, geometryText, styleText, modelText] = await Promise.all([
+            const [messkonzeptText, layoutText, layoutCalculationsText, connectionsText, renderText, geometryText, styleText, modelText] = await Promise.all([
                 fetchSource('messkonzept.js?parallel-stabil=1'),
                 fetchSource('js/messkonzept/layout.js?parallel-stabil=1'),
+                fetchSource('js/messkonzept/layout-calculations.js?parallel-stabil=1'),
                 fetchSource('js/messkonzept/connections.js?parallel-stabil=1'),
                 fetchSource('js/messkonzept/render.js?parallel-stabil=1'),
                 fetchSource('messkonzept-geometry.js?parallel-stabil=1'),
                 fetchSource('styles.css?parallel-stabil=1'),
                 fetchSource('js/messkonzept/model.js?parallel-stabil=1')
             ]);
-            const layoutAwareText = `${messkonzeptText}\n${layoutText}`;
-            assert(layoutAwareText.includes('function getParallelLayoutMetrics') && layoutAwareText.includes('function getParallelBranchWidth') && layoutAwareText.includes('function getZoneMeterDepth') && layoutAwareText.includes('const railIndent = 0') && layoutAwareText.includes('const branchCount = Math.max(1, Number(meterCount) || 1)') && layoutAwareText.includes('branchWidths') && layoutAwareText.includes('gridTemplateColumns') && layoutAwareText.includes('dropZonePadding') && modelText.includes('Math.min(parsed - 1, Math.max(0, Number(match[1])))') && layoutAwareText.includes('function updateParallelBus') && layoutAwareText.includes('fitBranchTracks') && layoutAwareText.includes('visualRight') && messkonzeptText.includes('mkUpdateParallelBus();') && layoutAwareText.includes('querySelector(\'.mk-meter-node\')') && layoutAwareText.includes('stack.style.setProperty(\'--mk-parallel-feed-offset-px\'') && styleText.includes('grid-template-columns: var(--mk-parallel-grid-template-columns') && styleText.includes('--mk-parallel-bus-left-px') && styleText.includes('--mk-parallel-bus-width-px') && styleText.includes('transform: translateX(var(--mk-parallel-feed-offset-px, 0px))') && styleText.includes('left: 15px'), 'Parallelzweige muessen reale Rail-Breiten statt eines pauschalen Tiefenaufschlags verwenden; der Nachbarzaehler darf nur bei echter Kollision nach rechts rücken.');
+            const layoutAwareText = `${messkonzeptText}\n${layoutText}\n${layoutCalculationsText}`;
+            assert(layoutAwareText.includes('function getParallelLayoutMetrics') && layoutAwareText.includes('function getParallelBranchWidth') && layoutAwareText.includes('function getZoneMeterDepth') && layoutAwareText.includes('const branchCount = Math.max(1, Number(meterCount) || 1)') && layoutAwareText.includes('branchWidths') && layoutAwareText.includes('gridTemplateColumns') && layoutAwareText.includes('dropZonePadding') && modelText.includes('Math.min(parsed - 1, Math.max(0, Number(match[1])))') && layoutAwareText.includes('function updateParallelBus') && layoutAwareText.includes('fitBranchTracks') && layoutAwareText.includes('visualRight') && messkonzeptText.includes('mkUpdateParallelBus();') && layoutAwareText.includes('querySelector(\'.mk-meter-node\')') && layoutAwareText.includes('stack.style.setProperty(\'--mk-parallel-feed-offset-px\'') && styleText.includes('grid-template-columns: var(--mk-parallel-grid-template-columns') && styleText.includes('--mk-parallel-bus-left-px') && styleText.includes('--mk-parallel-bus-width-px') && styleText.includes('transform: translateX(var(--mk-parallel-feed-offset-px, 0px))') && styleText.includes('left: 15px'), 'Parallelzweige muessen reale Rail-Breiten statt eines pauschalen Tiefenaufschlags verwenden; der Nachbarzaehler darf nur bei echter Kollision nach rechts rücken.');
             const renderAwareText = `${layoutAwareText}\n${renderText}`;
             assert(connectionsText.includes('const dynamicNodes = []') && connectionsText.includes('dynamicNodes.map(buildNode)') && renderAwareText.includes('data-mk-rail-junction') && !connectionsText.includes("kind: 'rail'") && styleText.includes('.mk-dynamic-node') && styleText.includes('.mk-zone-assets::after') && styleText.includes('display: none'), 'Objektabgänge müssen aus den echten Positionen gezeichnet werden; Sammelschienenknoten werden als HTML-Anker geführt und dürfen nicht doppelt als SVG-Knoten erscheinen');
             assert(styleText.includes('.mk-parallel-branch {') && styleText.includes('align-self: start;') && styleText.includes('height: max-content;'), 'Parallele Zweige dürfen sich nicht auf die Höhe eines längeren Nachbarzweigs strecken; zusätzliche Erzeugungszähler dürfen Z2 und Z3 nicht nach unten verschieben');
@@ -1972,6 +1994,499 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             assert(dragDropText.includes('draggedType') && dragDropText.includes('getMeterForAsset'), 'Anlagen muessen auch beim Drop auf die sichtbare Zählerkarte sicher dem bestehenden Messpunkt zugeordnet werden');
             assert(renderText.includes("asset.type === 'generation' && asset.generationMeter && !attachedMeter") && renderText.includes('const attachedMeter = getMeterForAsset(asset)'), 'Ein gemeinsamer Zusatzzähler darf nicht zusätzlich als eigener Erzeugungszähler der Anlage gerendert werden');
             assert(domainText.includes('function mkGetMeterForAsset') && renderAwareText.includes('mk-meter-share-branch') && renderAwareText.includes('has-meter-group') && renderAwareText.includes('data-mk-remove-meter') && domainText.includes('asset.meterId === removedId') && domainText.includes('asset.parentMeterId === removedId') && connectionsText.includes('mk-asset-row-bus') && modelAwareText.includes('assignedMeter') && domainText.includes('meterGroupTargetId') && domainText.includes('canDropPaletteOnMeterGroup') && !connectionsText.includes('dynamicNodes.push({ x: meterTop.x, y: junctionPoint.y }') && stylesText.includes('.mk-meter-share-branch') && stylesText.includes('.mk-remove-meter') && stylesText.includes('.mk-asset-branch.has-generation-meter.has-meter-group') && stylesText.includes('.mk-asset-row.meter-group-row') && stylesText.includes('margin-top: 1.1rem') && stylesText.includes('.mk-zone-assets::before') && stylesText.includes('display: none'), 'Gemeinsame Messpunkte muessen mit Abstand und einer tiefer liegenden Sammelschiene dargestellt, vom Sammelbus getrennt und Zusatzzaehler entfernbar sein');
+        });
+
+        addTest('browser-e2e', 'Messkonzept-Bedienablauf im echten Browser', 'Startet den Konfigurator, zieht eine Erzeugungsanlage auf Z1, wechselt den Modus und entfernt sie wieder', async function() {
+            if (window.location.protocol === 'file:') skipTest('Ueber file:// uebersprungen: Browser-E2E-Test benoetigt HTTP/HTTPS.');
+
+            const frame = document.createElement('iframe');
+            frame.title = 'Browser-E2E-Testfenster';
+            frame.setAttribute('aria-hidden', 'true');
+            frame.style.cssText = 'position:fixed;left:-12000px;top:0;width:1280px;height:900px;border:0;opacity:0;pointer-events:none;';
+            document.body.appendChild(frame);
+
+            const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+            const waitFor = async (predicate, label, timeout = 4000) => {
+                const started = performance.now();
+                while (performance.now() - started < timeout) {
+                    if (predicate()) return;
+                    await wait(40);
+                }
+                throw new Error(`Browser-E2E: ${label} wurde nicht erreicht`);
+            };
+            const createTransfer = () => {
+                const values = new Map();
+                return {
+                    effectAllowed: 'copy',
+                    dropEffect: 'copy',
+                    setData(type, value) { values.set(type, String(value)); },
+                    getData(type) { return values.get(type) || ''; },
+                    clearData(type) { type ? values.delete(type) : values.clear(); },
+                    setDragImage() {}
+                };
+            };
+            const dispatchDragEvent = (target, type, transfer, frameWindow) => {
+                const event = new frameWindow.Event(type, { bubbles: true, cancelable: true });
+                Object.defineProperty(event, 'dataTransfer', { value: transfer });
+                target.dispatchEvent(event);
+                return event;
+            };
+
+            try {
+                const sourceUrl = new URL(`index.html?browser-e2e=${Date.now()}`, window.location.href).href;
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Browser-E2E: index.html hat nicht geladen')), 5000);
+                    frame.addEventListener('load', () => { clearTimeout(timeout); resolve(); }, { once: true });
+                    frame.addEventListener('error', () => { clearTimeout(timeout); reject(new Error('Browser-E2E: index.html konnte nicht geladen werden')); }, { once: true });
+                    frame.src = sourceUrl;
+                });
+                await wait(250);
+
+                const frameDocument = frame.contentDocument;
+                const frameWindow = frame.contentWindow;
+                assert(frameDocument && frameWindow, 'Browser-E2E: Testfenster ist nicht erreichbar');
+
+                frameDocument.getElementById('btn-open-messkonzept-card')?.click();
+                await waitFor(() => !frameDocument.getElementById('messkonzept-screen')?.classList.contains('hidden'), 'Messkonzept-Seite');
+                frameDocument.getElementById('btn-mk-start-free')?.click();
+                await waitFor(() => !frameDocument.getElementById('mk-builder-shell')?.classList.contains('hidden'), 'freier Konfigurator');
+
+                const baseMeterTarget = frameDocument.querySelector('[data-mk-base-meter-target="0"]');
+                const generationPalette = frameDocument.querySelector('.mk-palette-item[data-mk-type="generation"]');
+                assert(baseMeterTarget && generationPalette, 'Browser-E2E: Z1-Ziel oder Erzeugungsanlagen-Baustein fehlt');
+                assert(frameDocument.querySelectorAll('.mk-asset-card').length === 0, 'Browser-E2E: freier Start muss ohne Anlagen beginnen');
+
+                const transfer = createTransfer();
+                dispatchDragEvent(generationPalette, 'dragstart', transfer, frameWindow);
+                dispatchDragEvent(baseMeterTarget, 'dragover', transfer, frameWindow);
+                dispatchDragEvent(baseMeterTarget, 'drop', transfer, frameWindow);
+                dispatchDragEvent(generationPalette, 'dragend', transfer, frameWindow);
+                await waitFor(() => frameDocument.querySelectorAll('.mk-asset-card').length === 1, 'Anlage nach Drag-and-Drop');
+                assert(frameDocument.querySelector('[data-mk-zone="single-main"] .mk-asset-card'), 'Browser-E2E: Anlage liegt nicht im gemeinsamen Messbereich');
+
+                const parallelButton = frameDocument.querySelector('[data-mk-mode="parallel"]');
+                const singleButton = frameDocument.querySelector('[data-mk-mode="single"]');
+                assert(parallelButton && singleButton, 'Browser-E2E: Messkonzept-Umschalter fehlt');
+                parallelButton.click();
+                await waitFor(() => parallelButton.getAttribute('aria-pressed') === 'true', 'Parallelmodus');
+                singleButton.click();
+                await waitFor(() => singleButton.getAttribute('aria-pressed') === 'true', 'Gemeinsame Messung');
+
+                const removeButton = frameDocument.querySelector('[data-mk-remove-asset]');
+                assert(removeButton, 'Browser-E2E: Entfernen-Schaltfläche der Anlage fehlt');
+                removeButton.click();
+                await waitFor(() => frameDocument.querySelectorAll('.mk-asset-card').length === 0, 'Anlage entfernen');
+            } finally {
+                frame.remove();
+            }
+        });
+
+        addTest('browser-e2e', 'Kaskaden-Drop bleibt auf seiner Sammelschiene', 'Prueft Zusatzzaehler, zweite Anlage am Zusatzzaehler, eindeutige Karten und stabilen Wechsel zur Parallelmessung', async function() {
+            if (window.location.protocol === 'file:') skipTest('Ueber file:// uebersprungen: Browser-E2E-Test benoetigt HTTP/HTTPS.');
+
+            const frame = document.createElement('iframe');
+            frame.title = 'Browser-Kaskaden-Regressionstest';
+            frame.setAttribute('aria-hidden', 'true');
+            frame.style.cssText = 'position:fixed;left:-12000px;top:0;width:1280px;height:900px;border:0;opacity:0;pointer-events:none;';
+            document.body.appendChild(frame);
+
+            const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+            const waitFor = async (predicate, label, timeout = 4500) => {
+                const started = performance.now();
+                while (performance.now() - started < timeout) {
+                    if (predicate()) return;
+                    await wait(40);
+                }
+                throw new Error(`Browser-E2E: ${label} wurde nicht erreicht`);
+            };
+            const createTransfer = () => {
+                const values = new Map();
+                return {
+                    effectAllowed: 'copy',
+                    dropEffect: 'copy',
+                    setData(type, value) { values.set(type, String(value)); },
+                    getData(type) { return values.get(type) || ''; },
+                    clearData(type) { type ? values.delete(type) : values.clear(); },
+                    setDragImage() {}
+                };
+            };
+            const dispatchDragEvent = (target, type, transfer, frameWindow) => {
+                const event = new frameWindow.Event(type, { bubbles: true, cancelable: true });
+                Object.defineProperty(event, 'dataTransfer', { value: transfer });
+                target.dispatchEvent(event);
+            };
+            const dragPaletteTo = (frameDocument, frameWindow, type, target) => {
+                const palette = frameDocument.querySelector(`.mk-palette-item[data-mk-type="${type}"]`);
+                assert(palette && target, `Browser-E2E: ${type}-Baustein oder Drop-Ziel fehlt`);
+                const transfer = createTransfer();
+                dispatchDragEvent(palette, 'dragstart', transfer, frameWindow);
+                dispatchDragEvent(target, 'dragover', transfer, frameWindow);
+                dispatchDragEvent(target, 'drop', transfer, frameWindow);
+                dispatchDragEvent(palette, 'dragend', transfer, frameWindow);
+            };
+            const assertUniqueAssetCards = frameDocument => {
+                const cards = [...frameDocument.querySelectorAll('[data-mk-asset-id]')];
+                const ids = cards.map(card => card.dataset.mkAssetId);
+                assert(new Set(ids).size === ids.length, 'Browser-E2E: Ein Objekt wird doppelt gerendert');
+                return cards;
+            };
+
+            try {
+                const sourceUrl = new URL(`index.html?browser-cascade-e2e=${Date.now()}`, window.location.href).href;
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Browser-E2E: index.html hat nicht geladen')), 5000);
+                    frame.addEventListener('load', () => { clearTimeout(timeout); resolve(); }, { once: true });
+                    frame.addEventListener('error', () => { clearTimeout(timeout); reject(new Error('Browser-E2E: index.html konnte nicht geladen werden')); }, { once: true });
+                    frame.src = sourceUrl;
+                });
+                await wait(250);
+                const frameDocument = frame.contentDocument;
+                const frameWindow = frame.contentWindow;
+                assert(frameDocument && frameWindow, 'Browser-E2E: Kaskaden-Testfenster ist nicht erreichbar');
+
+                frameDocument.getElementById('btn-open-messkonzept-card')?.click();
+                await waitFor(() => !frameDocument.getElementById('messkonzept-screen')?.classList.contains('hidden'), 'Messkonzept-Seite');
+                frameDocument.getElementById('btn-mk-start-free')?.click();
+                await waitFor(() => !frameDocument.getElementById('mk-builder-shell')?.classList.contains('hidden'), 'freier Konfigurator');
+
+                dragPaletteTo(frameDocument, frameWindow, 'generation', frameDocument.querySelector('[data-mk-base-meter-target="0"]'));
+                await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === 1, 'erste Anlage');
+                const firstCard = frameDocument.querySelector('[data-mk-asset-id]');
+                assert(firstCard?.dataset.mkAssetId, 'Browser-E2E: erste Anlage hat keine stabile ID');
+
+                dragPaletteTo(frameDocument, frameWindow, 'meter', firstCard);
+                await waitFor(() => frameDocument.querySelectorAll('[data-mk-remove-meter]').length === 1, 'Zusatzzaehler');
+                const meterId = frameDocument.querySelector('[data-mk-remove-meter]')?.dataset.mkRemoveMeter;
+                assert(meterId, 'Browser-E2E: Zusatzzaehler hat keine stabile ID');
+
+                const meterGroupTarget = frameDocument.querySelector(`[data-mk-meter-group-target="${meterId}"]`);
+                dragPaletteTo(frameDocument, frameWindow, 'generation', meterGroupTarget);
+                await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === 2, 'zweite Anlage am Zusatzzaehler');
+                const cards = assertUniqueAssetCards(frameDocument);
+                const rail = frameDocument.querySelector(`.mk-meter-rail.meter-group-rail[data-mk-meter-rail="${meterId}"]`);
+                assert(rail, 'Browser-E2E: eigene Unter-Sammelschiene des Zusatzzaehlers fehlt');
+                cards.forEach(card => assert(card.closest('.mk-meter-rail') === rail, 'Browser-E2E: Anlage wurde in eine falsche Sammelschiene teleportiert'));
+
+                const parallelButton = frameDocument.querySelector('[data-mk-mode="parallel"]');
+                const singleButton = frameDocument.querySelector('[data-mk-mode="single"]');
+                assert(parallelButton && singleButton, 'Browser-E2E: Messkonzept-Umschalter fehlt');
+                parallelButton.click();
+                await waitFor(() => parallelButton.getAttribute('aria-pressed') === 'true', 'Parallelmodus mit bestehender Topologie');
+                assertUniqueAssetCards(frameDocument);
+                assert(frameDocument.querySelectorAll('[data-mk-asset-id]').length === 2, 'Browser-E2E: Beim Wechsel zur Parallelmessung gingen Anlagen verloren');
+                singleButton.click();
+                await waitFor(() => singleButton.getAttribute('aria-pressed') === 'true', 'Rueckkehr zur gemeinsamen Messung');
+                assertUniqueAssetCards(frameDocument);
+            } finally {
+                frame.remove();
+            }
+        });
+
+        addTest('browser-e2e', 'Löschsicherheit für Anlagen und leere Messschienen', 'Prueft Ersatzzuordnung, leere anlagenbezogene Messschienen und den Schutz vor dem Löschen eines Zählers mit zugeordneten Anlagen', async function() {
+            if (window.location.protocol === 'file:') skipTest('Ueber file:// uebersprungen: Browser-E2E-Test benoetigt HTTP/HTTPS.');
+
+            const frame = document.createElement('iframe');
+            frame.title = 'Browser-Lösch-Regressionstest';
+            frame.setAttribute('aria-hidden', 'true');
+            frame.style.cssText = 'position:fixed;left:-12000px;top:0;width:1280px;height:900px;border:0;opacity:0;pointer-events:none;';
+            document.body.appendChild(frame);
+
+            const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+            const waitFor = async (predicate, label, timeout = 4500) => {
+                const started = performance.now();
+                while (performance.now() - started < timeout) {
+                    if (predicate()) return;
+                    await wait(40);
+                }
+                throw new Error(`Browser-E2E: ${label} wurde nicht erreicht`);
+            };
+            const createTransfer = () => {
+                const values = new Map();
+                return {
+                    effectAllowed: 'copy',
+                    dropEffect: 'copy',
+                    setData(type, value) { values.set(type, String(value)); },
+                    getData(type) { return values.get(type) || ''; },
+                    clearData(type) { type ? values.delete(type) : values.clear(); },
+                    setDragImage() {}
+                };
+            };
+            const dispatchDragEvent = (target, type, transfer, frameWindow) => {
+                const event = new frameWindow.Event(type, { bubbles: true, cancelable: true });
+                Object.defineProperty(event, 'dataTransfer', { value: transfer });
+                target.dispatchEvent(event);
+            };
+            const dragPaletteTo = (frameDocument, frameWindow, type, target) => {
+                const palette = frameDocument.querySelector(`.mk-palette-item[data-mk-type="${type}"]`);
+                assert(palette && target, `Browser-E2E: ${type}-Baustein oder Drop-Ziel fehlt`);
+                const transfer = createTransfer();
+                dispatchDragEvent(palette, 'dragstart', transfer, frameWindow);
+                dispatchDragEvent(target, 'dragover', transfer, frameWindow);
+                dispatchDragEvent(target, 'drop', transfer, frameWindow);
+                dispatchDragEvent(palette, 'dragend', transfer, frameWindow);
+            };
+
+            try {
+                const sourceUrl = new URL(`index.html?browser-delete-e2e=${Date.now()}`, window.location.href).href;
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Browser-E2E: index.html hat nicht geladen')), 5000);
+                    frame.addEventListener('load', () => { clearTimeout(timeout); resolve(); }, { once: true });
+                    frame.addEventListener('error', () => { clearTimeout(timeout); reject(new Error('Browser-E2E: index.html konnte nicht geladen werden')); }, { once: true });
+                    frame.src = sourceUrl;
+                });
+                await wait(250);
+                const frameDocument = frame.contentDocument;
+                const frameWindow = frame.contentWindow;
+                assert(frameDocument && frameWindow, 'Browser-E2E: Lösch-Testfenster ist nicht erreichbar');
+
+                frameDocument.getElementById('btn-open-messkonzept-card')?.click();
+                await waitFor(() => !frameDocument.getElementById('messkonzept-screen')?.classList.contains('hidden'), 'Messkonzept-Seite');
+                frameDocument.getElementById('btn-mk-start-free')?.click();
+                await waitFor(() => !frameDocument.getElementById('mk-builder-shell')?.classList.contains('hidden'), 'freier Konfigurator');
+
+                dragPaletteTo(frameDocument, frameWindow, 'generation', frameDocument.querySelector('[data-mk-base-meter-target="0"]'));
+                await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === 1, 'erste Anlage');
+                const firstCard = frameDocument.querySelector('[data-mk-asset-id]');
+                const firstAssetId = firstCard?.dataset.mkAssetId;
+                assert(firstAssetId, 'Browser-E2E: erste Anlage hat keine stabile ID');
+
+                dragPaletteTo(frameDocument, frameWindow, 'meter', firstCard);
+                await waitFor(() => frameDocument.querySelectorAll('[data-mk-remove-meter]').length === 1, 'Zusatzzaehler');
+                const meterId = frameDocument.querySelector('[data-mk-remove-meter]')?.dataset.mkRemoveMeter;
+                assert(meterId, 'Browser-E2E: Zusatzzaehler hat keine stabile ID');
+
+                const meterGroupTarget = frameDocument.querySelector(`[data-mk-meter-group-target="${meterId}"]`);
+                dragPaletteTo(frameDocument, frameWindow, 'generation', meterGroupTarget);
+                await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === 2, 'zweite Anlage am Zusatzzaehler');
+                const secondAssetId = [...frameDocument.querySelectorAll('[data-mk-asset-id]')].find(card => card.dataset.mkAssetId !== firstAssetId)?.dataset.mkAssetId;
+                assert(secondAssetId, 'Browser-E2E: zweite Anlage hat keine stabile ID');
+
+                // Ein belegter Zähler darf nicht gelöscht werden. Die Warnung
+                // ist fachlich wichtig und verhindert verwaiste Messbeziehungen.
+                frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`)?.click();
+                await waitFor(() => frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`), 'Löschschutz des belegten Zählers');
+                const warning = frameDocument.querySelector('#toast-container .toast-warning');
+                assert(warning?.textContent.includes('Bitte entfernen Sie zuerst'), 'Browser-E2E: Beim Löschen eines belegten Zählers fehlt der verständliche Hinweis');
+
+                // Der erste Anlagenabgang darf beim Entfernen nicht den Zähler
+                // in die Hauptschiene zurückstufen oder die zweite Anlage verlieren.
+                frameDocument.querySelector(`[data-mk-remove-asset="${firstAssetId}"]`)?.click();
+                await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === 1, 'erste Anlage entfernen');
+                assert(frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`), 'Browser-E2E: Messpunkt verschwand nach dem Entfernen der Zielanlage');
+                assert(frameDocument.querySelector(`[data-mk-asset-id="${secondAssetId}"]`), 'Browser-E2E: Ersatzanlage am Zusatzzaehler fehlt');
+
+                // Auch die letzte Anlage darf nur die leere, sichtbare Rail
+                // hinterlassen. Erst danach ist der Zähler löschbar.
+                frameDocument.querySelector(`[data-mk-remove-asset="${secondAssetId}"]`)?.click();
+                await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === 0, 'letzte Anlage entfernen');
+                assert(frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`), 'Browser-E2E: leere anlagenbezogene Messschiene blieb nicht erhalten');
+                frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`)?.click();
+                await waitFor(() => !frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`), 'leeren Zähler entfernen');
+                assert(frameDocument.querySelectorAll('[data-mk-remove-meter]').length === 0, 'Browser-E2E: leerer Zusatzzaehler wurde nicht vollständig entfernt');
+            } finally {
+                frame.remove();
+            }
+        });
+
+        addTest('browser-e2e', 'Startvorlagen öffnen im richtigen Messmodus', 'Prueft alle acht Vorlagen als echten Bedienablauf mit erwarteter Objektzahl, eindeutigen Karten und sichtbarem Messmodus', async function() {
+            if (window.location.protocol === 'file:') skipTest('Ueber file:// uebersprungen: Browser-E2E-Test benoetigt HTTP/HTTPS.');
+
+            const frame = document.createElement('iframe');
+            frame.title = 'Browser-Vorlagen-Regressionstest';
+            frame.setAttribute('aria-hidden', 'true');
+            frame.style.cssText = 'position:fixed;left:-12000px;top:0;width:1280px;height:900px;border:0;opacity:0;pointer-events:none;';
+            document.body.appendChild(frame);
+
+            const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+            const waitFor = async (predicate, label, timeout = 4500) => {
+                const started = performance.now();
+                while (performance.now() - started < timeout) {
+                    if (predicate()) return;
+                    await wait(40);
+                }
+                throw new Error(`Browser-E2E: ${label} wurde nicht erreicht`);
+            };
+            const expected = [
+                { id: 'single-household-pv', mode: 'single', assets: 2, meters: 0 },
+                { id: 'single-household-pv-storage', mode: 'single', assets: 3, meters: 0 },
+                { id: 'single-household-pv-storage-wallbox', mode: 'single', assets: 4, meters: 0 },
+                { id: 'single-household-pv-storage-heatpump', mode: 'single', assets: 4, meters: 0 },
+                { id: 'parallel-heatpump', mode: 'parallel', assets: 2, meters: 0 },
+                { id: 'parallel-wallbox', mode: 'parallel', assets: 2, meters: 0 },
+                { id: 'cascade-heatpump', mode: 'single', assets: 4, meters: 1 },
+                { id: 'cascade-wallbox', mode: 'single', assets: 4, meters: 1 }
+            ];
+
+            const loadFrame = async suffix => {
+                const sourceUrl = new URL(`index.html?browser-preset-e2e=${suffix}-${Date.now()}`, window.location.href).href;
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Browser-E2E: index.html hat nicht geladen')), 5000);
+                    frame.addEventListener('load', () => { clearTimeout(timeout); resolve(); }, { once: true });
+                    frame.addEventListener('error', () => { clearTimeout(timeout); reject(new Error('Browser-E2E: index.html konnte nicht geladen werden')); }, { once: true });
+                    frame.src = sourceUrl;
+                });
+                await wait(180);
+                return { document: frame.contentDocument, window: frame.contentWindow };
+            };
+
+            try {
+                for (const definition of expected) {
+                    const { document: frameDocument } = await loadFrame(definition.id);
+                    assert(frameDocument, `Browser-E2E: Fenster für ${definition.id} ist nicht erreichbar`);
+                    frameDocument.getElementById('btn-open-messkonzept-card')?.click();
+                    await waitFor(() => !frameDocument.getElementById('messkonzept-screen')?.classList.contains('hidden'), `${definition.id}: Messkonzept-Seite`);
+                    await waitFor(() => frameDocument.querySelectorAll('[data-mk-preset]').length === expected.length, `${definition.id}: Vorlagenkarten`);
+
+                    const card = frameDocument.querySelector(`[data-mk-preset="${definition.id}"]`);
+                    assert(card, `Browser-E2E: Vorlage ${definition.id} fehlt in der Startauswahl`);
+                    card.click();
+                    await waitFor(() => !frameDocument.getElementById('mk-builder-shell')?.classList.contains('hidden'), `${definition.id}: Konfigurator`);
+                    await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === definition.assets, `${definition.id}: Objektzahl`);
+
+                    const assetCards = [...frameDocument.querySelectorAll('[data-mk-asset-id]')];
+                    const assetIds = assetCards.map(item => item.dataset.mkAssetId);
+                    assert(new Set(assetIds).size === assetIds.length, `Browser-E2E: ${definition.id} rendert doppelte Objektkarten`);
+                    assert(frameDocument.querySelector(`[data-mk-mode="${definition.mode}"][aria-pressed="true"]`), `Browser-E2E: ${definition.id} startet nicht im Modus ${definition.mode}`);
+                    assert(frameDocument.querySelectorAll('[data-mk-remove-meter]').length === definition.meters, `Browser-E2E: ${definition.id} hat eine unerwartete Zahl Zusatzzaehler`);
+
+                    if (definition.id.startsWith('cascade-')) {
+                        const groupRails = frameDocument.querySelectorAll('.mk-meter-rail.meter-group-rail');
+                        assert(groupRails.length >= 1, `Browser-E2E: ${definition.id} besitzt keine sichtbare Kaskaden-Sammelschiene`);
+                    }
+                }
+            } finally {
+                frame.remove();
+            }
+        });
+
+        addTest('browser-e2e', 'PDF-Exportvarianten im echten Browser', 'Prueft Skizzenexport und Gesamtexport mit Projektkopf, Messskizze, Prüfstatus und vollständigen Objektdetails', async function() {
+            if (window.location.protocol === 'file:') skipTest('Ueber file:// uebersprungen: Browser-E2E-Test benoetigt HTTP/HTTPS.');
+
+            const frame = document.createElement('iframe');
+            frame.title = 'Browser-PDF-Export-Regressionstest';
+            frame.setAttribute('aria-hidden', 'true');
+            frame.style.cssText = 'position:fixed;left:-12000px;top:0;width:1280px;height:900px;border:0;opacity:0;pointer-events:none;';
+            document.body.appendChild(frame);
+
+            const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+            const waitFor = async (predicate, label, timeout = 4500) => {
+                const started = performance.now();
+                while (performance.now() - started < timeout) {
+                    if (predicate()) return;
+                    await wait(40);
+                }
+                throw new Error(`Browser-E2E: ${label} wurde nicht erreicht`);
+            };
+
+            try {
+                const sourceUrl = new URL(`index.html?browser-pdf-e2e=${Date.now()}`, window.location.href).href;
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Browser-E2E: index.html hat nicht geladen')), 5000);
+                    frame.addEventListener('load', () => { clearTimeout(timeout); resolve(); }, { once: true });
+                    frame.addEventListener('error', () => { clearTimeout(timeout); reject(new Error('Browser-E2E: index.html konnte nicht geladen werden')); }, { once: true });
+                    frame.src = sourceUrl;
+                });
+                await wait(220);
+                const frameDocument = frame.contentDocument;
+                const frameWindow = frame.contentWindow;
+                assert(frameDocument && frameWindow, 'Browser-E2E: PDF-Testfenster ist nicht erreichbar');
+
+                frameDocument.getElementById('btn-open-messkonzept-card')?.click();
+                await waitFor(() => !frameDocument.getElementById('messkonzept-screen')?.classList.contains('hidden'), 'Messkonzept-Seite');
+                const preset = frameDocument.querySelector('[data-mk-preset="cascade-heatpump"]');
+                assert(preset, 'Browser-E2E: Kaskaden-Vorlage für den PDF-Test fehlt');
+                preset.click();
+                await waitFor(() => !frameDocument.getElementById('mk-builder-shell')?.classList.contains('hidden'), 'Kaskaden-Konfigurator');
+                await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === 4, 'Vorlagenobjekte');
+
+                let printCalls = 0;
+                frameWindow.print = () => { printCalls += 1; };
+                const sketchButton = frameDocument.getElementById('btn-mk-export-sketch');
+                const fullButton = frameDocument.getElementById('btn-mk-export-pdf');
+                assert(sketchButton && fullButton, 'Browser-E2E: beide PDF-Exportbuttons fehlen');
+
+                sketchButton.click();
+                await waitFor(() => frameDocument.querySelector('.mk-print-sheet[data-mk-export-scope="sketch"]'), 'Skizzenexport');
+                const sketchSheet = frameDocument.querySelector('.mk-print-sheet[data-mk-export-scope="sketch"]');
+                assert(sketchSheet?.querySelector('.mk-print-header') && sketchSheet.querySelector('.mk-print-project') && sketchSheet.querySelector('.mk-print-topology') && sketchSheet.querySelector('.mk-print-status'), 'Browser-E2E: Skizzenexport enthält nicht Kopf, Projektangaben, Skizze und Prüfstatus');
+                assert(!sketchSheet.querySelector('.mk-print-details'), 'Browser-E2E: Skizzenexport darf keine vollständigen Objektdetails enthalten');
+                await waitFor(() => printCalls === 1, 'Browser-Druckaufruf für Skizzenexport');
+                await waitFor(() => !frameDocument.querySelector('.mk-print-sheet'), 'Bereinigung nach Skizzenexport', 1200);
+
+                fullButton.click();
+                await waitFor(() => frameDocument.querySelector('.mk-print-sheet[data-mk-export-scope="full"]'), 'Gesamtexport');
+                const fullSheet = frameDocument.querySelector('.mk-print-sheet[data-mk-export-scope="full"]');
+                assert(fullSheet?.querySelector('.mk-print-header') && fullSheet.querySelector('.mk-print-project') && fullSheet.querySelector('.mk-print-topology') && fullSheet.querySelector('.mk-print-status') && fullSheet.querySelector('.mk-print-details'), 'Browser-E2E: Gesamtexport enthält nicht alle vorgesehenen Abschnitte');
+                assert(fullSheet.querySelectorAll('.mk-print-detail-block').length >= 4, 'Browser-E2E: Gesamtexport enthält nicht alle Vorlagenobjekte');
+                await waitFor(() => printCalls === 2, 'Browser-Druckaufruf für Gesamtexport');
+            } finally {
+                frame.remove();
+            }
+        });
+
+        addTest('browser-e2e', 'Messkonzept bleibt auf Smartphone bedienbar', 'Prueft Einstieg, Bausteinleiste, Umschalter, Exportbuttons und die absichtliche horizontale Verschiebbarkeit der Skizze in einer schmalen Ansicht', async function() {
+            if (window.location.protocol === 'file:') skipTest('Ueber file:// uebersprungen: Browser-E2E-Test benoetigt HTTP/HTTPS.');
+
+            const frame = document.createElement('iframe');
+            frame.title = 'Browser-Mobile-Regressionstest';
+            frame.setAttribute('aria-hidden', 'true');
+            frame.style.cssText = 'position:fixed;left:-12000px;top:0;width:390px;height:844px;border:0;opacity:0;pointer-events:none;';
+            document.body.appendChild(frame);
+
+            const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+            const waitFor = async (predicate, label, timeout = 4500) => {
+                const started = performance.now();
+                while (performance.now() - started < timeout) {
+                    if (predicate()) return;
+                    await wait(40);
+                }
+                throw new Error(`Browser-E2E: ${label} wurde nicht erreicht`);
+            };
+
+            try {
+                const sourceUrl = new URL(`index.html?browser-mobile-e2e=${Date.now()}`, window.location.href).href;
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Browser-E2E: mobile index.html hat nicht geladen')), 5000);
+                    frame.addEventListener('load', () => { clearTimeout(timeout); resolve(); }, { once: true });
+                    frame.addEventListener('error', () => { clearTimeout(timeout); reject(new Error('Browser-E2E: mobile index.html konnte nicht geladen werden')); }, { once: true });
+                    frame.src = sourceUrl;
+                });
+                await wait(220);
+                const frameDocument = frame.contentDocument;
+                const frameWindow = frame.contentWindow;
+                assert(frameDocument && frameWindow, 'Browser-E2E: mobile Testfenster ist nicht erreichbar');
+                assert(frameWindow.innerWidth <= 420 && frameWindow.innerHeight >= 800, 'Browser-E2E: der Test läuft nicht in einer Smartphone-Viewportgröße');
+
+                frameDocument.getElementById('btn-open-messkonzept-card')?.click();
+                await waitFor(() => !frameDocument.getElementById('messkonzept-screen')?.classList.contains('hidden'), 'mobile Messkonzept-Seite');
+                const freeStart = frameDocument.getElementById('btn-mk-start-free');
+                assert(freeStart && freeStart.getBoundingClientRect().width > 0, 'Browser-E2E: freier Einstieg ist mobil nicht sichtbar');
+                freeStart.click();
+                await waitFor(() => !frameDocument.getElementById('mk-builder-shell')?.classList.contains('hidden'), 'mobiler Konfigurator');
+                await waitFor(() => frameDocument.querySelectorAll('.mk-palette-item').length >= 8, 'mobile Bausteinleiste');
+
+                const canvas = frameDocument.getElementById('mk-canvas');
+                const palette = frameDocument.querySelector('.mk-palette');
+                const controls = [...frameDocument.querySelectorAll('[data-mk-mode], [data-mk-view], #btn-mk-export-sketch, #btn-mk-export-pdf, .mk-palette-item')];
+                assert(canvas && palette && controls.length >= 12, 'Browser-E2E: mobile Bedienbereiche fehlen');
+                assert([...frameDocument.querySelectorAll('.mk-palette-item')].every(item => item.getBoundingClientRect().width > 0 && item.getBoundingClientRect().right <= frameWindow.innerWidth + 1), 'Browser-E2E: Bausteine sind mobil nicht vollständig erreichbar');
+                assert([...frameDocument.querySelectorAll('[data-mk-mode], [data-mk-view], #btn-mk-export-sketch, #btn-mk-export-pdf')].every(item => item.getBoundingClientRect().width > 0 && item.getBoundingClientRect().right <= frameWindow.innerWidth + 1), 'Browser-E2E: Modus-, Darstellungs- oder Exportbuttons werden mobil abgeschnitten');
+
+                frameDocument.getElementById('btn-mk-change-start')?.click();
+                await waitFor(() => !frameDocument.getElementById('mk-start-panel')?.classList.contains('hidden'), 'mobile Vorlagenauswahl');
+                const presets = frameDocument.querySelectorAll('[data-mk-preset]');
+                const mobilePreset = frameDocument.querySelector('[data-mk-preset="single-household-pv-storage-wallbox"]');
+                assert(presets.length >= 8 && mobilePreset && mobilePreset.getBoundingClientRect().width > 0, 'Browser-E2E: mobile Vorlagenauswahl ist unvollständig');
+                // Die Vorlage erzeugt absichtlich eine breite Skizze. Sie darf im Canvas
+                // scrollen, darf aber keinen horizontalen Überlauf der gesamten Seite auslösen.
+                mobilePreset.click();
+                await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === 4, 'mobile Vorlagenobjekte');
+                assert(getComputedStyle(canvas).overflowX === 'auto' || getComputedStyle(canvas).overflowX === 'scroll', 'Browser-E2E: die Skizze ist mobil nicht horizontal verschiebbar');
+                assert(canvas.scrollWidth >= canvas.clientWidth, 'Browser-E2E: Canvas-Geometrie ist mobil nicht messbar');
+                assert(frameDocument.documentElement.scrollWidth <= frameDocument.documentElement.clientWidth + 1, 'Browser-E2E: die gesamte Seite wird durch die breite Skizze horizontal überdehnt');
+            } finally {
+                frame.remove();
+            }
         });
 
         addTest('ui', 'Obere Sammelschiene bleibt vollständig', 'Prueft, dass direkte Anlagen nach einer Untergruppe nicht nach unten umbrechen', async function() {
@@ -2176,20 +2691,22 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
 
         addTest('ui', 'EA-Nummern und Einzelrail-Standard', 'Prueft EA1/EA2 sowie die direkte Leitung bei genau einer Anlage hinter einem Zusatzzaehler', async function() {
             if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
-            const [modelText, messkonzeptText, layoutText, connectionsText, renderText, stylesText] = await Promise.all([
+            const [modelText, messkonzeptText, layoutText, connectionsText, renderText, stylesText, identifiersText, assetDisplayText] = await Promise.all([
                 fetch(`js/messkonzept/model.js?ea-number-test=${Date.now()}`).then(response => response.text()),
                 fetch(`messkonzept.js?single-rail-test=${Date.now()}`).then(response => response.text()),
                 fetch(`js/messkonzept/layout.js?single-rail-test=${Date.now()}`).then(response => response.text()),
                 fetch(`js/messkonzept/connections.js?single-rail-test=${Date.now()}`).then(response => response.text()),
                 fetch(`js/messkonzept/render.js?single-rail-test=${Date.now()}`).then(response => response.text()),
-                fetch(`styles.css?single-rail-test=${Date.now()}`).then(response => response.text())
+                fetch(`styles.css?single-rail-test=${Date.now()}`).then(response => response.text()),
+                fetch(`js/messkonzept/identifiers.js?ea-number-test=${Date.now()}`).then(response => response.text()),
+                fetch(`js/messkonzept/asset-display.js?ea-number-test=${Date.now()}`).then(response => response.text())
             ]);
             const model = new Function(`${modelText}; return window.WattspurMesskonzeptModel;`)();
             const state = model.createState();
             const first = model.addAsset(state, 'generation', 'single-main', '', 'PV', {}, () => null);
             const second = model.addAsset(state, 'generation', 'single-main', '', 'Wind', {}, () => null);
             assert(first.generationNumber === 1 && second.generationNumber === 2 && first.name.includes('PV1') && second.name.includes('WE2'), 'Erzeugungsanlagen erhalten eine gemeinsame fortlaufende Nummerierung unabhaengig vom Energietraeger');
-            assert(messkonzeptText.includes('function mkGetGenerationAssetNumber') && messkonzeptText.includes('const prefix = mkGetGenerationDisplay(asset).prefix;') && messkonzeptText.includes('return number ? `${prefix}${number}` : meta.short;'), 'Die typgerechte EA-Nummer muss auch im Objekt-Icon sichtbar werden');
+            assert(messkonzeptText.includes('function mkGetGenerationAssetNumber') && identifiersText.includes('function getGenerationAssetNumber') && assetDisplayText.includes('const prefix = getGenerationDisplayForAsset(asset).prefix;') && assetDisplayText.includes('return number ?') && assetDisplayText.includes('meta.short;'), 'Die typgerechte EA-Nummer muss auch im Objekt-Icon sichtbar werden');
             assert(connectionsText.includes('const isSingleAssetRail = Boolean') && connectionsText.includes("rail.classList.contains('single-asset-rail')") && connectionsText.includes('buildWire(meterBottom, assetPoint)'), 'Ein Zusatzzaehler mit genau einer Anlage darf keinen Sammelschienenbus erzeugen, sondern nur einen geraden Abgang');
             assert(renderText.includes("railMeter?.meterScope === 'asset'") && renderText.includes('railAssets.length === 1'), 'Nur anlagenbezogene Einzelzähler dürfen den Sammelschienenknoten auslassen; Kaskadenzähler behalten ihn');
             assert(stylesText.includes('.mk-meter-rail.single-asset-rail > .mk-asset-row') && stylesText.includes('--mk-single-asset-row-align-px') && layoutText.includes('alignSingleAssetRails') && layoutText.includes('meterCenter - branchCenter'), 'Der Einzelrail muss die Kartenmitte in jeder Sammelschiene auf die Zaehlerachse ausrichten');
@@ -2225,7 +2742,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             ]);
             const rules = new Function(`${rulesText}; return window.WattspurMesskonzeptRules;`)();
             const ruleCatalog = rules.getRuleCatalog();
-            assert(rules.rulesetVersion === '2026-08-15-beta.3' && ruleCatalog.STORAGE_ROLE?.id === 'MK-ASSET-001' && ruleCatalog.STEUVE_THRESHOLD?.id === 'MK-ASSET-002' && ruleCatalog.NSH_REGIME?.id === 'MK-ASSET-003' && ruleCatalog.SINGLE_MIXED_LOAD?.id === 'MK-SINGLE-001' && !ruleCatalog.EMPTY_STATE && !ruleCatalog.EXTRA_METER && !ruleCatalog.ASSET_COUNT && !ruleCatalog.PARALLEL_READY && !ruleCatalog.PARALLEL_EMPTY && !ruleCatalog.GENERATION_OWN_METER && !ruleCatalog.GENERATION_SHARED, 'Das Regeln-Modul muss einen versionierten Katalog mit den relevanten Prüfregeln ohne entfernte Komfort- und Statusmeldungen bereitstellen');
+            assert(rules.rulesetVersion === '2026-08-17-beta.4' && ruleCatalog.STORAGE_ROLE?.id === 'MK-ASSET-001' && ruleCatalog.STEUVE_THRESHOLD?.id === 'MK-ASSET-002' && ruleCatalog.NSH_REGIME?.id === 'MK-ASSET-003' && ruleCatalog.SINGLE_MIXED_LOAD?.id === 'MK-SINGLE-001' && !ruleCatalog.EMPTY_STATE && !ruleCatalog.EXTRA_METER && !ruleCatalog.ASSET_COUNT && !ruleCatalog.PARALLEL_READY && !ruleCatalog.PARALLEL_EMPTY && !ruleCatalog.GENERATION_OWN_METER && !ruleCatalog.GENERATION_SHARED, 'Das Regeln-Modul muss einen versionierten Katalog mit den relevanten Prüfregeln ohne entfernte Komfort- und Statusmeldungen bereitstellen');
             const emptyState = { mode: 'single', cascadeLevels: 2, assets: [] };
             const emptyChecks = rules.evaluate(emptyState);
             assert(emptyChecks.length === 0, 'Der leere Zustand darf keine rein beschreibende Statusmeldung mehr liefern');
@@ -2254,7 +2771,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             assert(rulebookText.includes('MK-DATA-001') && rulebookText.includes('MK-TOPO-001') && rulebookText.includes('MK-SINGLE-003') && rulebookText.includes('Bewusst entfernte Prüf- und Komfortmeldungen') && rulebookText.includes('Hinweisstufen'), 'Das Regelwerk muss aktive Regeln, Hinweisstufen und bewusst entfernte Prüf- und Komfortmeldungen dokumentieren');
             assert(!parallelChecks.some(check => ['MK-PARALLEL-001', 'MK-PARALLEL-002'].includes(check.ruleId)) && !parallelChecks.some(check => check.text.includes('vorbereitet') || check.text.includes('hat noch keinen')), 'Der Prüfstatus darf keine rein beschreibenden Parallelmeldungen mehr ausgeben');
             assert(!rules.evaluate({ mode: 'single', assets: [{ id: 'asset-1', type: 'generation', zone: 'single-main' }, { id: 'asset-2', type: 'generation', zone: 'single-main' }] }).some(check => check.ruleId === 'MK-DATA-002'), 'Die reine Bausteinanzahl darf keine Prüfstatusmeldung mehr erzeugen');
-            assert(statusText.includes('rules.evaluate') && messkonzeptText.includes('MK_VALIDATION_STATUS') && messkonzeptText.includes('return MK_RULES.parsePowerNumber(value)'), 'Die UI darf die fachliche Bewertung nur über die Regeln-API und das Statusmodul anfordern');
+            assert(statusText.includes('rules.evaluate') && messkonzeptText.includes('MK_VALIDATION_STATUS') && messkonzeptText.includes('validate: () => MK_VALIDATION_STATUS.evaluate()') && messkonzeptText.includes('MK_VALIDATION_STATUS.refresh()') && !messkonzeptText.includes('function mkValidation(') && !messkonzeptText.includes('function mkRenderValidation(') && !messkonzeptText.includes('function mkRefreshInlineStatus(') && messkonzeptText.includes('return MK_RULES.parsePowerNumber(value)'), 'Die UI darf die fachliche Bewertung nur über die Regeln-API und das Statusmodul anfordern; veraltete Adapter sollen nicht zurückkehren');
             assert(!rulesText.includes('document.') && !rulesText.includes('getBoundingClientRect'), 'Das Regeln-Modul muss vollständig DOM-frei bleiben');
         });
 
@@ -2466,10 +2983,11 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
 
          addTest('ui', 'Einzelzaehler auf gemeinsamer Sammelschiene', 'Prueft einen eigenen Zaehler am ersten Objekt einer Gruppe', async function() {
             if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
-            const [modelText, topologyText, messkonzeptText] = await Promise.all([
+            const [modelText, topologyText, messkonzeptText, policyText] = await Promise.all([
                 fetch(`js/messkonzept/model.js?shared-asset-meter-test=${Date.now()}`).then(response => response.text()),
                 fetch(`messkonzept-topology.js?shared-asset-meter-test=${Date.now()}`).then(response => response.text()),
-                fetch(`messkonzept.js?shared-asset-meter-test=${Date.now()}`).then(response => response.text())
+                fetch(`messkonzept.js?shared-asset-meter-test=${Date.now()}`).then(response => response.text()),
+                fetch(`js/messkonzept/meter-policy.js?shared-asset-meter-test=${Date.now()}`).then(response => response.text())
             ]);
             const model = new Function(`${modelText}; return window.WattspurMesskonzeptModel;`)();
             const topology = new Function(`${topologyText}; return window.WattspurMesskonzeptTopology;`)();
@@ -2481,7 +2999,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             const tree = topology.buildZoneMeterTree(state.assets, 'single-main');
             assert(individualMeter?.parentMeterId === groupMeter.id && owner.meterId === individualMeter.id, 'Der Einzelzaehler muss unter dem gemeinsamen Messpunkt gespeichert werden');
             assert(tree.children[0]?.meterId === groupMeter.id && tree.children[0]?.children.length === 0 && tree.children[0]?.assets.some(asset => asset.id === owner.id), 'Der Einzelzaehler bleibt inline am gemeinsamen Sammelschienen-Rail und wird nicht als gestapelter Unter-Rail dargestellt');
-            assert(messkonzeptText.includes('function mkCanAddMeterToAsset') && messkonzeptText.includes('function mkGetMeterDropOptions') && messkonzeptText.includes('parentMeterId: attachedMeter.id') && messkonzeptText.includes('keepEmptyRail: true'), 'Die Drop-Logik erlaubt einen eigenen Zaehler am Objekt einer gemeinsamen Sammelschiene');
+            assert(messkonzeptText.includes('function mkCanAddMeterToAsset') && messkonzeptText.includes('function mkGetMeterDropOptions') && policyText.includes('parentMeterId: attachedMeter.id') && policyText.includes('keepEmptyRail: true'), 'Die Drop-Logik erlaubt einen eigenen Zaehler am Objekt einer gemeinsamen Sammelschiene');
         });
 
         addTest('ui', 'Gemeinsamer Messpunkt ohne doppelte Zaehlkarten', 'Prueft, dass ein Asset beim Wechsel von einer Sammelschiene auf einen eigenen Zaehler nicht mehr mit dem alten und neuen Zaehler zugleich erscheint', async function() {
@@ -2577,7 +3095,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             assert(!messkonzeptText.includes("mkElements.canvas.addEventListener('dragover'") && !messkonzeptText.includes("mkElements.canvas.addEventListener('drop'") && !messkonzeptText.includes("mkElements.canvas.addEventListener('click'"), 'Die DOM-Verkabelung darf nicht parallel im Hauptmodul dupliziert werden');
             assert(messkonzeptText.includes('function mkHandleDrop') && messkonzeptText.includes('MK_DRAG_DROP.handleDrop') && !messkonzeptText.includes('mkHandleDropLegacy') && !messkonzeptText.includes('mkHandleCanvasClickLegacy'), 'Der Konfigurator muss die fachlichen DnD-Befehle nur noch als schlanke Adapter an das Modul weiterreichen');
             assert(dragDropText.includes('createDragDropController') && dragDropText.includes('handleDrop') && dragDropText.includes('handleCanvasClick') && dragDropText.includes('handleCanvasDragOver') && dragDropText.includes('handleCanvasDrop') && dragDropText.includes('handlePaletteDragStart') && dragDropText.includes('findDropAnchors') && dragDropText.includes("call('captureHistoryState'") && dragDropText.includes("call('recordHistory'"), 'Die fachlichen Drop- und Loeschbefehle muessen im eigenen Modul ueber injizierte Abhaengigkeiten verfuegbar sein');
-            assert(messkonzeptText.includes('MK_DRAG_DROP.handleCanvasDragOver') && messkonzeptText.includes('MK_DRAG_DROP.handleCanvasDrop') && messkonzeptText.includes('setActiveDrag'), 'Der Einstiegspunkt muss die Drag-and-drop-Verkabelung nur noch als Adapter an das Modul weiterreichen');
+            assert(messkonzeptText.includes('MK_DRAG_DROP.handleCanvasDragOver') && messkonzeptText.includes('MK_DRAG_DROP.handleCanvasDrop') && messkonzeptText.includes('setActiveDrag') && !messkonzeptText.includes('if (MK_DRAG_DROP.handleCanvasDragOver)') && !messkonzeptText.includes('if (MK_DRAG_DROP.handleCanvasDrop)'), 'Der Einstiegspunkt muss die vollständige Drag-and-drop-API ohne zweite Fallback-Implementierung als Adapter weiterreichen');
             assert(messkonzeptText.includes('WattspurMesskonzeptDragDrop.createDragDropController') && indexText.includes('js/messkonzept/drag-drop.js') && serviceWorkerText.includes("'js/messkonzept/drag-drop.js'"), 'Das DnD-Modul muss vor dem Einstiegspunkt geladen und offline gecacht werden');
         });
 
@@ -2784,18 +3302,20 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
 
         addTest('ui', 'Parallelzweig-Achsenabstand', 'Prueft, dass die erste Anlagenkarte eines Parallelzweigs nicht in den senkrechten Hauptstrang ragt', async function() {
             if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
-            const [geometryText, messkonzeptText, layoutText, stylesText] = await Promise.all([
+            const [geometryText, messkonzeptText, layoutText, layoutCalculationsText, stylesText] = await Promise.all([
                 fetch(`messkonzept-geometry.js?parallel-axis-test=${Date.now()}`).then(response => response.text()),
                 fetch(`messkonzept.js?parallel-axis-test=${Date.now()}`).then(response => response.text()),
                 fetch(`js/messkonzept/layout.js?parallel-axis-test=${Date.now()}`).then(response => response.text()),
+                fetch(`js/messkonzept/layout-calculations.js?parallel-axis-test=${Date.now()}`).then(response => response.text()),
                 fetch(`styles.css?parallel-axis-test=${Date.now()}`).then(response => response.text())
             ]);
+            const layoutAwareText = `${layoutText}\n${layoutCalculationsText}`;
             assert(geometryText.includes('parallelMeterAxisOffsetPx: 16') && geometryText.includes('parallelAssetClearancePx: 12.8') && geometryText.includes('primaryRailClearancePx: 12.8'), 'Die Parallelachse muss einen festen Knotenabstand und einen sichtbaren Kartenabstand definieren');
-            assert(layoutText.includes('parallelMeterAxisOffsetPx') && layoutText.includes('parallelAssetClearancePx') && layoutText.includes('alignRailFirstAsset') && layoutText.includes('primaryRailClearancePx'), 'Die berechnete Parallelzweigbreite muss den Achsenabstand und die echte Kartenposition berücksichtigen');
+            assert(layoutAwareText.includes('parallelMeterAxisOffsetPx') && layoutAwareText.includes('parallelAssetClearancePx') && layoutText.includes('alignRailFirstAsset') && layoutText.includes('primaryRailClearancePx'), 'Die berechnete Parallelzweigbreite muss den Achsenabstand und die echte Kartenposition berücksichtigen');
             assert(stylesText.includes('--mk-asset-row-offset: calc(16px + 0.8rem);'), 'Die erste Anlagenkarte muss im Parallelzweig rechts neben der Messachse beginnen');
             assert(stylesText.includes('--mk-rail-asset-shift-px'), 'Die erste Anlagenkarte muss bei einer Kaskade dynamisch von der Messachse ferngehalten werden');
             assert(geometryText.includes('railAxisClearancePx: 0') && layoutText.includes('mk-asset-slot-placeholder') && layoutText.includes('Math.max(0, (startCenter') && layoutText.includes("rootRail?.querySelector('.mk-meter-rail.meter-group-rail") && layoutText.includes('(rect.width <= 0 && rect.height <= 0)'), 'Einzeläste und reservierte Zählerplätze müssen eine gemeinsame, ausschließlich nach rechts korrigierende Achsenregel verwenden');
-            const layoutApi = new Function('window', `${layoutText}; return window.WattspurMesskonzeptLayout;`)(window);
+            const layoutApi = new Function('window', `${layoutCalculationsText}\n${layoutText}; return window.WattspurMesskonzeptLayout;`)(window);
             const fixtureStyle = document.createElement('style');
             fixtureStyle.textContent = `
                 .mk-test-canvas { width: 800px; height: 240px; position: relative; }
@@ -3011,6 +3531,285 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             assert(bootstrapText.includes('createBootstrapController') && bootstrapText.includes('collectElements') && bootstrapText.includes('bindResize') && bootstrapText.includes('DOMContentLoaded') && !bootstrapText.includes('mkConfiguratorState') && !bootstrapText.includes('mkElements'), 'Das Bootstrap-Modul darf keine fachlichen Zustände oder Konfiguratorvariablen kennen');
             assert(indexText.includes('js/messkonzept/bootstrap.js') && indexText.indexOf('js/messkonzept/bootstrap.js') < indexText.indexOf('messkonzept.js') && serviceWorkerText.includes("'js/messkonzept/bootstrap.js'"), 'Das Bootstrap-Modul muss vor dem Einstiegspunkt geladen und offline gecacht werden');
             assert(messkonzeptText.includes('WattspurMesskonzeptBootstrap.createBootstrapController') && messkonzeptText.includes('MK_BOOTSTRAP.start(mkInitialize)') && !messkonzeptText.includes("document.addEventListener('DOMContentLoaded', mkInitialize)") && !messkonzeptText.includes('document.getElementById(') && !messkonzeptText.includes('document.querySelector') && !messkonzeptText.includes('document.body'), 'Der Konfigurator darf die statische DOM-Verkabelung nicht mehr selbst aufbauen');
+        });
+
+        addTest('ui', 'Objekteditor bleibt als eigene Schicht gekapselt', 'Prueft, dass Dialogfelder nicht mehr in der allgemeinen Interaktionsschicht oder im Einstiegspunkt verdrahtet werden', async function() {
+            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
+            const [editorText, interactionText, messkonzeptText, indexText, serviceWorkerText] = await Promise.all([
+                fetch(`js/messkonzept/editor.js?editor-module-test=${Date.now()}`).then(response => response.text()),
+                fetch(`js/messkonzept/interaction.js?editor-module-test=${Date.now()}`).then(response => response.text()),
+                fetch(`messkonzept.js?editor-module-test=${Date.now()}`).then(response => response.text()),
+                fetch(`index.html?editor-module-test=${Date.now()}`).then(response => response.text()),
+                fetch(`service-worker.js?editor-module-test=${Date.now()}`).then(response => response.text())
+            ]);
+            const editorApi = new Function('window', `${editorText}; return window.WattspurMesskonzeptEditor;`)(window);
+            const listeners = {};
+            const modal = { addEventListener: (type, handler) => { listeners[type] = handler; } };
+            const state = { assets: [{ id: 'asset-1', type: 'generation', energyCarrier: 'pv' }] };
+            const card = { dataset: { mkAssetId: 'asset-1' }, querySelector: () => null };
+            let generationSyncs = 0;
+            let statusRefreshes = 0;
+            const editor = editorApi.createEditorController({
+                getElements: () => ({ objectModal: modal }),
+                getState: () => state,
+                callbacks: {
+                    getFieldHistoryBefore: () => null,
+                    getMeterDetails: () => ({}),
+                    syncGenerationName: () => { generationSyncs += 1; },
+                    refreshInlineStatus: () => { statusRefreshes += 1; }
+                }
+            });
+            editor.initialize();
+            const assetField = { type: 'text', value: 'kwk', dataset: { mkField: 'energyCarrier' }, closest: () => card };
+            listeners.input({ target: assetField });
+            assert(state.assets[0].energyCarrier === 'kwk' && generationSyncs === 1 && statusRefreshes === 1, 'Der ausgelagerte Editor muss Asset-Felder über injizierte Callbacks aktualisieren');
+            assert(editorText.includes('createEditorController') && editorText.includes('updateAssetField') && editorText.includes('updateMeterDetailField') && editorText.includes('mkMeterField') && !editorText.includes('mkConfiguratorState') && !editorText.includes('mkElements'), 'Das Editor-Modul darf keine globalen Konfiguratorvariablen oder Geometrie kennen');
+            assert(!interactionText.includes("call('updateAssetField'") && !interactionText.includes("call('updateMeterDetailField'"), 'Die allgemeine Interaktionsschicht darf keine feldspezifische Editorlogik duplizieren');
+            assert(messkonzeptText.includes('WattspurMesskonzeptEditor.createEditorController') && messkonzeptText.includes('MK_EDITOR.initialize()'), 'Der Einstiegspunkt muss den Editor über eine benannte Start-API anschließen');
+            assert(indexText.includes('js/messkonzept/editor.js') && indexText.indexOf('js/messkonzept/editor.js') < indexText.indexOf('messkonzept.js') && serviceWorkerText.includes("'js/messkonzept/editor.js'"), 'Das Editor-Modul muss vor dem Einstiegspunkt geladen und offline gecacht werden');
+        });
+
+        addTest('ui', 'Startfluss bleibt als eigene Schicht gekapselt', 'Prueft Startauswahl, freien Einstieg und Vorlagenladung außerhalb des Konfigurator-Einstiegspunkts', async function() {
+            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
+            const [startFlowText, messkonzeptText, indexText, serviceWorkerText] = await Promise.all([
+                fetch(`js/messkonzept/start-flow.js?start-flow-test=${Date.now()}`).then(response => response.text()),
+                fetch(`messkonzept.js?start-flow-test=${Date.now()}`).then(response => response.text()),
+                fetch(`index.html?start-flow-test=${Date.now()}`).then(response => response.text()),
+                fetch(`service-worker.js?start-flow-test=${Date.now()}`).then(response => response.text())
+            ]);
+            const fakeWindow = { scrollTo() {}, requestAnimationFrame: callback => callback() };
+            const startFlowApi = new Function('window', `${startFlowText}; return window.WattspurMesskonzeptStartFlow;`)(fakeWindow);
+            const classList = { toggles: [], add() {}, remove() {}, toggle(name, force) { this.toggles.push([name, force]); } };
+            const fakeElements = {
+                startPanel: { classList, querySelectorAll: () => [] },
+                builderShell: { classList },
+                uploadScreen: { classList },
+                dashboardScreen: { classList },
+                messkonzeptScreen: { classList }
+            };
+            const calls = [];
+            const flow = startFlowApi.createStartFlowController({
+                getElements: () => fakeElements,
+                getPresets: () => ({ getCatalog: () => [], getGroupInfo: () => null }),
+                callbacks: {
+                    reset: () => calls.push('reset'),
+                    clearHistory: () => calls.push('clearHistory'),
+                    render: () => calls.push('render'),
+                    applyPreset: () => calls.push('applyPreset')
+                }
+            });
+            flow.initialize();
+            flow.startFreeConfigurator();
+            assert(calls.join(',') === 'reset,clearHistory,render', 'Der freie Einstieg muss Reset, Verlaufslöschung und Rendern in der richtigen Reihenfolge auslösen');
+            assert(startFlowText.includes('createStartFlowController') && startFlowText.includes('renderPresetCards') && startFlowText.includes('startFreeConfigurator') && !startFlowText.includes('mkConfiguratorState') && !startFlowText.includes('mkElements'), 'Das Startfluss-Modul darf keine globalen Konfiguratorvariablen kennen');
+            assert(messkonzeptText.includes('WattspurMesskonzeptStartFlow.createStartFlowController') && messkonzeptText.includes('MK_START_FLOW.initialize()'), 'Der Einstiegspunkt muss den Startfluss über eine benannte API anschließen');
+            assert(indexText.includes('js/messkonzept/start-flow.js') && indexText.indexOf('js/messkonzept/start-flow.js') < indexText.indexOf('messkonzept.js') && serviceWorkerText.includes("'js/messkonzept/start-flow.js'"), 'Das Startfluss-Modul muss vor dem Einstiegspunkt geladen und offline gecacht werden');
+        });
+
+        addTest('ui', 'Render-Zyklus als eigene Orchestrierungsschicht', 'Prueft den zentralen Renderlauf ohne Vermischung mit Messlogik oder DOM-Verkabelung', async function() {
+            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
+            const [cycleText, messkonzeptText, indexText, serviceWorkerText] = await Promise.all([
+                fetch(`js/messkonzept/render-cycle.js?render-cycle-test=${Date.now()}`).then(response => response.text()),
+                fetch(`messkonzept.js?render-cycle-test=${Date.now()}`).then(response => response.text()),
+                fetch(`index.html?render-cycle-test=${Date.now()}`).then(response => response.text()),
+                fetch(`service-worker.js?render-cycle-test=${Date.now()}`).then(response => response.text())
+            ]);
+            const fakeWindow = {};
+            const renderCycleApi = new Function('window', `${cycleText}; return window.WattspurMesskonzeptRenderCycle;`)(fakeWindow);
+            const makeButton = dataset => ({
+                dataset,
+                disabled: false,
+                classList: { toggle() {} },
+                setAttribute() {}
+            });
+            const fakeElements = {
+                canvas: {},
+                modeButtons: [makeButton({ mkMode: 'parallel' })],
+                levelButtons: [makeButton({ mkLevel: '2' })],
+                viewButtons: [makeButton({ mkView: 'detail' })]
+            };
+            const calls = [];
+            const renderCycle = renderCycleApi.createRenderCycleController({
+                getState: () => ({ mode: 'parallel', cascadeLevels: 2, viewMode: 'detail' }),
+                getElements: () => fakeElements,
+                callbacks: {
+                    syncProjectFields: () => calls.push('syncProjectFields'),
+                    renderCanvas: () => calls.push('renderCanvas'),
+                    observeConnectorGeometry: () => calls.push('observeConnectorGeometry'),
+                    renderZoomControls: () => calls.push('renderZoomControls'),
+                    scheduleConnectorGeometry: () => calls.push('scheduleConnectorGeometry'),
+                    refreshValidation: () => calls.push('refreshValidation'),
+                    updateHistoryButtons: () => calls.push('updateHistoryButtons')
+                }
+            });
+            renderCycle.render();
+            assert(calls.join(',') === 'syncProjectFields,renderCanvas,observeConnectorGeometry,renderZoomControls,scheduleConnectorGeometry,refreshValidation,updateHistoryButtons', 'Der Renderlauf muss die sieben UI-Schritte in stabiler Reihenfolge ausführen');
+            assert(cycleText.includes('createRenderCycleController') && cycleText.includes('updateToggleButtons') && !cycleText.includes('mkConfiguratorState') && !cycleText.includes('mkElements') && !cycleText.includes('document.'), 'Das Render-Modul darf keine fachlichen Zustände oder statischen DOM-Abfragen kennen');
+            assert(messkonzeptText.includes('WattspurMesskonzeptRenderCycle.createRenderCycleController') && messkonzeptText.includes('MK_RENDER_CYCLE.render()') && !messkonzeptText.includes('function mkRender()'), 'Der Einstiegspunkt muss den alten monolithischen Render-Wrapper durch den benannten Controller ersetzen');
+            assert(indexText.includes('js/messkonzept/render-cycle.js') && indexText.indexOf('js/messkonzept/render-cycle.js') < indexText.indexOf('messkonzept.js') && serviceWorkerText.includes("'js/messkonzept/render-cycle.js'"), 'Das Render-Modul muss vor dem Einstiegspunkt geladen und offline gecacht werden');
+        });
+
+        addTest('ui', 'Geometrie-Nachlauf als eigene Laufzeitschicht', 'Prueft die stabile Reihenfolge von Sammelschienen, Unter-Rails, Verbindungen und Zentrierung', async function() {
+            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
+            const [runtimeText, messkonzeptText, indexText, serviceWorkerText] = await Promise.all([
+                fetch(`js/messkonzept/geometry-runtime.js?geometry-runtime-test=${Date.now()}`).then(response => response.text()),
+                fetch(`messkonzept.js?geometry-runtime-test=${Date.now()}`).then(response => response.text()),
+                fetch(`index.html?geometry-runtime-test=${Date.now()}`).then(response => response.text()),
+                fetch(`service-worker.js?geometry-runtime-test=${Date.now()}`).then(response => response.text())
+            ]);
+            const fakeWindow = {
+                requestAnimationFrame: callback => { callback(); return 1; },
+                cancelAnimationFrame() {},
+                clearTimeout() {}
+            };
+            const runtimeApi = new Function('window', `${runtimeText}; return window.WattspurMesskonzeptGeometryRuntime;`)(fakeWindow);
+            const calls = [];
+            const runtime = runtimeApi.createGeometryRuntimeController({
+                getWindow: () => fakeWindow,
+                updateSimpleAssetStrands: () => calls.push('root-rail'),
+                updateMeterGroupOffsets: () => calls.push('nested-rails'),
+                updateParallelBus: () => calls.push('parallel-bus'),
+                updateDynamicConnections: () => calls.push('connections'),
+                centerParallelViewport: () => calls.push('center')
+            });
+            runtime.updateNow();
+            assert(calls.join(',') === 'root-rail,nested-rails,root-rail,parallel-bus,connections,center', 'Der Geometrie-Nachlauf muss Root-Rail, Unter-Rails, zweiten Root-Lauf, Parallelbus, Verbindungen und Zentrierung stabil ausführen');
+            calls.length = 0;
+            runtime.schedule();
+            assert(calls.join(',') === 'root-rail,nested-rails,root-rail,parallel-bus,connections,center', 'Der geplante Geometrie-Nachlauf muss denselben Ablauf wie der direkte Lauf verwenden');
+            assert(runtimeText.includes('createGeometryRuntimeController') && runtimeText.includes('updateSimpleAssetStrands') && !runtimeText.includes('document.'), 'Das Geometrie-Runtime-Modul darf keine DOM-Suche oder Messobjektlogik enthalten');
+            assert(messkonzeptText.includes('WattspurMesskonzeptGeometryRuntime.createGeometryRuntimeController') && messkonzeptText.includes('return MK_GEOMETRY_RUNTIME.schedule()'), 'Der Einstiegspunkt muss den Geometrie-Nachlauf über die benannte Runtime-API anschließen');
+            assert(indexText.includes('js/messkonzept/geometry-runtime.js') && indexText.indexOf('js/messkonzept/geometry-runtime.js') < indexText.indexOf('messkonzept.js') && serviceWorkerText.includes("'js/messkonzept/geometry-runtime.js'"), 'Das Geometrie-Runtime-Modul muss vor dem Einstiegspunkt geladen und offline gecacht werden');
+        });
+
+        addTest('ui', 'Messbereich-Komposition als eigene Schicht', 'Prueft Rail-Markup, strukturelle Sammelschienenknoten und Drop-Zonen außerhalb des Einstiegspunkts', async function() {
+            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
+            const [zoneText, messkonzeptText, indexText, serviceWorkerText] = await Promise.all([
+                fetch(`js/messkonzept/zone-renderer.js?zone-renderer-test=${Date.now()}`).then(response => response.text()),
+                fetch(`messkonzept.js?zone-renderer-test=${Date.now()}`).then(response => response.text()),
+                fetch(`index.html?zone-renderer-test=${Date.now()}`).then(response => response.text()),
+                fetch(`service-worker.js?zone-renderer-test=${Date.now()}`).then(response => response.text())
+            ]);
+            const zoneApi = new Function('window', `${zoneText}; return window.WattspurMesskonzeptZoneRenderer;`)({});
+            const asset = { id: 'asset-1', zone: 'single-main', type: 'generation' };
+            const tree = { assets: [asset], children: [] };
+            const zoneRenderer = zoneApi.createZoneRenderer({
+                getState: () => ({ viewMode: 'simple' }),
+                getDefaultZone: () => 'single-main',
+                getZoneAssets: () => [asset],
+                buildZoneMeterTree: () => tree,
+                getRailEntries: () => [asset],
+                renderAssetRail: () => '<div class="mk-asset-row" data-mk-asset-id="asset-1"></div>',
+                getAdditionalMeters: () => [],
+                getAssetsPerRow: count => count || 3,
+                getZoneLabel: () => 'Hinter Z1',
+                escapeHtml: value => String(value ?? '')
+            });
+            const markup = zoneRenderer.renderDropZone('single-main', 0);
+            assert(markup.includes('data-mk-zone="single-main"') && markup.includes('mk-zone-junction') && markup.includes('data-mk-node-kind="SK"') && markup.includes('simple-mode') && markup.includes('data-mk-asset-id="asset-1"'), 'Die Drop-Zone muss Rail, Sammelschienenknoten und Objekt-Markup gemeinsam verankern');
+            assert(zoneText.includes('createZoneRenderer') && zoneText.includes('renderDropZone') && !zoneText.includes('document.'), 'Der Zone-Renderer darf keine globale DOM-Suche oder fachlichen Zustände kennen');
+            assert(messkonzeptText.includes('WattspurMesskonzeptZoneRenderer.createZoneRenderer') && messkonzeptText.includes('return MK_ZONE_RENDERER.renderDropZone(zone, index)'), 'Der Einstiegspunkt muss die Messbereich-Komposition über die benannte Zone-Renderer-API anschließen');
+            assert(indexText.includes('js/messkonzept/zone-renderer.js') && indexText.indexOf('js/messkonzept/zone-renderer.js') < indexText.indexOf('messkonzept.js') && serviceWorkerText.includes("'js/messkonzept/zone-renderer.js'"), 'Der Zone-Renderer muss vor dem Einstiegspunkt geladen und offline gecacht werden');
+        });
+
+        addTest('ui', 'Zähler- und Anlagenkennungen als eigene Schicht', 'Prueft fortlaufende Zählernummern sowie stabile Anlagenkennungen außerhalb des Renderers', async function() {
+            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
+            const [identifiersText, messkonzeptText, indexText, serviceWorkerText] = await Promise.all([
+                fetch(`js/messkonzept/identifiers.js?identifiers-test=${Date.now()}`).then(response => response.text()),
+                fetch(`messkonzept.js?identifiers-test=${Date.now()}`).then(response => response.text()),
+                fetch(`index.html?identifiers-test=${Date.now()}`).then(response => response.text()),
+                fetch(`service-worker.js?identifiers-test=${Date.now()}`).then(response => response.text())
+            ]);
+            const fakeWindow = {};
+            const identifiersApi = new Function('window', `${identifiersText}; return window.WattspurMesskonzeptIdentifiers;`)(fakeWindow);
+            const meterA = { id: 'meter-a', type: 'meter' };
+            const meterB = { id: 'meter-b', type: 'meter' };
+            const generation = { id: 'generation-1', type: 'generation', energyCarrier: 'pv', name: 'EA1', generationMeter: true, meterId: 'meter-b' };
+            const state = { mode: 'parallel', cascadeLevels: 2, assets: [meterA, generation, meterB] };
+            const identifiers = identifiersApi.createIdentifierController({
+                getState: () => state,
+                getAdditionalMeters: () => [meterA, meterB],
+                getMeterForAsset: asset => asset?.meterId === meterB.id ? meterB : null,
+                getGenerationDisplay: () => ({ prefix: 'PV' })
+            });
+            assert(identifiers.getMeterNumber(meterA) === 3 && identifiers.getMeterNumber(meterB) === 4 && identifiers.getMeterDetailIndex(meterB) === 3, 'Zusatzzaehler müssen hinter der gewählten Parallel-Grundtopologie fortlaufend nummeriert werden');
+            assert(identifiers.getConfiguredMeterCount() === 4 && identifiers.getGenerationMeterNumber(generation) === 4, 'Die Gesamtzählerzahl und der eigene Erzeugungszähler müssen dieselbe Nummernquelle verwenden');
+            identifiers.syncGenerationName(generation);
+            assert(generation.name === 'PV1', 'Die sichtbare Erzeugungskennung muss über den zentralen Prefix-Adapter aktualisiert werden');
+            assert(identifiersText.includes('createIdentifierController') && identifiersText.includes('getGenerationMeterNumber') && !identifiersText.includes('document.'), 'Das Kennungsmodul darf weder DOM noch Renderlogik kennen');
+            assert(messkonzeptText.includes('WattspurMesskonzeptIdentifiers.createIdentifierController') && messkonzeptText.includes('MK_IDENTIFIERS.getMeterNumber'), 'Der Einstiegspunkt muss Kennungen über die benannte API beziehen');
+            assert(indexText.includes('js/messkonzept/identifiers.js') && indexText.indexOf('js/messkonzept/identifiers.js') < indexText.indexOf('messkonzept.js') && serviceWorkerText.includes("'js/messkonzept/identifiers.js'"), 'Das Kennungsmodul muss vor dem Einstiegspunkt geladen und offline gecacht werden');
+        });
+
+        addTest('ui', 'Zähler-Drop-Regeln als eigene Fachschicht', 'Prueft erlaubte Kaskadenstufen, Einzelzähler und gemeinsame Messpunkte ohne DOM-Abhängigkeit', async function() {
+            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
+            const [policyText, messkonzeptText, indexText, serviceWorkerText] = await Promise.all([
+                fetch(`js/messkonzept/meter-policy.js?meter-policy-test=${Date.now()}`).then(response => response.text()),
+                fetch(`messkonzept.js?meter-policy-test=${Date.now()}`).then(response => response.text()),
+                fetch(`index.html?meter-policy-test=${Date.now()}`).then(response => response.text()),
+                fetch(`service-worker.js?meter-policy-test=${Date.now()}`).then(response => response.text())
+            ]);
+            const policyApi = new Function('window', `${policyText}; return window.WattspurMesskonzeptMeterPolicy;`)({});
+            const baseMeter = { id: 'base-1', type: 'meter', meterScope: 'base' };
+            const sharedMeter = { id: 'shared-1', type: 'meter', meterScope: 'asset' };
+            const directAsset = { id: 'asset-1', type: 'generation' };
+            const sharedAsset = { id: 'asset-2', type: 'generation' };
+            const ownMeter = { id: 'own-1', type: 'meter', meterScope: 'asset' };
+            const policy = policyApi.createMeterPolicyController({
+                getAssetMeters: assetId => assetId === directAsset.id ? [] : assetId === sharedAsset.id ? [sharedMeter] : [ownMeter],
+                getMeterForAsset: asset => asset?.id === sharedAsset.id ? sharedMeter : asset?.id === directAsset.id ? null : ownMeter,
+                isMeterExpanded: meterId => meterId === sharedMeter.id,
+                getMeterAssets: meterId => meterId === sharedMeter.id ? [sharedAsset, { id: 'asset-3', type: 'consumer' }] : []
+            });
+            assert(policy.canBuildCascadeAfterMeter(baseMeter) && !policy.canBuildCascadeAfterMeter(sharedMeter), 'Nur Basiszähler dürfen eine weitere Kaskadenstufe erhalten');
+            assert(policy.canAddMeterToAsset(directAsset), 'Eine Anlage ohne eigenen Zähler muss einen Einzelzähler erhalten dürfen');
+            assert(policy.canAddMeterToAsset(sharedAsset) && policy.getMeterDropOptions(sharedAsset).parentMeterId === sharedMeter.id, 'Eine Anlage an einer erweiterten Sammelschiene muss einen eigenen Zähler erhalten und ihre Elternbeziehung behalten');
+            assert(!policy.canAddMeterToAsset({ id: 'asset-3', type: 'consumer' }), 'Ein bereits isolierter Einzelzähler darf nicht unbeabsichtigt zur Unterkaskade werden');
+            assert(policyText.includes('createMeterPolicyController') && policyText.includes('canBuildCascadeAfterMeter') && policyText.includes('getMeterDropOptions') && !policyText.includes('document.'), 'Die Drop-Regelschicht darf weder DOM noch Renderlogik kennen');
+            assert(messkonzeptText.includes('WattspurMesskonzeptMeterPolicy.createMeterPolicyController') && messkonzeptText.includes('MK_METER_POLICY.canAddMeterToAsset'), 'Der Einstiegspunkt muss Drop-Regeln über die benannte Fach-API beziehen');
+            assert(indexText.includes('js/messkonzept/meter-policy.js') && indexText.indexOf('js/messkonzept/meter-policy.js') < indexText.indexOf('messkonzept.js') && serviceWorkerText.includes("'js/messkonzept/meter-policy.js'"), 'Das Drop-Regelmodul muss vor dem Einstiegspunkt geladen und offline gecacht werden');
+        });
+
+        addTest('ui', 'Objekt-Darstellung als eigene Schicht', 'Prueft Labels, fachliche Hinweise und Symbole ohne DOM- oder Layout-Abhängigkeit', async function() {
+            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
+            const [displayText, messkonzeptText, indexText, serviceWorkerText] = await Promise.all([
+                fetch(`js/messkonzept/asset-display.js?asset-display-test=${Date.now()}`).then(response => response.text()),
+                fetch(`messkonzept.js?asset-display-test=${Date.now()}`).then(response => response.text()),
+                fetch(`index.html?asset-display-test=${Date.now()}`).then(response => response.text()),
+                fetch(`service-worker.js?asset-display-test=${Date.now()}`).then(response => response.text())
+            ]);
+            const displayApi = new Function('window', `${displayText}; return window.WattspurMesskonzeptAssetDisplay;`)({});
+            const display = displayApi.createAssetDisplayController({
+                getAssetMeta: () => ({
+                    generation: { short: 'EA' },
+                    nsh: { label: 'Nachtspeicherheizung', short: 'NSH' },
+                    storage: { short: '▤' },
+                    steuve: { short: 'S' }
+                }),
+                getAssetTypeOptions: () => ({
+                    generation: [{ value: 'pv', label: 'PV' }],
+                    steuve: [{ value: 'Wallbox', label: 'Wallbox' }]
+                }),
+                getGenerationDisplay: () => ({ prefix: 'PV' }),
+                getPowerNumber: value => value === '' || value == null ? null : Number(value),
+                renderSelectOptions: () => '<option>Modul 1</option>',
+                steuveModuleOptions: [],
+                getGenerationAssetNumber: () => 1,
+                getMeterNumber: () => 3,
+                getMeterDetailIndex: () => 2,
+                canBuildCascadeAfterMeter: () => true,
+                escapeHtml: value => String(value ?? '')
+            });
+            const generation = { id: 'generation-1', type: 'generation', energyCarrier: 'pv', name: 'PV1' };
+            const wallbox = { id: 'steuve-1', type: 'steuve', steuveType: 'Wallbox', power: '11' };
+            assert(display.getAssetTypeLabel(generation) === 'PV' && display.getGenerationDisplay(generation).prefix === 'PV', 'Erzeugungsanlagen müssen über die Darstellungsschicht verständliche Labels erhalten');
+            assert(display.renderAssetIcon(generation) === 'PV1', 'Die sichtbare Erzeugungskennung muss aus der zentralen Darstellungsschicht kommen');
+            assert(display.renderAssetIcon(wallbox).includes('mk-charge-symbol') && display.renderAssetIcon(wallbox).includes('mk-charge-plug'), 'Das Wallbox-Symbol muss Kabel und Stecker als ein zusammengehöriges Icon liefern');
+            assert(display.renderSteuveNotice(wallbox).includes('§ 14a EnWG') && display.renderSteuveModuleFields(wallbox).includes('steuveModule'), 'SteuVE-Hinweis und Modulwahl müssen über dieselbe Darstellungsschicht erzeugt werden');
+            assert(display.renderInlineMeter({ id: 'meter-1' }, generation).includes('Z3'), 'Inline-Zähler müssen die zentrale Zählernummer und das Drop-Hinweisverhalten verwenden');
+            assert(displayText.includes('createAssetDisplayController') && !displayText.includes('document.'), 'Die Darstellungsschicht darf weder DOM noch Layout kennen');
+            assert(messkonzeptText.includes('WattspurMesskonzeptAssetDisplay.createAssetDisplayController') && messkonzeptText.includes('MK_ASSET_DISPLAY.renderAssetIcon'), 'Der Einstiegspunkt muss die Darstellung über die benannte API verkabeln');
+            assert(indexText.includes('js/messkonzept/asset-display.js') && indexText.indexOf('js/messkonzept/asset-display.js') < indexText.indexOf('messkonzept.js') && serviceWorkerText.includes("'js/messkonzept/asset-display.js'"), 'Das Darstellungsmodul muss vor dem Einstiegspunkt geladen und offline gecacht werden');
         });
 
         addTest('ui', 'Unter-Sammelschienen nutzen Anschlussoberkante', 'Prueft den gemeinsamen senkrechten Anlagenabstand auch bei inline-Zaehlern', async function() {

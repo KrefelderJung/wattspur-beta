@@ -169,6 +169,7 @@ const activeRuleIds = ['MK-ASSET-001', 'MK-ASSET-002', 'MK-ASSET-003', 'MK-SINGL
 activeRuleIds.forEach(ruleId => {
     assert(rulesText.includes(ruleId), `rules.js: aktive Prüfregel ${ruleId} fehlt`);
 });
+assert(rulesText.includes('getSteuveEffectivePower') && rulesText.includes('einschließlich Heizstab') && !rulesText.includes('heatingRodPower'), 'rules.js: §14a-Leistungsprüfung muss eine inklusive Wärmepumpen-Gesamtleistung verwenden');
 
 const rulesetVersionMatch = rulesText.match(/RULESET_VERSION\s*=\s*['"]([^'"]+)['"]/);
 assert(rulesetVersionMatch, 'rules.js: RULESET_VERSION fehlt');

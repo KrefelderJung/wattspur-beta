@@ -4,22 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wattspur | Energiewerkzeuge im Browser</title>
+    <meta name="description" content="Wattspur bietet lokale Energiewerkzeuge im Browser: Lastganganalyse und Messkonzept-Konfigurator für verständliche Orientierung und Exporte.">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://wattspur.de/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Wattspur">
+    <meta property="og:title" content="Wattspur | Energiewerkzeuge im Browser">
+    <meta property="og:description" content="Lokale Werkzeuge für Lastgänge und Messkonzepte.">
+    <meta property="og:url" content="https://wattspur.de/">
     <script src="theme.js?v=1"></script>
     <!-- ECharts -->
     <script src="lib/echarts.min.js"></script>
     <!-- PapaParse -->
     <script src="lib/papaparse.min.js"></script>
     
-    <link rel="stylesheet" href="styles.css?v=257">
+    <link rel="stylesheet" href="styles.css?v=258">
     <link rel="icon" type="image/svg+xml" href="wattspur-mark.svg">
     <!-- PWA Meta tags -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="icon-192.png">
     <script>
-        if (new URLSearchParams(window.location.search).get('tool') === 'lastgang') {
+        const legacyTool = new URLSearchParams(window.location.search).get('tool');
+        if (legacyTool === 'lastgang') {
+            const cleanUrl = `${window.location.pathname}#lastgang`;
+            window.history.replaceState({}, '', cleanUrl);
             document.documentElement.dataset.tool = 'lastgang';
         }
+        if (window.location.hash === '#lastgang') document.documentElement.dataset.tool = 'lastgang';
     </script>
 </head>
 <body class="landing-home">
@@ -65,7 +77,7 @@
                                 <li>Vergleichen</li>
                             </ul>
                         </a>
-                        <button type="button" class="landing-module-card landing-card-button" id="btn-open-messkonzept-card" aria-label="Messkonzept-Konfigurator öffnen">
+                        <a class="landing-module-card landing-card-button" id="btn-open-messkonzept-card" href="messkonzept-konfigurator.html" aria-label="Messkonzept-Konfigurator öffnen">
                             <span class="landing-module-icon landing-module-icon-messkonzept" aria-hidden="true">
                                 <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="15" y="5" width="18" height="14" rx="3"></rect>
@@ -82,7 +94,7 @@
                                 <li>Prüfen</li>
                                 <li>Exportieren</li>
                             </ul>
-                        </button>
+                        </a>
                     </div>
                 </section>
 
@@ -414,9 +426,9 @@
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="generation" title="Erzeugungsanlage einfügen"><span class="mk-palette-icon generation" aria-hidden="true">EA</span><span class="mk-palette-label">Erzeugungs&shy;anlage</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="storage" title="Batteriespeicher einfügen"><span class="mk-palette-icon storage" aria-hidden="true"><span class="mk-battery-symbol"><span class="mk-battery-level"></span></span></span><span class="mk-palette-label">Batterie&shy;speicher</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="consumer" title="Sonstigen Verbraucher einfügen"><span class="mk-palette-icon consumer" aria-hidden="true">V</span><span class="mk-palette-label">Sonstige Verbraucher</span></button>
-                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wallbox" title="Wallbox einfügen"><span class="mk-palette-icon steuve mk-device-wallbox" aria-hidden="true"><svg class="mk-charge-symbol" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="mk-charge-body" x="4.5" y="3" width="13" height="18.5" rx="2.6"></rect><rect class="mk-charge-display" x="7.2" y="6" width="7.6" height="5.8" rx="1.4"></rect><path class="mk-charge-bolt" d="m11.8 6.8-2.1 3.1h1.8l-.5 2.3 2.9-3.7h-1.7l.9-1.7z"></path><path class="mk-charge-cable" d="M17.5 15.5c4.8 0 7 2.1 7 5.4v1.3"></path><rect class="mk-charge-plug" x="20.8" y="21.8" width="6.5" height="5.4" rx="1.4"></rect><path class="mk-charge-pin" d="M22.5 21.8v-2.1m3.1 2.1v-2.1"></path></svg></span><span class="mk-palette-label">Wallbox</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wallbox" title="Wallbox einfügen"><span class="mk-palette-icon steuve mk-device-wallbox" aria-hidden="true"><svg class="mk-charge-symbol" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="mk-charge-body" x="3.5" y="2.5" width="14.5" height="21" rx="3.2"></rect><rect class="mk-charge-display" x="5.5" y="5" width="10" height="9" rx="1.6"></rect><path class="mk-charge-bolt" d="m11.5 5.8-3.2 4.8h2.8l-.9 3.7 4.7-5.8h-2.7l1.2-2.7z"></path><path class="mk-charge-cable" d="M18 15.5c5 0 7.5 2.3 7.5 5.8v1.2"></path><rect class="mk-charge-plug" x="21.4" y="22.2" width="8.2" height="6.8" rx="1.6"></rect><path class="mk-charge-pin" d="M24 28.7v2.8m4-2.8v2.8"></path><circle class="mk-charge-pin-dot" cx="24" cy="31.5" r="0.9"></circle><circle class="mk-charge-pin-dot" cx="28" cy="31.5" r="0.9"></circle></svg></span><span class="mk-palette-label">Wallbox</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wärmepumpe" title="Wärmepumpe einfügen"><span class="mk-palette-icon steuve mk-device-heatpump" aria-hidden="true"><span class="mk-fan-symbol"><span class="mk-fan-blade mk-fan-blade-1"></span><span class="mk-fan-blade mk-fan-blade-2"></span><span class="mk-fan-blade mk-fan-blade-3"></span><span class="mk-fan-hub"></span></span></span><span class="mk-palette-label">Wärme&shy;pumpe</span></button>
-                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Klimaanlage" title="Klimaanlage einfügen"><span class="mk-palette-icon steuve mk-device-climate" aria-hidden="true">❄</span><span class="mk-palette-label">Klima&shy;anlage</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Klimaanlage" title="Raumkühlung / Klimaanlage einfügen"><span class="mk-palette-icon steuve mk-device-climate" aria-hidden="true">❄</span><span class="mk-palette-label">Raumkühlung / Klimaanlage</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="nsh" title="Nachtspeicherheizung einfügen"><span class="mk-palette-icon nsh" aria-hidden="true">NSH</span><span class="mk-palette-label">Nachtspeicher&shy;heizung</span></button>
                         </div>
                     </aside>
@@ -514,9 +526,9 @@
         <div id="dashboard-screen" class="screen hidden">
             <!-- Neue linksbündige Primärnavigation (Sidebar-Navigation) -->
             <aside class="module-sidebar">
-                <div class="module-logo" title="Wattspur">
+                <a class="module-logo module-logo-link" href="index.html#top" aria-label="Zur Werkzeugauswahl" title="Zur Werkzeugauswahl">
                     <img src="wattspur-mark.svg" alt="Wattspur">
-                </div>
+                </a>
                 <nav class="module-nav">
                     <button class="module-btn active" data-module="basis" title="Basis-Analyse">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1736,28 +1748,37 @@
     <script src="parser.js?v=304"></script>
     <script src="charts.js?v=304"></script>
     <script src="app.js?v=309"></script>
-    <script src="js/messkonzept/model.js?v=6"></script>
+    <script src="js/lastgang/data-editor.js?v=2"></script>
+    <script src="js/messkonzept/model.js?v=11"></script>
     <script src="js/messkonzept/presets.js?v=13"></script>
     <script src="js/messkonzept/preset-loader.js?v=2"></script>
     <script src="messkonzept-geometry.js?v=13"></script>
     <script src="messkonzept-topology.js?v=1"></script>
-    <script src="js/messkonzept/rules.js?v=3"></script>
+    <script src="js/messkonzept/rules.js?v=7"></script>
     <script src="js/messkonzept/layout-calculations.js?v=3"></script>
     <script src="js/messkonzept/validation-status.js?v=1"></script>
+    <script src="js/messkonzept/identifiers.js?v=1"></script>
+    <script src="js/messkonzept/meter-policy.js?v=1"></script>
+    <script src="js/messkonzept/asset-display.js?v=6"></script>
     <script src="js/messkonzept/layout.js?v=9"></script>
     <script src="js/messkonzept/render.js?v=6"></script>
+    <script src="js/messkonzept/zone-renderer.js?v=1"></script>
     <script src="js/messkonzept/connections.js?v=3"></script>
+    <script src="js/messkonzept/geometry-runtime.js?v=1"></script>
     <script src="js/messkonzept/export.js?v=4"></script>
     <script src="js/messkonzept/viewport.js?v=1"></script>
     <script src="js/messkonzept/history.js?v=1"></script>
     <script src="js/messkonzept/commands.js?v=1"></script>
     <script src="js/messkonzept/project-meta.js?v=1"></script>
     <script src="js/messkonzept/decision-calculator.js?v=4"></script>
-    <script src="js/messkonzept/canvas-renderer.js?v=2"></script>
-    <script src="js/messkonzept/drag-drop.js?v=5"></script>
-    <script src="js/messkonzept/interaction.js?v=7"></script>
+    <script src="js/messkonzept/canvas-renderer.js?v=10"></script>
+    <script src="js/messkonzept/editor.js?v=5"></script>
+    <script src="js/messkonzept/start-flow.js?v=1"></script>
+    <script src="js/messkonzept/render-cycle.js?v=1"></script>
+    <script src="js/messkonzept/drag-drop.js?v=6"></script>
+    <script src="js/messkonzept/interaction.js?v=9"></script>
     <script src="js/messkonzept/bootstrap.js?v=2"></script>
     <script src="js/messkonzept/module-contracts.js?v=1"></script>
-    <script src="messkonzept.js?v=120"></script>
+    <script src="messkonzept.js?v=121"></script>
 </body>
 </html>

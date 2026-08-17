@@ -50,6 +50,9 @@ function normalizeScriptPath(source) {
 const requiredFiles = [
     'index.html',
     'lastgang-analyse.html',
+    'messkonzept-konfigurator.html',
+    'robots.txt',
+    'sitemap.xml',
     'impressum.html',
     'datenschutz.html',
     'kontakt.html',
@@ -65,6 +68,15 @@ const requiredFiles = [
     'tests/z5-second-asset-test.js',
     'tests/rail-anchor-delete-test.js',
     'tests/messlogic-invariants-test.js',
+    'tests/messlogic-replay-test.js',
+    'tests/meter-hierarchy-regression-test.js',
+    'tests/architecture-boundaries-test.js',
+    'tests/data-editor-module-test.js',
+    'tests/hak-voltage-test.js',
+    'tests/steuve-total-power-test.js',
+    'tests/stecker-pv-limit-test.js',
+    'tests/technical-fields-test.js',
+    'tests/seo-test.js',
     'tests/meter-rail-spacing-test.js',
     'tests/wallbox-icon-test.js',
     'tests/link-check-test.js',
@@ -72,7 +84,9 @@ const requiredFiles = [
     'docs/architecture-smoke-test.md',
     'docs/messkonzept-regelwerk.md',
     'docs/messkonzept-startvorlagen.md',
-    'docs/projekt-teststandard.md'
+    'docs/projekt-teststandard.md',
+    'docs/technische-anlagenfelder.md',
+    'docs/seo-anforderungen.md'
 ];
 requiredFiles.forEach(relativePath => assert(fs.existsSync(absolute(relativePath)), `${relativePath}: erwartete Qualitätsdatei fehlt`));
 
@@ -84,11 +98,20 @@ const serviceWorkerText = read('service-worker.js');
 const documentationText = read('docs/projekt-teststandard.md');
 const copyrightText = read('COPYRIGHT.md');
 const presetText = read('js/messkonzept/presets.js');
+const modelText = read('js/messkonzept/model.js');
+const canvasRendererText = read('js/messkonzept/canvas-renderer.js');
+const editorText = read('js/messkonzept/editor.js');
+const technicalFieldsText = read('tests/technical-fields-test.js');
+const rulesText = read('js/messkonzept/rules.js');
+const dragDropText = read('js/messkonzept/drag-drop.js');
+const interactionText = read('js/messkonzept/interaction.js');
+const exportText = read('js/messkonzept/export.js');
 
 // Veröffentlichung darf keine externen Script-/Stylesheet-Abhängigkeiten
 // erzwingen. Fachliche Referenzlinks (z. B. VBEW) sind davon ausgenommen.
-const remoteScriptOrStyle = [...indexText.matchAll(/<(?:script[^>]+src|link[^>]+href)=["'](https?:\/\/[^"']+)["']/gi)];
-assert(remoteScriptOrStyle.length === 0, `index.html: externe Script-/Stylesheet-Abhängigkeit gefunden (${remoteScriptOrStyle.map(match => match[1]).join(', ')})`);
+const remoteScriptOrStyle = [...indexText.matchAll(/<script\b[^>]*\bsrc=["'](https?:\/\/[^"']+)["'][^>]*>|<link\b[^>]*\brel=["']stylesheet["'][^>]*\bhref=["'](https?:\/\/[^"']+)["'][^>]*>/gi)]
+    .map(match => match[1] || match[2]);
+assert(remoteScriptOrStyle.length === 0, `index.html: externe Script-/Stylesheet-Abhängigkeit gefunden (${remoteScriptOrStyle.join(', ')})`);
 const localScripts = [...indexText.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)]
     .map(match => normalizeScriptPath(match[1]))
     .filter(source => !/^https?:\/\//i.test(source));
@@ -103,6 +126,7 @@ const localCoreFiles = [
     'messkonzept.js',
     'messkonzept-geometry.js',
     'messkonzept-topology.js',
+    'js/lastgang/data-editor.js',
     ...collectJavaScriptFiles('js/messkonzept')
 ];
 const networkApiPattern = /\b(?:fetch|XMLHttpRequest|WebSocket|sendBeacon)\s*\(/;
@@ -111,25 +135,58 @@ localCoreFiles.forEach(relativePath => {
     assert(!networkApiPattern.test(source), `${relativePath}: Netzwerk-API gehört nicht in den lokalen Messkonzept-Kern`);
 });
 assert(serviceWorkerText.includes('event.request.mode === \'navigate\''), 'service-worker.js: Offline-/Navigationsstrategie fehlt');
+assert(serviceWorkerText.includes('js/messkonzept/model.js') && /beta\.308/.test(serviceWorkerText), 'service-worker.js: aktueller Modellstand muss im neuen Offline-Cache enthalten sein');
+
+// Der Netzanschluss ist ein eigenes, bearbeitbares Objekt. Diese Prüfungen
+// verhindern, dass ein späteres Refactoring den HAK nur visuell anklickbar
+// macht, aber Modell, Modal, Tastaturpfad oder Export vergisst.
+assert(modelText.includes("hak: { voltageLevel: 'low' }") && modelText.includes('setHakVoltageLevel') && modelText.includes('hak: clone'), 'model.js: Spannungsebene des HAK muss modelliert und historienfähig sein');
+assert(canvasRendererText.includes('data-mk-select-hak') && canvasRendererText.includes('renderHakEditorFields') && canvasRendererText.includes('mk-transformer-symbol'), 'canvas-renderer.js: HAK-Auswahl und Trafo-Ringe müssen gerendert werden');
+assert(editorText.includes('mkHakField') && editorText.includes('updateHakField'), 'editor.js: Spannungsebenenfeld muss über den Objekteditor aktualisiert werden');
+assert(dragDropText.includes('[data-mk-select-hak]') && interactionText.includes('[data-mk-select-hak]'), 'Interaktion: HAK muss per Maus und Tastatur auswählbar sein');
+assert(exportText.includes('state.hak?.voltageLevel') && exportText.includes('Spannungsebene'), 'export.js: gewählte HAK-Spannungsebene muss im Gesamtexport erscheinen');
+
+// §14a: Bei Wärmepumpen wird ein einziges Leistungsfeld inklusive Heizstab
+// gegen 4,2 kW geprüft. Ein separates Heizstabfeld darf nicht zurückkehren.
+assert(rulesText.includes('getSteuveEffectivePower') && rulesText.includes('getSteuveMeasurementGroups') && rulesText.includes('STEUVE_LEGACY_REGIME') && rulesText.includes('einschließlich Heizstab') && !rulesText.includes('heatingRodPower'), 'rules.js: SteuVE müssen zählerbezogen summiert und zeitlich eingeordnet werden');
+assert(rulesText.includes('STECKER_PV_MAX_INVERTER_VA') && rulesText.includes('getSteckerPvMeasurementGroups') && rulesText.includes('800 VA'), 'rules.js: Stecker-PV muss die Wechselrichtergrenze und die Messbereichssummierung prüfen');
+assert(!modelText.includes('heatingRodPower') && canvasRendererText.includes('Elektrische Gesamtleistung inkl. Heizstab') && !canvasRendererText.includes('data-mk-field="heatingRodPower"') && !editorText.includes('heatingRodPower'), 'Messkonzept-Editor: separate Heizstababfrage darf nicht zurückkehren');
+
+// Optionale technische Stammdaten für PV/Wind und Speicher bleiben von der
+// Messlogik getrennt. Das Qualitäts-Gate stellt sicher, dass Modell, Editor
+// und Regressionstest gemeinsam erweitert werden.
+assert(modelText.includes('inverterPower') && modelText.includes('storageInverterPower'), 'model.js: technische Wechselrichterfelder fehlen');
+assert(canvasRendererText.includes('data-mk-field="inverterPower"') && canvasRendererText.includes('data-mk-field="storageCapacity"'), 'canvas-renderer.js: technische Felder fehlen');
+assert(technicalFieldsText.includes('technical-fields-test: OK'), 'technische Feldprüfung fehlt');
+assert(read('tests/stecker-pv-limit-test.js').includes('Stecker-PV-Grenztest: OK'), 'Stecker-PV-Grenztest fehlt');
 
 // Die Objektfarben bleiben semantisch zentral definiert. So verhindert der
 // Test, dass eine spätere UI-Anpassung Verbraucher, Wallbox oder Messgerät
 // wieder unabsichtlich gleich einfärbt.
 const objectColorTokens = [
     '--mk-meter-fg', '--mk-meter-bg',
+    '--mk-meter-border',
     '--mk-generation-fg', '--mk-generation-bg',
+    '--mk-generation-border',
     '--mk-consumer-fg', '--mk-consumer-bg',
+    '--mk-consumer-border',
     '--mk-storage-fg', '--mk-storage-bg',
+    '--mk-storage-border',
     '--mk-wallbox-fg', '--mk-wallbox-bg',
+    '--mk-wallbox-border',
     '--mk-heatpump-fg', '--mk-heatpump-bg',
+    '--mk-heatpump-border',
     '--mk-climate-fg', '--mk-climate-bg',
+    '--mk-climate-border',
     '--mk-nsh-fg', '--mk-nsh-bg',
+    '--mk-nsh-border',
     '--mk-hak-fg', '--mk-hak-bg', '--mk-hak-border', '--mk-hak-accent'
 ];
 objectColorTokens.forEach(token => assert(stylesText.includes(`${token}:`), `styles.css: semantische Farbvariable fehlt (${token})`));
 assert(stylesText.includes('color: var(--mk-consumer-fg)'), 'styles.css: Verbraucherfarbe ist nicht an die semantische Variable gebunden');
 assert(stylesText.includes('background: var(--mk-wallbox-bg)'), 'styles.css: Wallboxfarbe ist nicht an die semantische Variable gebunden');
 assert(stylesText.includes('background: var(--mk-hak-bg)'), 'styles.css: HAK-Farbe ist nicht an die semantische Variable gebunden');
+assert(stylesText.includes('box-sizing: border-box') && stylesText.includes('inset 0 0 0 1px var(--mk-object-border'), 'styles.css: Objekt-Ränder müssen als geometrieneutraler Inset-Rand umgesetzt sein');
 
 // Syntax-Gate für alle ausgelagerten Messkonzept-Module. Ein solcher Fehler
 // würde sonst erst beim Öffnen eines seltenen Modus sichtbar.
@@ -145,10 +202,12 @@ localCoreFiles.forEach(relativePath => {
 // Die Teststrecke selbst muss die drei Ebenen ausführen können.
 assert(testText.includes('tests/architecture-smoke-test.js'), 'tests.html: Architektur-Smoke-Test ist nicht verlinkt');
 assert(testText.includes('Messkonzept-Startvorlagen als bearbeitbare Zustände'), 'tests.html: Startvorlagen-Regressionstest fehlt');
+assert(testText.includes('Stecker-PV-Wechselrichtergrenze'), 'tests.html: Stecker-PV-Grenztest fehlt');
 assert(testText.includes('Export-Modul bleibt gekapselt'), 'tests.html: Export-Modultest fehlt');
 assert(testText.includes('Standardisierte Kartenbewegung'), 'tests.html: Bedien-/Pan-Test fehlt');
 assert(documentationText.includes('Unit-') && documentationText.includes('Browser') && documentationText.includes('Release'), 'docs/projekt-teststandard.md: Testebenen müssen verständlich dokumentiert sein');
 assert(documentationText.includes('tests/link-check-test.js'), 'docs/projekt-teststandard.md: Link-Check fehlt');
+assert(documentationText.includes('tests/seo-test.js'), 'docs/projekt-teststandard.md: SEO-Test fehlt');
 assert(documentationText.includes('tests/messlogic-invariants-test.js'), 'docs/projekt-teststandard.md: Messlogik-Invarianten-Test fehlt');
 assert(documentationText.includes('tests/meter-rail-spacing-test.js'), 'docs/projekt-teststandard.md: Rail-Abstandstest fehlt');
 assert((indexText.match(/class="mk-fachhinweis"/g) || []).length === 1, 'index.html: Der fachliche Hinweis soll als eine gemeinsame Hinweisbox erscheinen');
@@ -174,6 +233,7 @@ assert(stylesText.includes('[data-theme="light"] .mk-start-group--shared') && st
 assert(stylesText.includes('.module-card-context') && stylesText.includes('font-size: 0.98rem') && stylesText.includes('font-weight: 500'), 'Startseite: Werkzeugbeschreibungen müssen ausreichend groß und kräftig lesbar sein');
 assert(indexText.includes('Wattspur · öffentliche Beta') && indexText.includes('Lokal verarbeitet · unverbindliche Ergebnisse') && !indexText.includes('Wattspur · Energiewerkzeuge · öffentliche Beta') && stylesText.includes('font-size: 0.84rem'), 'Fußzeile: kurze, gut lesbare Statuszeilen statt doppelter Produktbeschreibung');
 assert(indexText.includes('class="mk-brand mk-brand-link"') && indexText.includes('id="btn-mk-back" href="index.html#top"') && stylesText.includes('.mk-brand-link:focus-visible'), 'Messkonzept-Navigation: das Logo muss als zugänglicher Rückweg statt als separater Button dienen');
+assert(indexText.includes('<a class="module-logo module-logo-link" href="index.html#top"') && stylesText.includes('.module-logo-link:focus-visible'), 'Lastgang-Navigation: Das Seitenleisten-Logo muss ebenfalls als zugänglicher Rückweg zur Werkzeugauswahl dienen');
 assert(!indexText.includes('Vorlage auswählen und direkt starten.') && !stylesText.includes('.mk-start-cases-heading p'), 'Startvorlagen: der kleine doppelte Anleitungstext soll entfallen');
 assert(!indexText.includes('Skizze selbst aufbauen') && !stylesText.includes('.mk-start-free-button-copy small'), 'Startaktion: der zu kleine Untertitel soll entfallen');
 assert(!indexText.includes('class="mk-start-note"') && !stylesText.includes('.mk-start-note'), 'Startvorlagen: der Parallelhinweis soll nicht zusätzlich als sichtbare Doppelung im Slide stehen');

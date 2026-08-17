@@ -9,10 +9,14 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | Datei | Ordner | Hauptaufgabe & Funktion |
 | :--- | :--- | :--- |
 | **`index.html`** | `/` | Das visuelle HTML5-Grundgerüst der Anwendung (Struktur für Upload, Dashboard, Editor, AgNes, Modals). |
+| **`lastgang-analyse.html`** | `/` | Indexierbare SEO-Einstiegsseite für die Lastganganalyse mit stabilem Hash-Einstieg in die lokale Anwendung. |
+| **`messkonzept-konfigurator.html`** | `/` | Indexierbare SEO-Einstiegsseite für den Messkonzept-Konfigurator mit stabilem Hash-Einstieg in die lokale Anwendung. |
 | **`styles.css`** | `/` | Modernes CSS3-Designsystem (Darkmode, Glasmorphismus, Layout-Grid, Ampel-Badges, Buttons, Tabellen). |
 | **`manifest.json`** | `/` | Web App Manifest (PWA) für die Installation als eigenständige App auf Desktop und Smartphone. |
-| **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.08.14-beta.192`). Speichert alle Modulpfade lokal im Browser für den Offlinebetrieb. |
-| **`tests.html`** | `/` | Automatische Test-Engine im Browser. Führt aktuell 142 Unit-, Integrations- und Regressionstests aus. |
+| **`robots.txt` / `sitemap.xml`** | `/` | Legen Indexierungsregeln und die öffentlichen Kernseiten für Suchmaschinen fest. |
+| **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.08.18-beta.308`). Speichert alle Modulpfade lokal im Browser für den Offlinebetrieb. |
+| **`tests.html`** | `/` | Automatische Test-Engine im Browser. Führt aktuell 155 Unit-, Integrations- und Regressionstests aus. |
+| **`tests/seo-test.js`** | `tests/` | Prüft stabile URLs, Meta-Daten, Canonicals, robots.txt und Sitemap. |
 | **`js/app.js`** | `js/` | Schlanker Anwendungsstarter (`initializeApp()`). Verbindet Controller und startet die App beim Laden. |
 
 ---
@@ -102,22 +106,43 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 
 ---
 
+## 🧾 8a. Modulbereich `js/lastgang/` (Dateneditor)
+
+| Datei | Funktion |
+| :--- | :--- |
+| **`data-editor.js`** | Kapselt den Tabellen- und Massendateneditor: Seitenwechsel, Zelländerungen, Zwischenablage, Import und Bearbeitungssperre. Die Oberfläche wird weiterhin vom bestehenden Lastgang-Einstieg orchestriert; der Editor veröffentlicht dafür nur `WattspurLastgangDataEditor`. |
+
+Der Dateneditor bleibt bewusst eine kleine Übergangsschicht. Er verwendet die
+bestehenden Lastgang-State- und Dashboard-Funktionen, verändert aber keine
+Messkonzept- oder PDF-Logik. Der isolierte
+`tests/data-editor-module-test.js` prüft die Schnittstelle ohne Browser-DOM.
+
+---
+
 ## 🧩 9. Modulbereich `js/messkonzept/` (Messkonzept-Konfigurator)
 
 | Datei | Funktion |
 | :--- | :--- |
-| **`model.js`** | DOM-freies Zustandsmodell für Messobjekte, Projektangaben, Historie und Moduswechsel. |
+| **`model.js`** | DOM-freies Zustandsmodell für Messobjekte, Projektangaben, Spannungsebene des Netzanschlusses, Historie und Moduswechsel. |
 | **`rules.js`** | Versionierter, DOM-freier Regelkatalog für Zähler, Anlagen, Speicher, NSH und Parallelmessung. |
 | **`validation-status.js`** | Verbindet den versionierten Regelkatalog mit der kompakten Prüfstatus-Anzeige. |
+| **`identifiers.js`** | Vergibt fortlaufende Zählernummern und verständliche Kennungen für Erzeugungsanlagen ohne DOM- oder Renderlogik. |
+| **`meter-policy.js`** | Kapselt die fachlichen Regeln für Kaskadenstufen, Einzelzähler und Drop-Ziele. |
+| **`asset-display.js`** | Kapselt Labels, fachliche Objekt-Hinweise und die Icons des Messkonzept-Editors. |
 | **`render.js`** | Erzeugt Karten-, Rail- und Objekt-Markup ohne DOM-Messungen. |
+| **`zone-renderer.js`** | Komponiert Drop-Zonen, Sammelschienenknoten und Rail-Markup ohne globale Zustände oder DOM-Messungen. |
 | **`layout-calculations.js`** | Reine, DOM-freie Berechnungen für Reihenbreiten, Rail-Tiefe und Paralleltracks. |
 | **`layout.js`** | Berechnet Rail-Breiten, Abstände, Kollisionen und Parallelzweig-Layout. |
 | **`connections.js`** | Zeichnet dynamische Leitungen und Knoten aus semantischen DOM-Ankern. |
+| **`geometry-runtime.js`** | Orchestriert den zeitlich stabilen Geometrie-Nachlauf aus Root-Rails, Unter-Rails, Parallelbus, Leitungsverbindungen und Viewport-Zentrierung. |
 | **`viewport.js`** | Kapselt Zoom, Pan, ResizeObserver und die Topografie-Bedienung. |
 | **`history.js`** | Kapselt Undo/Redo und die dazugehörige Schaltflächen-Synchronisation. |
 | **`commands.js`** | Bündelt Zustandsänderungen wie Reset, Moduswechsel, Kaskadenstufen, Anlagenanlage und Verschieben. |
 | **`project-meta.js`** | Synchronisiert Projektname, Referenz, Skizzenstand, Standort und Kommentar mit dem Zustand. |
-| **`canvas-renderer.js`** | Komponiert Canvas, HAK-/Zählerstruktur und Objekt-Modal aus injizierten Render- und Zustandsfunktionen. |
+| **`canvas-renderer.js`** | Komponiert Canvas, klickbaren HAK bzw. Trafo, Zählerstruktur und Objekt-Modal aus injizierten Render- und Zustandsfunktionen. |
+| **`editor.js`** | Verarbeitet Eingaben im Objekt-Dialog und meldet Asset- sowie Zählerdetailänderungen über injizierte Callbacks. |
+| **`start-flow.js`** | Kapselt Werkzeugwechsel, Startauswahl, freie Skizze und Laden der Messkonzept-Vorlagen. |
+| **`render-cycle.js`** | Orchestriert einen vollständigen UI-Renderlauf über injizierte Adapter, ohne Messlogik oder DOM-Suche zu kennen. |
 | **`drag-drop.js`** | Fachliche Drag-and-Drop- und Löschlogik über injizierte Befehls-Callbacks. |
 | **`interaction.js`** | DOM-Verkabelung für Dialoge, Felder, Buttons und Tastaturinteraktion. |
 | **`bootstrap.js`** | Sammelt statische DOM-Anker und verbindet Resize-/Lebenszyklus-Ereignisse mit dem Einstiegspunkt. |
@@ -136,6 +161,7 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`tests/project-quality-test.js`** | Browserfreier projektweiter Qualitäts-Gate-Test für Pflichtdateien, Syntax, lokale Verarbeitung und Release-Schutz. |
 | **`tests/link-check-test.js`** | Prüft lokale `href`-/`src`-Verweise; externe Links können mit `--external` als separates Release-Gate geprüft werden. |
 | **`tests/storage-operation-test.js`** | Prüft die Speicher-Betriebsweisen für Netzeinspeisung, Netzbezug zum Laden und reinen PV-Überschussbetrieb. |
+| **`tests/stecker-pv-limit-test.js`** | Prüft die 800-VA-Wechselrichtergrenze von Stecker-PV, Einheitenumrechnung und Summierung am selben Messpunkt. |
 | **`tests/wallbox-icon-test.js`** | Sichert das sichtbare Wallbox-Kabel mit Steckergehäuse und Kontaktstiften in Palette und Messskizze ab. |
 | **`tests/z5-second-asset-test.js`** | Regressionstest für einen zweiten Anschluss an einem verschachtelten Anlagenzähler. Prüft, dass der Unter-Rail erhalten bleibt und die Layout-Routine ihren Root-Anker kennt. |
 | **`docs/projekt-teststandard.md`** | Verständlicher Spickzettel für die fünf Testebenen und die Abnahmekriterien neuer Änderungen. |

@@ -396,6 +396,11 @@
 
         function handleCanvasClick(event) {
             const state = getState();
+            const hak = event.target.closest('[data-mk-select-hak]');
+            if (hak) {
+                call('openObjectModal', { kind: 'hak' });
+                return;
+            }
             const removeMeterButton = event.target.closest('[data-mk-remove-meter]');
             if (removeMeterButton) {
                 const removedId = removeMeterButton.dataset.mkRemoveMeter;

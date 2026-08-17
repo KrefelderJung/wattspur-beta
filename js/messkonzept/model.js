@@ -41,10 +41,18 @@
         steuve: [
             { value: 'Wärmepumpe', label: 'Wärmepumpe' },
             { value: 'Wallbox', label: 'Wallbox' },
-            { value: 'Klimaanlage', label: 'Klimaanlage' },
-            { value: 'Sonstige', label: 'Sonstige steuerbare Anlage' }
+            { value: 'Klimaanlage', label: 'Raumkühlung / Klimaanlage' },
+            { value: 'offen', label: 'Fachliche Einordnung offen' }
         ]
     });
+
+    // Die frühere Auswahl „Sonstige steuerbare Anlage“ wird nicht mehr
+    // angeboten. Alte Entwürfe werden trotzdem in einen neutralen Zustand
+    // überführt, ohne daraus automatisch eine §14a-Einordnung abzuleiten.
+    function normalizeSteuveType(value) {
+        if (value === 'Sonstige' || value === 'Fachliche Einordnung offen' || !value) return 'offen';
+        return ['Wärmepumpe', 'Wallbox', 'Klimaanlage', 'offen'].includes(value) ? value : 'offen';
+    }
 
     const steuveModuleOptions = Object.freeze([
         { value: 'Modul 1', label: 'Modul 1' },
@@ -59,6 +67,10 @@
     ]);
     const storageInfoText = 'Achtung: Die Registrierung des Stromspeichers im Marktstammdatenregister ist zu prüfen. Einspeisung und Bezug sind getrennt zu betrachten. Die konkrete Betriebsweise und das Messkonzept mit dem Verteilnetzbetreiber abstimmen.';
     const balconyInfoText = 'Balkonkraftwerk / Steckersolargerät: Registrierung im Marktstammdatenregister prüfen. Die vereinfachte Behandlung hängt unter anderem von Leistungsgrenzen und der gewählten EEG-Veräußerungsform ab.';
+    const hakVoltageLevels = Object.freeze([
+        { value: 'low', label: 'Niederspannung', objectLabel: 'HAK' },
+        { value: 'medium', label: 'Mittelspannung', objectLabel: 'Trafo' }
+    ]);
     const meterDetailFields = Object.freeze([
         { key: 'maloBezug', label: 'MaLo Bezug', type: 'text' },
         { key: 'maloLieferung', label: 'MaLo Lieferung', type: 'text' },
@@ -73,6 +85,21 @@
 
     function normalizeStorageGridChoice(value) {
         return ['yes', 'no'].includes(value) ? value : 'unknown';
+    }
+
+    function normalizeHakVoltageLevel(value) {
+        return value === 'medium' ? 'medium' : 'low';
+    }
+
+    function getHakVoltageLevel(currentState) {
+        return normalizeHakVoltageLevel(currentState?.hak?.voltageLevel);
+    }
+
+    function setHakVoltageLevel(currentState, value) {
+        if (!currentState) return 'low';
+        if (!currentState.hak || typeof currentState.hak !== 'object') currentState.hak = {};
+        currentState.hak.voltageLevel = normalizeHakVoltageLevel(value);
+        return currentState.hak.voltageLevel;
     }
 
     function getStorageOperation(storage) {
@@ -122,6 +149,7 @@
             nextId: 1,
             assets: [],
             meterDetails: {},
+            hak: { voltageLevel: 'low' },
             project: { name: '', reference: '', street: '', houseNumber: '', postalCode: '', city: '', planStatus: 'Aktuell' },
             notes: '',
             selectedObject: null
@@ -141,7 +169,8 @@
             cascadeLevels: currentState.cascadeLevels,
             nextId: currentState.nextId,
             assets: clone(currentState.assets),
-            meterDetails: clone(currentState.meterDetails)
+            meterDetails: clone(currentState.meterDetails),
+            hak: clone(currentState.hak || { voltageLevel: 'low' })
         };
     }
 
@@ -167,6 +196,8 @@
         currentState.nextId = snapshot.nextId;
         currentState.assets = clone(snapshot.assets);
         currentState.meterDetails = clone(snapshot.meterDetails);
+        currentState.hak = clone(snapshot.hak || { voltageLevel: 'low' });
+        setHakVoltageLevel(currentState, currentState.hak.voltageLevel);
         currentState.selectedObject = null;
         history.applying = false;
     }
@@ -187,8 +218,10 @@
     function createAsset(currentState, type, zone, steuveType = '', energyCarrier = '') {
         const meta = assetMeta[type] || assetMeta.consumer;
         const selectedEnergyCarrier = type === 'generation' ? energyCarrier || 'PV' : '';
+        const selectedSteuveType = type === 'steuve' ? normalizeSteuveType(steuveType) : '';
+        const selectedSteuveLabel = assetTypeOptions.steuve.find(option => option.value === selectedSteuveType)?.label || 'Fachliche Einordnung offen';
         const sameType = currentState.assets.filter(asset => asset.type === type
-            && (type !== 'steuve' || asset.steuveType === steuveType)
+            && (type !== 'steuve' || normalizeSteuveType(asset.steuveType) === selectedSteuveType)
             && (type !== 'generation' || asset.energyCarrier === selectedEnergyCarrier)).length + 1;
         // Erzeugungsanlagen erhalten eine eigene, energietraegerunabhaengige
         // laufende Nummer. Die sichtbare Kennung (z. B. PV1, BHKW2 oder WE3)
@@ -208,7 +241,7 @@
             meter: `Zusatzzaehler ${sameType}`,
             generation: `${getGenerationDisplay(selectedEnergyCarrier).prefix}${generationNumber}`,
             consumer: `Sonstiger Verbraucher ${sameType}`,
-            steuve: `${steuveType || 'Steuerbare Anlage'} ${sameType}`,
+            steuve: `${selectedSteuveLabel} ${sameType}`,
             storage: `Speicher ${sameType}`,
             nsh: `Nachtspeicherheizung ${sameType}`
         };
@@ -219,14 +252,22 @@
             zone,
             name: defaultNames[type] || meta.label,
             energyCarrier: selectedEnergyCarrier,
-            steuveType: type === 'steuve' ? steuveType : '',
+            steuveType: selectedSteuveType,
             steuveModule: '',
             power: '',
+            // Technische Stammdaten werden bewusst getrennt von der
+            // Messlogik gespeichert. Die Werte dokumentieren die Anlage,
+            // lösen aber keine automatische Netzbetreiberentscheidung aus.
+            inverterPower: type === 'generation' ? '' : '',
             commissioningDate: '',
             meterRole: type === 'meter' ? 'Bezug / Lieferung' : '',
             generationMeter: false,
             storageGridFeedIn: type === 'storage' ? 'unknown' : '',
             storageGridImport: type === 'storage' ? 'unknown' : '',
+            storageCapacity: type === 'storage' ? '' : '',
+            storageChargePower: type === 'storage' ? '' : '',
+            storageDischargePower: type === 'storage' ? '' : '',
+            storageInverterPower: type === 'storage' ? '' : '',
             generationNumber,
             meterScope: type === 'meter' ? 'asset' : '',
             targetAssetId: '',
@@ -287,6 +328,7 @@
         currentState.nextId = 1;
         currentState.assets = [];
         currentState.meterDetails = {};
+        currentState.hak = { voltageLevel: 'low' };
         currentState.selectedObject = null;
     }
 
@@ -382,8 +424,10 @@
     global.WattspurMesskonzeptModel = Object.freeze({
         assetMeta,
         assetTypeOptions,
+        normalizeSteuveType,
         generationDisplay,
         storageGridOptions,
+        hakVoltageLevels,
         steuveModuleOptions,
         storageInfoText,
         balconyInfoText,
@@ -412,6 +456,9 @@
         moveMeterSubtreeToZone,
         getGenerationDisplay,
         normalizeStorageGridChoice,
-        getStorageOperation
+        getStorageOperation,
+        normalizeHakVoltageLevel,
+        getHakVoltageLevel,
+        setHakVoltageLevel
     });
 }(window));

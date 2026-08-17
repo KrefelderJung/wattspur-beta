@@ -36,6 +36,10 @@ function isExternal(value) {
     return /^https?:\/\//i.test(value) || /^\/\//.test(value);
 }
 
+function isOwnSiteUrl(value) {
+    return /^https:\/\/wattspur\.de(?:\/|$)/i.test(value.trim());
+}
+
 function cleanTarget(value) {
     return value.trim().split('#')[0].split('?')[0];
 }
@@ -81,6 +85,7 @@ function scanHtmlFiles() {
         for (const match of source.matchAll(attributePattern)) {
             const rawValue = match[1].trim();
             if (isIgnored(rawValue)) continue;
+            if (isOwnSiteUrl(rawValue)) continue;
             if (isExternal(rawValue)) {
                 const normalized = rawValue.startsWith('//') ? `https:${rawValue}` : rawValue;
                 if (!externalLinks.has(normalized)) externalLinks.set(normalized, []);
@@ -175,4 +180,3 @@ main().catch(error => {
     console.error(`Link-Check: unerwarteter Fehler (${error.message})`);
     process.exitCode = 1;
 });
-

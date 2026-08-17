@@ -33,7 +33,6 @@ const MK_BOOTSTRAP = window.WattspurMesskonzeptBootstrap.createBootstrapControll
 const MK_METER_DETAIL_FIELDS = MK_MODEL.meterDetailFields;
 const mkConfiguratorState = MK_MODEL.state;
 let mkElements = {};
-let mkGeometryFrame = 0;
 let mkActiveDrag = null;
 
 const MK_LAYOUT = window.WattspurMesskonzeptLayout.createLayoutController({
@@ -77,13 +76,29 @@ const MK_RENDER = window.WattspurMesskonzeptRender.createRenderer({
     getStorageOperation: asset => MK_MODEL.getStorageOperation(asset)
 });
 
+// Drop-Zonen und Rail-Komposition erzeugen nur Markup. Topologie, Layout und
+// Beschriftungen werden über Adapter geliefert, damit die Skizzenkomposition
+// nicht erneut in den Orchestrator zurückwandert.
+const MK_ZONE_RENDERER = window.WattspurMesskonzeptZoneRenderer.createZoneRenderer({
+    getState: () => mkConfiguratorState,
+    getDefaultZone: () => mkDefaultZone(),
+    getZoneAssets: zone => mkGetZoneAssets(zone),
+    buildZoneMeterTree: zone => mkBuildZoneMeterTree(zone),
+    getRailEntries: rail => mkGetRailEntries(rail),
+    renderAssetRail: (rail, isRoot) => MK_RENDER.renderAssetRail(rail, isRoot),
+    getAdditionalMeters: () => mkGetAdditionalMeters(),
+    getAssetsPerRow: count => mkGetAssetsPerRow(count),
+    getZoneLabel: index => mkGetZoneLabel(index),
+    escapeHtml: value => mkEscapeHtml(value)
+});
+
 const MK_HISTORY = window.WattspurMesskonzeptHistory.createHistoryController({
     getHistory: () => MK_MODEL.history,
     captureState: () => MK_MODEL.captureHistoryState(mkConfiguratorState),
     recordState: previousState => MK_MODEL.recordHistory(mkConfiguratorState, previousState),
     restoreState: snapshot => {
         MK_MODEL.restoreHistoryState(mkConfiguratorState, snapshot);
-        mkRender();
+        MK_RENDER_CYCLE.render();
     },
     getButtons: () => ({
         undo: mkElements.undo,
@@ -97,7 +112,7 @@ const MK_COMMANDS = window.WattspurMesskonzeptCommands.createCommandController({
     state: mkConfiguratorState,
     captureHistoryState: () => mkCaptureHistoryState(),
     recordHistory: previousState => mkRecordHistory(previousState),
-    render: () => mkRender(),
+    render: () => MK_RENDER_CYCLE.render(),
     notify: (message, type) => mkNotify(message, type),
     getDefaultZone: () => mkDefaultZone(),
     getMeterForAsset: asset => mkGetMeterForAsset(asset),
@@ -122,6 +137,35 @@ const MK_VALIDATION_STATUS = window.WattspurMesskonzeptValidationStatus.createVa
     storageInfoText: MK_STORAGE_INFO_TEXT
 });
 
+const MK_IDENTIFIERS = window.WattspurMesskonzeptIdentifiers.createIdentifierController({
+    getState: () => mkConfiguratorState,
+    getAdditionalMeters: () => mkGetAdditionalMeters(),
+    getMeterForAsset: asset => mkGetMeterForAsset(asset),
+    getGenerationDisplay: energyCarrier => MK_MODEL.getGenerationDisplay(energyCarrier)
+});
+
+const MK_METER_POLICY = window.WattspurMesskonzeptMeterPolicy.createMeterPolicyController({
+    getAssetMeters: assetId => mkGetAssetMeters(assetId),
+    getMeterForAsset: asset => mkGetMeterForAsset(asset),
+    isMeterExpanded: meterId => mkIsMeterExpanded(meterId),
+    getMeterAssets: meterId => mkGetMeterAssets(meterId)
+});
+
+const MK_ASSET_DISPLAY = window.WattspurMesskonzeptAssetDisplay.createAssetDisplayController({
+    getAssetMeta: () => MK_ASSET_META,
+    getAssetTypeOptions: () => MK_ASSET_TYPE_OPTIONS,
+    getGenerationDisplay: asset => MK_MODEL.getGenerationDisplay(asset?.energyCarrier),
+    getPowerNumber: value => MK_RULES.parsePowerNumber(value),
+    getSteuveEffectivePower: asset => MK_RULES.getSteuveEffectivePower(asset),
+    renderSelectOptions: (options, selected, placeholder) => mkRenderSelectOptions(options, selected, placeholder),
+    steuveModuleOptions: MK_STEUVE_MODULE_OPTIONS,
+    getGenerationAssetNumber: asset => MK_IDENTIFIERS.getGenerationAssetNumber(asset),
+    getMeterNumber: meter => MK_IDENTIFIERS.getMeterNumber(meter),
+    getMeterDetailIndex: meter => MK_IDENTIFIERS.getMeterDetailIndex(meter),
+    canBuildCascadeAfterMeter: meter => MK_METER_POLICY.canBuildCascadeAfterMeter(meter),
+    escapeHtml: value => mkEscapeHtml(value)
+});
+
 // Die DOM-Komposition der Messskizze liegt in einem eigenen Renderer. Der
 // Hauptbaustein bleibt dadurch Orchestrator: Zustand, Regeln und Geometrie
 // werden nur noch über kleine injizierte Adapter verbunden.
@@ -132,11 +176,13 @@ const MK_CANVAS_RENDERER = window.WattspurMesskonzeptCanvasRenderer.createCanvas
     assetMeta: MK_ASSET_META,
     assetTypeOptions: MK_ASSET_TYPE_OPTIONS,
     storageGridOptions: MK_STORAGE_GRID_OPTIONS,
+    hakVoltageLevels: MK_MODEL.hakVoltageLevels,
     steuveModuleOptions: MK_STEUVE_MODULE_OPTIONS,
     meterDetailFields: MK_METER_DETAIL_FIELDS,
     layoutGeometry: MK_LAYOUT_GEOMETRY,
     escapeHtml: mkEscapeHtml,
     getMeterDetails: index => mkGetMeterDetails(index),
+    getHakVoltageLevel: () => MK_MODEL.getHakVoltageLevel(mkConfiguratorState),
     getBaseMeterZone: index => mkGetBaseMeterZone(index),
     renderSelectOptions: (options, selected, placeholder) => mkRenderSelectOptions(options, selected, placeholder),
     renderSteuveNotice: asset => mkRenderSteuveNotice(asset),
@@ -146,6 +192,7 @@ const MK_CANVAS_RENDERER = window.WattspurMesskonzeptCanvasRenderer.createCanvas
     getGenerationDisplay: asset => mkGetGenerationDisplay(asset),
     getStorageOperation: asset => MK_MODEL.getStorageOperation(asset),
     getSteuveRegime: asset => mkGetSteuveRegime(asset),
+    getSteuveEffectivePower: asset => MK_RULES.getSteuveEffectivePower(asset),
     getNshRegime: asset => mkGetNshRegime(asset),
     getSteuveIconClass: asset => mkGetSteuveIconClass(asset),
     getAssetTypeLabel: asset => mkGetAssetTypeLabel(asset),
@@ -154,7 +201,63 @@ const MK_CANVAS_RENDERER = window.WattspurMesskonzeptCanvasRenderer.createCanvas
     renderDropZone: (zone, index) => mkRenderDropZone(zone, index),
     getSimpleCanvasMinimumWidth: assetCount => mkGetSimpleCanvasMinimumWidth(assetCount),
     getZoneAssets: zone => mkGetZoneAssets(zone),
-    render: () => mkRender()
+    render: () => MK_RENDER_CYCLE.render()
+});
+
+// Der Objekteditor bindet ausschließlich Dialogfelder an den fachlichen
+// Zustand. Die allgemeine Interaktionsschicht bleibt dadurch frei von
+// feldspezifischer Zustandslogik.
+const MK_EDITOR = window.WattspurMesskonzeptEditor.createEditorController({
+    getState: () => mkConfiguratorState,
+    getElements: () => mkElements,
+    callbacks: {
+        getFieldHistoryBefore: event => MK_HISTORY.getFieldHistoryBefore(event),
+        recordHistory: previousState => mkRecordHistory(previousState),
+        getMeterDetails: index => mkGetMeterDetails(index),
+        updateHakField: (field, value) => {
+            if (field === 'voltageLevel') MK_MODEL.setHakVoltageLevel(mkConfiguratorState, value);
+        },
+        refreshObjectModal: selection => MK_CANVAS_RENDERER.openObjectModal(selection),
+        syncGenerationName: asset => mkSyncGenerationName(asset),
+        getStorageOperation: asset => MK_MODEL.getStorageOperation(asset),
+        renderSteuveNotice: asset => mkRenderSteuveNotice(asset),
+        renderSteuveModuleFields: asset => mkRenderSteuveModuleFields(asset),
+        refreshInlineStatus: () => MK_VALIDATION_STATUS.refresh(),
+        render: () => MK_RENDER_CYCLE.render()
+    }
+});
+
+const MK_START_FLOW = window.WattspurMesskonzeptStartFlow.createStartFlowController({
+    getElements: () => mkElements,
+    getPresets: () => MK_PRESETS,
+    escapeHtml: value => mkEscapeHtml(value),
+    getFlowChipClass: label => mkGetPresetFlowChipClass(label),
+    callbacks: {
+        reset: () => MK_COMMANDS.reset(),
+        clearHistory: () => {
+            MK_MODEL.history.undo = [];
+            MK_MODEL.history.redo = [];
+        },
+        applyPreset: presetId => MK_PRESET_LOADER.applyPreset(mkConfiguratorState, presetId),
+        render: () => MK_RENDER_CYCLE.render(),
+        notify: (message, type) => mkNotify(message, type)
+    }
+});
+
+// Der vollständige UI-Renderlauf ist als Orchestrator ausgelagert. Die
+// bestehenden Fach- und Geometriefunktionen bleiben über Adapter unverändert.
+const MK_RENDER_CYCLE = window.WattspurMesskonzeptRenderCycle.createRenderCycleController({
+    getState: () => mkConfiguratorState,
+    getElements: () => mkElements,
+    callbacks: {
+        syncProjectFields: () => mkSyncProjectFields(),
+        renderCanvas: () => mkRenderCanvas(),
+        observeConnectorGeometry: () => mkObserveConnectorGeometry(),
+        renderZoomControls: () => mkRenderZoomControls(),
+        scheduleConnectorGeometry: () => mkScheduleConnectorGeometry(),
+        refreshValidation: () => MK_VALIDATION_STATUS.refresh(),
+        updateHistoryButtons: () => mkUpdateHistoryButtons()
+    }
 });
 
 // Die Zeichenflächen-Bedienung ist bewusst vom Messkonzept- und
@@ -180,7 +283,7 @@ const MK_DRAG_DROP = window.WattspurMesskonzeptDragDrop.createDragDropController
         getBaseChainChild: (parentMeter, baseMeterIndex, zone) => mkGetBaseChainChild(parentMeter, baseMeterIndex, zone),
         canBuildCascadeAfterMeter: meter => mkCanBuildCascadeAfterMeter(meter),
         addAsset: (...args) => MK_COMMANDS.addAsset(...args),
-        render: () => mkRender(),
+        render: () => MK_RENDER_CYCLE.render(),
         notify: (message, type) => mkNotify(message, type),
         moveAssetBefore: (assetId, beforeId) => MK_COMMANDS.moveAssetBefore(assetId, beforeId),
         moveAssetAfter: (assetId, afterId) => MK_COMMANDS.moveAssetAfter(assetId, afterId),
@@ -201,11 +304,11 @@ const MK_DRAG_DROP = window.WattspurMesskonzeptDragDrop.createDragDropController
 const MK_INTERACTION = window.WattspurMesskonzeptInteraction.createInteractionController({
     getElements: () => mkElements,
     callbacks: {
-        showScreen: () => mkShowScreen(),
-        hideScreen: () => mkHideScreen(),
-        startFree: () => mkStartFreeConfigurator(),
-        showStartPanel: () => mkShowStartPanel(),
-        loadPreset: presetId => mkLoadPreset(presetId),
+        showScreen: () => MK_START_FLOW.showScreen(),
+        hideScreen: () => MK_START_FLOW.hideScreen(),
+        startFree: () => MK_START_FLOW.startFreeConfigurator(),
+        showStartPanel: () => MK_START_FLOW.showStartPanel(),
+        loadPreset: presetId => MK_START_FLOW.loadPreset(presetId),
         reset: () => MK_COMMANDS.reset(),
         notify: (message, type) => mkNotify(message, type),
         downloadPdf: options => mkDownloadPdf(options),
@@ -217,8 +320,6 @@ const MK_INTERACTION = window.WattspurMesskonzeptInteraction.createInteractionCo
         openObjectModal: selection => mkOpenObjectModal(selection),
         undo: () => mkUndo(),
         redo: () => mkRedo(),
-        updateAssetField: event => mkUpdateAssetField(event),
-        updateMeterDetailField: event => mkUpdateMeterDetailField(event),
         updateProjectField: (key, value) => {
             MK_PROJECT_META.updateProjectField(key, value);
         },
@@ -250,11 +351,23 @@ const MK_CONNECTIONS = window.WattspurMesskonzeptConnections.createConnections({
     layoutGeometry: MK_LAYOUT_GEOMETRY
 });
 
+// Der Geometrie-Nachlauf ist eine eigene Laufzeit-Schicht. Sie kennt nur die
+// Reihenfolge der visuellen Aktualisierungen und bleibt damit unabhängig von
+// Messobjekten, Drop-Regeln und DOM-Komposition.
+const MK_GEOMETRY_RUNTIME = window.WattspurMesskonzeptGeometryRuntime.createGeometryRuntimeController({
+    getWindow: () => window,
+    updateSimpleAssetStrands: () => MK_LAYOUT.updateSimpleAssetStrands(),
+    updateMeterGroupOffsets: () => MK_LAYOUT.updateMeterGroupOffsets(),
+    updateParallelBus: () => MK_LAYOUT.updateParallelBus(),
+    updateDynamicConnections: () => MK_CONNECTIONS.updateDynamicConnections(),
+    centerParallelViewport: () => MK_VIEWPORT.centerParallelViewport()
+});
+
 const MK_EXPORT = window.WattspurMesskonzeptExport.createExporter({
     getState: () => mkConfiguratorState,
     getElements: () => mkElements,
     escapeHtml: mkEscapeHtml,
-    validate: () => mkValidation(),
+    validate: () => MK_VALIDATION_STATUS.evaluate(),
     renderMeterDetailsSummary: (index, includeEmpty) => mkRenderMeterDetailsSummary(index, includeEmpty),
     renderAssetSummary: (asset, includeEmpty) => mkRenderAssetSummary(asset, includeEmpty),
     getMeterNumber: meter => mkGetMeterNumber(meter),
@@ -272,10 +385,6 @@ function mkUpdateHistoryButtons() {
 
 function mkRecordHistory(previousState) {
     return MK_HISTORY.record(previousState);
-}
-
-function mkGetFieldHistoryBefore(event) {
-    return MK_HISTORY.getFieldHistoryBefore(event);
 }
 
 function mkRestoreHistoryState(snapshot) {
@@ -319,74 +428,6 @@ function mkGetPresetFlowChipClass(label) {
     if (normalized.includes('nachtspeicher')) kinds.push('nsh');
     if (kinds.length > 1) return 'mk-start-flow-chip--mixed';
     return kinds.length === 1 ? `mk-start-flow-chip--${kinds[0]}` : 'mk-start-flow-chip--neutral';
-}
-
-function mkRenderPresetInfo(groupId) {
-    const info = MK_PRESETS.getGroupInfo?.(groupId);
-    if (!info) return '';
-    const renderList = items => `<ul>${items.map(item => `<li>${mkEscapeHtml(item)}</li>`).join('')}</ul>`;
-    const renderLinks = links => links?.length
-        ? `<div class="mk-start-info-links"><span>Mehr erfahren:</span>${links.map(link => `<a href="${mkEscapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${mkEscapeHtml(link.label)} ↗</a>`).join('')}</div>`
-        : '';
-    return `
-        <p class="mk-start-info-intro">${mkEscapeHtml(info.intro)}</p>
-        <div class="mk-start-info-columns">
-            <div><strong>Vorteile</strong>${renderList(info.advantages)}</div>
-            <div><strong>Worauf achten?</strong>${renderList(info.cautions)}</div>
-        </div>
-        ${renderLinks(info.links)}
-    `;
-}
-
-function mkRenderPresetCards() {
-    const startPanel = mkElements.startPanel;
-    if (!startPanel) return;
-    startPanel.querySelectorAll('[data-mk-preset-group]').forEach(group => {
-        const groupId = group.dataset.mkPresetGroup;
-        const entries = MK_PRESETS.getCatalog().filter(entry => entry.group === groupId);
-        const infoHost = group.closest('.mk-start-group')?.querySelector('[data-mk-preset-info]');
-        if (infoHost) infoHost.innerHTML = mkRenderPresetInfo(groupId);
-        group.innerHTML = entries.map(entry => `
-            <button type="button" class="mk-start-card" data-mk-preset="${mkEscapeHtml(entry.id)}" aria-label="${mkEscapeHtml(`Vorlage ${entry.title} laden. ${entry.summary}`)}">
-                <span class="mk-start-card-title">${mkEscapeHtml(entry.title)}</span>
-                <span class="mk-start-card-flow" aria-hidden="true">${entry.flow.map(label => `<span class="mk-start-flow-chip ${mkGetPresetFlowChipClass(label)}">${mkEscapeHtml(label)}</span>`).join('')}</span>
-            </button>
-        `).join('');
-        group.querySelectorAll('[data-mk-preset]').forEach(button => {
-            button.addEventListener('click', () => mkLoadPreset(button.dataset.mkPreset));
-        });
-    });
-}
-
-function mkSetBuilderVisibility(showBuilder) {
-    if (mkElements.startPanel) mkElements.startPanel.classList.toggle('hidden', showBuilder);
-    if (mkElements.builderShell) mkElements.builderShell.classList.toggle('hidden', !showBuilder);
-}
-
-function mkShowStartPanel() {
-    mkRenderPresetCards();
-    mkSetBuilderVisibility(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function mkStartFreeConfigurator() {
-    MK_COMMANDS.reset();
-    MK_MODEL.history.undo = [];
-    MK_MODEL.history.redo = [];
-    mkSetBuilderVisibility(true);
-    mkRender();
-}
-
-function mkLoadPreset(presetId) {
-    try {
-        MK_PRESET_LOADER.applyPreset(mkConfiguratorState, presetId);
-        MK_MODEL.history.undo = [];
-        MK_MODEL.history.redo = [];
-        mkSetBuilderVisibility(true);
-        mkRender();
-    } catch (error) {
-        mkNotify(error.message || 'Vorlage konnte nicht geladen werden.', 'error');
-    }
 }
 
 function mkCreateMeterDetails() {
@@ -457,11 +498,7 @@ function mkGetBaseChainChild(parentMeter = null, baseMeterIndex = null, zone = '
 }
 
 function mkCanBuildCascadeAfterMeter(meter) {
-    // Nur Zaehler auf dem Hauptstrang (meterScope=base) duerfen eine weitere
-    // Kaskadenstufe erhalten. Ein Zaehler vor einer einzelnen Anlage bleibt
-    // ein Anlagen-Messpunkt und darf nicht durch einen weiteren Drop in eine
-    // unkontrollierte Unterkaskade umgewandelt werden.
-    return Boolean(meter && meter.type === 'meter' && meter.meterScope === 'base');
+    return MK_METER_POLICY.canBuildCascadeAfterMeter(meter);
 }
 
 function mkMoveAssetBefore(assetId, beforeId) {
@@ -481,23 +518,11 @@ function mkGetAssetMeters(assetId) {
  * nur ein weiterer Zähler vor einem bereits isolierten Einzelzähler; das
  * würde unbeabsichtigt eine neue Unterkaskade erzeugen. */
 function mkCanAddMeterToAsset(asset) {
-    if (!asset || asset.type === 'meter') return false;
-    const ownMeters = mkGetAssetMeters(asset.id);
-    const attachedMeter = mkGetMeterForAsset(asset);
-    const sharedMeter = attachedMeter
-        && mkIsMeterExpanded(attachedMeter.id)
-        && mkGetMeterAssets(attachedMeter.id).length > 1;
-    return ownMeters.length === 0 || Boolean(sharedMeter);
+    return MK_METER_POLICY.canAddMeterToAsset(asset);
 }
 
 function mkGetMeterDropOptions(asset) {
-    const attachedMeter = mkGetMeterForAsset(asset);
-    const sharedMeter = attachedMeter
-        && mkIsMeterExpanded(attachedMeter.id)
-        && mkGetMeterAssets(attachedMeter.id).length > 1;
-    return sharedMeter
-        ? { targetAssetId: asset.id, parentMeterId: attachedMeter.id, keepEmptyRail: true }
-        : { targetAssetId: asset.id };
+    return MK_METER_POLICY.getMeterDropOptions(asset);
 }
 
 /**
@@ -534,23 +559,15 @@ function mkBuildZoneMeterTree(zone) {
 }
 
 function mkGetMeterNumber(meter) {
-    if (!meter) return null;
-    const topologyCount = mkConfiguratorState.mode === 'parallel' ? mkConfiguratorState.cascadeLevels : 1;
-    const index = mkGetAdditionalMeters().findIndex(item => item.id === meter.id);
-    return index < 0 ? null : topologyCount + index + 1;
+    return MK_IDENTIFIERS.getMeterNumber(meter);
 }
 
 function mkGetMeterDetailIndex(meter) {
-    if (!meter) return null;
-    const topologyCount = mkConfiguratorState.mode === 'parallel' ? mkConfiguratorState.cascadeLevels : 1;
-    const additionalIndex = mkGetAdditionalMeters().findIndex(item => item.id === meter.id);
-    const meterNumber = additionalIndex < 0 ? null : topologyCount + additionalIndex + 1;
-    return meterNumber ? meterNumber - 1 : null;
+    return MK_IDENTIFIERS.getMeterDetailIndex(meter);
 }
 
 function mkGetAssetMeterNumber(asset) {
-    const meter = mkGetMeterForAsset(asset);
-    return meter ? mkGetMeterNumber(meter) : null;
+    return MK_IDENTIFIERS.getAssetMeterNumber(asset);
 }
 
 function mkGetZoneLabel(index) {
@@ -559,28 +576,15 @@ function mkGetZoneLabel(index) {
 }
 
 function mkGetAssetTypeLabel(asset) {
-    if (asset.type === 'generation') {
-        return MK_ASSET_TYPE_OPTIONS.generation.find(option => option.value === asset.energyCarrier)?.label || '';
-    }
-    if (asset.type === 'steuve') {
-        return MK_ASSET_TYPE_OPTIONS.steuve.find(option => option.value === asset.steuveType)?.label || '';
-    }
-    if (asset.type === 'nsh') return MK_ASSET_META.nsh.label;
-    return '';
+    return MK_ASSET_DISPLAY.getAssetTypeLabel(asset);
 }
 
 function mkGetGenerationDisplay(asset) {
-    return MK_MODEL.getGenerationDisplay(asset?.energyCarrier);
+    return MK_ASSET_DISPLAY.getGenerationDisplay(asset);
 }
 
 function mkGetSteuveIconClass(asset) {
-    if (asset?.type !== 'steuve') return '';
-    const classes = {
-        Wallbox: 'mk-device-wallbox',
-        Wärmepumpe: 'mk-device-heatpump',
-        Klimaanlage: 'mk-device-climate'
-    };
-    return classes[asset.steuveType] || 'mk-device-generic';
+    return MK_ASSET_DISPLAY.getSteuveIconClass(asset);
 }
 
 function mkGetPowerNumber(value) {
@@ -588,35 +592,19 @@ function mkGetPowerNumber(value) {
 }
 
 function mkGetSteuveRegime(asset) {
-    const power = mkGetPowerNumber(asset?.power);
-    if (power === null) return 'Leistung noch offen';
-    return power > 4.2 ? 'Über 4,2 kW · § 14a EnWG prüfen' : 'Bis 4,2 kW · § 14a-EnWG-Prüfung nicht automatisch';
+    return MK_ASSET_DISPLAY.getSteuveRegime(asset);
 }
 
 function mkRenderSteuveNotice(asset) {
-    const power = mkGetPowerNumber(asset.power);
-    if (power === null) {
-        return '<p class="mk-steuve-editor-hint" role="note">Leistung eintragen. Ab mehr als 4,2 kW die Einordnung nach § 14a EnWG und die Anmeldung beim Netzbetreiber prüfen.</p>';
-    }
-    if (power > 4.2) {
-        return '<p class="mk-steuve-editor-notice" role="note"><b>Hinweis zu § 14a EnWG:</b> Bei mehr als 4,2 kW ist die Einordnung als steuerbare Verbrauchseinrichtung typischerweise zu prüfen. Bitte beim Netzbetreiber anmelden und das passende Modul für dieses Messkonzept abstimmen.</p>';
-    }
-    return '<p class="mk-steuve-editor-hint" role="note">Bis 4,2 kW liegt nicht automatisch eine § 14a-relevante Einordnung vor. Die fachliche Prüfung bleibt erforderlich.</p>';
+    return MK_ASSET_DISPLAY.renderSteuveNotice(asset);
 }
 
 function mkRenderSteuveModuleFields(asset) {
-    if (mkGetPowerNumber(asset.power) <= 4.2) return '';
-    return `
-        <label>§14a-Modul<select data-mk-field="steuveModule">${mkRenderSelectOptions(MK_STEUVE_MODULE_OPTIONS, asset.steuveModule, 'Noch offen')}</select></label>
-        <p class="mk-steuve-module-hint">Die Auswahl ist eine Vorprüfung und ersetzt keine Abstimmung mit dem Netzbetreiber.</p>
-    `;
+    return MK_ASSET_DISPLAY.renderSteuveModuleFields(asset);
 }
 
 function mkGetNshRegime(asset) {
-    const year = Number(String(asset?.commissioningDate || '').slice(0, 4));
-    if (!Number.isFinite(year) || year < 1900) return 'Einordnung offen · Abstimmung erforderlich';
-    if (year < 2024) return 'Bestand vor 2024 · historische SteuVE-/Tarifbehandlung möglich';
-    return 'Ab 2024 · nicht automatisch als SteuVE einordnen';
+    return MK_ASSET_DISPLAY.getNshRegime(asset);
 }
 
 /**
@@ -626,64 +614,28 @@ function mkGetNshRegime(asset) {
  * werden können.
  */
 function mkGetConfiguredMeterCount() {
-    const topologyMeters = mkConfiguratorState.mode === 'parallel'
-        ? mkConfiguratorState.cascadeLevels
-        : 1;
-    const additionalMeterAssets = mkConfiguratorState.assets.filter(asset => asset.type === 'meter').length;
-    return topologyMeters + additionalMeterAssets;
+    return MK_IDENTIFIERS.getConfiguredMeterCount();
 }
 
 /** Liefert die fortlaufende Nummer eines eigenen Erzeugungszählers. */
 function mkGetGenerationMeterNumber(asset) {
-    if (!asset || asset.type !== 'generation' || !asset.generationMeter) return null;
-    const attachedNumber = mkGetAssetMeterNumber(asset);
-    if (attachedNumber) return attachedNumber;
-    const generationMeters = mkConfiguratorState.assets.filter(item => item.type === 'generation' && item.generationMeter);
-    const generationIndex = generationMeters.findIndex(item => item.id === asset.id);
-    return generationIndex < 0 ? null : mkGetConfiguredMeterCount() + generationIndex + 1;
+    return MK_IDENTIFIERS.getGenerationMeterNumber(asset);
 }
 
 function mkGetGenerationAssetNumber(asset) {
-    if (!asset || asset.type !== 'generation') return null;
-    const storedNumber = Number(asset.generationNumber);
-    if (Number.isFinite(storedNumber) && storedNumber > 0) return storedNumber;
-    const generationAssets = mkConfiguratorState.assets.filter(item => item.type === 'generation');
-    const index = generationAssets.findIndex(item => item.id === asset.id);
-    return index < 0 ? null : index + 1;
+    return MK_IDENTIFIERS.getGenerationAssetNumber(asset);
 }
 
 function mkSyncGenerationName(asset) {
-    if (asset?.type !== 'generation' || !/^(?:EA|PV|BHKW|WE)\s*\d+$|^Balkonkraftwerk\s+\d+$/.test(String(asset.name || '').trim())) return;
-    const number = mkGetGenerationAssetNumber(asset);
-    if (number) asset.name = `${mkGetGenerationDisplay(asset).prefix}${number}`;
+    return MK_IDENTIFIERS.syncGenerationName(asset);
 }
 
 function mkRenderAssetIcon(asset) {
-    const meta = MK_ASSET_META[asset.type];
-    if (asset.type === 'generation') {
-        const number = mkGetGenerationAssetNumber(asset);
-        const prefix = mkGetGenerationDisplay(asset).prefix;
-        return number ? `${prefix}${number}` : meta.short;
-    }
-    if (asset.type === 'storage') return '<span class="mk-battery-symbol" aria-hidden="true"><span class="mk-battery-level"></span></span>';
-    if (asset.type === 'steuve') {
-        if (asset.steuveType === 'Wallbox') return '<svg class="mk-charge-symbol" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="mk-charge-body" x="4.5" y="3" width="13" height="18.5" rx="2.6"></rect><rect class="mk-charge-display" x="7.2" y="6" width="7.6" height="5.8" rx="1.4"></rect><path class="mk-charge-bolt" d="m11.8 6.8-2.1 3.1h1.8l-.5 2.3 2.9-3.7h-1.7l.9-1.7z"></path><path class="mk-charge-cable" d="M17.5 15.5c4.8 0 7 2.1 7 5.4v1.3"></path><rect class="mk-charge-plug" x="20.8" y="21.8" width="6.5" height="5.4" rx="1.4"></rect><path class="mk-charge-pin" d="M22.5 21.8v-2.1m3.1 2.1v-2.1"></path></svg>';
-        if (asset.steuveType === 'Wärmepumpe') return '<span class="mk-fan-symbol" aria-hidden="true"><span class="mk-fan-blade mk-fan-blade-1"></span><span class="mk-fan-blade mk-fan-blade-2"></span><span class="mk-fan-blade mk-fan-blade-3"></span><span class="mk-fan-hub"></span></span>';
-        const icons = { Klimaanlage: '❄' };
-        return mkEscapeHtml(icons[asset.steuveType] || meta.short);
-    }
-    return mkEscapeHtml(meta.short);
+    return MK_ASSET_DISPLAY.renderAssetIcon(asset);
 }
 
 function mkRenderInlineMeter(meter, asset) {
-    const number = mkGetMeterNumber(meter);
-    if (!number) return '';
-    const detailIndex = mkGetMeterDetailIndex(meter);
-    const dropHint = mkCanBuildCascadeAfterMeter(meter)
-        ? 'Weitere Anlagen oder Zähler hierher ziehen'
-        : 'Weitere Anlagen hierher ziehen · keine weitere Kaskadenstufe';
-    const label = `Z${number}: Zusatzzaehler vor ${asset?.name || 'Anlage'}; ${dropHint}`;
-    return `<span class="mk-inline-meter-wrap" data-mk-meter-target="${mkEscapeHtml(meter.id)}" data-mk-meter-group-target="${mkEscapeHtml(meter.id)}" title="Z${number} vor ${mkEscapeHtml(asset?.name || 'Anlage')} · ${dropHint}"><span class="mk-meter-drop-hitbox" aria-hidden="true"></span><span class="mk-generation-meter mk-inline-meter" data-mk-select-meter="${detailIndex}" role="button" tabindex="0" aria-label="${mkEscapeHtml(label)}"><b>Z${number}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${mkEscapeHtml(meter.id)}" title="Z${number} entfernen" aria-label="Zähler Z${number} entfernen">×</button></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`;
+    return MK_ASSET_DISPLAY.renderInlineMeter(meter, asset);
 }
 
 function mkRenderAsset(asset, options = {}) {
@@ -727,36 +679,11 @@ function mkRenderAssetRail(rail, isRoot = false) {
 }
 
 function mkRenderAssetRows(assets, zoneOverride = '') {
-    const zone = zoneOverride || assets[0]?.zone || mkDefaultZone();
-    const tree = mkBuildZoneMeterTree(zone);
-    // Auch eine leere, bewusst erhaltene Unterkaskade braucht ein DOM-Rail,
-    // damit Zähler, Achse und Sammelschienenknoten sichtbar bleiben.
-    if (!assets.length && !tree.children.length) return '';
-    return mkRenderAssetRail(tree, true);
+    return MK_ZONE_RENDERER.renderAssetRows(assets, zoneOverride);
 }
 
 function mkRenderDropZone(zone, index) {
-    const assets = mkGetZoneAssets(zone);
-    const tree = mkBuildZoneMeterTree(zone);
-    const hasMeterGroups = tree.children.length > 0;
-    // Der oberste Sammelschienenanker bleibt für die Geometrie im DOM, wird
-    // aber bei einer reinen Zählerkette nicht als dekorativer Punkt gezeigt.
-    // Sichtbar wird er erst, wenn auf dieser Ebene tatsächlich ein Ast bzw.
-    // eine Sammelschiene beginnt.
-    const showRootJunction = mkGetRailEntries(tree).length > 0;
-    const hasEmptyMeterRail = mkGetAdditionalMeters().some(meter => meter.zone === zone && meter.keepEmptyRail);
-    // Auch ein struktureller Basis-Zähler ohne Anlagen ist ein sichtbarer
-    // Unter-Rail. Er darf beim Befüllen der oberen Schiene nicht mit der
-    // leeren Einfügezone verschwinden.
-    const hasRenderableRail = assets.length > 0 || hasMeterGroups || hasEmptyMeterRail;
-    const hasWrappedRows = assets.length > mkGetAssetsPerRow(assets.length);
-    const rowsMarkup = hasRenderableRail ? mkRenderAssetRows(assets, zone) : '<div class="mk-empty-zone">Noch leer</div>';
-    const dropZoneClass = `mk-drop-zone ${hasRenderableRail ? 'filled' : 'empty'}`;
-    return `
-        <div class="${dropZoneClass}" data-mk-zone="${mkEscapeHtml(zone)}" aria-label="${mkEscapeHtml(mkGetZoneLabel(index))}" data-mk-layout-container="true">
-            <div class="mk-zone-assets ${mkConfiguratorState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}${hasMeterGroups ? ' has-meter-groups' : ''}"><span class="mk-zone-junction${showRootJunction ? '' : ' mk-zone-junction-structural'}" data-mk-node-kind="SK" aria-hidden="true"></span>${hasWrappedRows ? '<span class="mk-zone-wrap-strand" aria-hidden="true"></span>' : ''}${rowsMarkup}</div>
-        </div>
-    `;
+    return MK_ZONE_RENDERER.renderDropZone(zone, index);
 }
 
 function mkGetBaseMeterZone(index) {
@@ -833,18 +760,6 @@ function mkRenderCanvas() {
     return MK_CANVAS_RENDERER.renderCanvas();
 }
 
-function mkValidation() {
-    return MK_VALIDATION_STATUS.evaluate();
-}
-
-function mkRenderValidation() {
-    return MK_VALIDATION_STATUS.renderValidation();
-}
-
-function mkRefreshInlineStatus() {
-    return MK_VALIDATION_STATUS.refresh();
-}
-
 function mkGetStageScale(stage) {
     return MK_GEOMETRY.getStageScale(stage);
 }
@@ -870,23 +785,7 @@ function mkUpdateDynamicConnections() {
     return MK_CONNECTIONS.updateDynamicConnections();
 }
 function mkScheduleConnectorGeometry() {
-    window.cancelAnimationFrame(mkGeometryFrame);
-    mkGeometryFrame = window.requestAnimationFrame(() => {
-        mkGeometryFrame = 0;
-        // Erst die Root-Sammelschiene aus der senkrechten Messachse loesen,
-        // danach Unter-Rails an ihren nun endgueltigen Zielkarten ausrichten.
-        // Andernfalls misst die Kaskadenlogik noch die alte Kartenposition und
-        // kann den Unterzaehler bei einer erneuten Erweiterung verschieben.
-        mkUpdateSimpleAssetStrands();
-        mkUpdateMeterGroupOffsets();
-        // Die Rail-Ausrichtung wird nach den Zielkarten-/Kollisionsversetzen
-        // ein zweites Mal gemessen. Dadurch verwenden Root- und Unter-
-        // Sammelschienen denselben echten DOM-Abstand zur ersten Karte.
-        mkUpdateSimpleAssetStrands();
-        mkUpdateParallelBus();
-        mkUpdateDynamicConnections();
-        mkCenterParallelViewport();
-    });
+    return MK_GEOMETRY_RUNTIME.schedule();
 }
 
 function mkRenderZoomControls() {
@@ -920,72 +819,10 @@ function mkInitializeCanvasPan() {
     return MK_VIEWPORT.initializeCanvasPan();
 }
 
-function mkRender() {
-    if (!mkElements.canvas) return;
-    mkSyncProjectFields();
-    mkElements.modeButtons.forEach(button => {
-        const active = button.dataset.mkMode === mkConfiguratorState.mode;
-        button.classList.toggle('active', active);
-        button.setAttribute('aria-pressed', String(active));
-    });
-    mkElements.levelButtons.forEach(button => {
-        const meterCountMode = mkConfiguratorState.mode === 'parallel';
-        const active = meterCountMode && Number(button.dataset.mkLevel) === mkConfiguratorState.cascadeLevels;
-        button.disabled = !meterCountMode;
-        button.classList.toggle('active', active);
-        button.setAttribute('aria-pressed', String(active));
-    });
-    mkElements.viewButtons.forEach(button => {
-        const active = button.dataset.mkView === mkConfiguratorState.viewMode;
-        button.classList.toggle('active', active);
-        button.setAttribute('aria-pressed', String(active));
-    });
-    mkRenderCanvas();
-    mkObserveConnectorGeometry();
-    mkRenderZoomControls();
-    mkScheduleConnectorGeometry();
-    mkRefreshInlineStatus();
-    mkUpdateHistoryButtons();
-}
-
 function mkHandleDrop(event, zone, targetAssetId = '', meterGroupTargetId = '', positionTargetId = '', baseMeterIndex = '') {
     return MK_DRAG_DROP.handleDrop(event, zone, targetAssetId, meterGroupTargetId, positionTargetId, baseMeterIndex);
 }
 
-
-function mkUpdateAssetField(event) {
-    const card = event.target.closest('[data-mk-asset-id]');
-    if (!card || !event.target.dataset.mkField) return;
-    const asset = mkConfiguratorState.assets.find(item => item.id === card.dataset.mkAssetId);
-    if (!asset) return;
-    const previousState = mkGetFieldHistoryBefore(event);
-    const field = event.target.dataset.mkField;
-    asset[field] = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-    if (asset.type === 'generation' && field === 'energyCarrier') mkSyncGenerationName(asset);
-    if (asset.type === 'storage' && ['storageGridFeedIn', 'storageGridImport'].includes(field)) {
-        const notice = card.querySelector(`[data-mk-storage-notice="${mkEscapeHtml(asset.id)}"]`);
-        if (notice) notice.textContent = MK_MODEL.getStorageOperation(asset).notice;
-        mkRender();
-    }
-    if (asset.type === 'steuve' && ['power', 'steuveType'].includes(field)) {
-        const notice = card.querySelector(`[data-mk-steuve-notice="${asset.id}"]`);
-        if (notice) notice.innerHTML = mkRenderSteuveNotice(asset);
-        const moduleFields = card.querySelector(`[data-mk-steuve-module-fields="${asset.id}"]`);
-        if (moduleFields) moduleFields.innerHTML = mkRenderSteuveModuleFields(asset);
-    }
-    mkRefreshInlineStatus();
-    if (previousState) mkRecordHistory(previousState);
-}
-
-function mkUpdateMeterDetailField(event) {
-    const field = event.target.dataset.mkMeterField;
-    if (!field) return;
-    const index = Number(event.target.dataset.mkMeterIndex) || 0;
-    const previousState = mkGetFieldHistoryBefore(event);
-    const details = mkGetMeterDetails(index);
-    details[field] = event.target.value;
-    if (previousState) mkRecordHistory(previousState);
-}
 
 function mkGetExportStand() {
     return MK_EXPORT.getExportStand();
@@ -1011,163 +848,32 @@ function mkDownloadPdf(options) {
     return MK_EXPORT.downloadPdf(options);
 }
 
-function mkShowScreen() {
-    const { uploadScreen: upload, dashboardScreen: dashboard, messkonzeptScreen: screen } = mkElements;
-    if (upload) upload.classList.add('hidden');
-    if (dashboard) dashboard.classList.add('hidden');
-    if (screen) screen.classList.remove('hidden');
-    mkRenderPresetCards();
-    mkSetBuilderVisibility(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    window.requestAnimationFrame(() => mkRender());
-}
-
-function mkHideScreen() {
-    const { messkonzeptScreen: screen, uploadScreen: upload } = mkElements;
-    if (screen) screen.classList.add('hidden');
-    if (upload) upload.classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 function mkHandlePaletteDragStart(event, button) {
-    if (MK_DRAG_DROP.handlePaletteDragStart) return MK_DRAG_DROP.handlePaletteDragStart(event, button);
-    mkActiveDrag = { source: 'palette', type: button.dataset.mkType };
-    event.dataTransfer.effectAllowed = 'copy';
-    event.dataTransfer.setData('application/json', JSON.stringify({
-        source: 'palette',
-        type: button.dataset.mkType,
-        steuveType: button.dataset.mkSteuveType || '',
-        energyCarrier: button.dataset.mkEnergyCarrier || ''
-    }));
+    return MK_DRAG_DROP.handlePaletteDragStart(event, button);
 }
 
 function mkHandlePaletteDragEnd() {
-    if (MK_DRAG_DROP.handlePaletteDragEnd) return MK_DRAG_DROP.handlePaletteDragEnd();
-    mkActiveDrag = null;
+    return MK_DRAG_DROP.handlePaletteDragEnd();
 }
 
 function mkHandleCanvasDragOver(event) {
-    if (MK_DRAG_DROP.handleCanvasDragOver) return MK_DRAG_DROP.handleCanvasDragOver(event);
-    const meterTarget = event.target.closest('[data-mk-meter-target]');
-    const meterGroupTarget = event.target.closest('[data-mk-meter-group-target]');
-    const baseMeterTarget = event.target.closest('[data-mk-base-meter-target]');
-    const positionTarget = event.target.closest('[data-mk-position-target]');
-    const zone = event.target.closest('[data-mk-zone]');
-    const sourceAsset = mkActiveDrag?.source === 'asset'
-        ? mkConfiguratorState.assets.find(asset => asset.id === mkActiveDrag.id)
-        : null;
-    const targetAsset = positionTarget
-        ? mkConfiguratorState.assets.find(asset => asset.id === positionTarget.dataset.mkPositionTarget)
-        : null;
-    if (positionTarget && sourceAsset && targetAsset && sourceAsset.id === targetAsset.id) {
-        event.preventDefault();
-        return;
-    }
-    const canSwapAssets = positionTarget
-        && sourceAsset
-        && targetAsset
-        && sourceAsset.type !== 'meter'
-        && targetAsset.type !== 'meter'
-        && sourceAsset.id !== targetAsset.id
-        && !meterGroupTarget;
-    if (canSwapAssets) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-        positionTarget.classList.add('mk-position-drop-target-active');
-        return;
-    }
-    const canDropOnBaseMeter = baseMeterTarget && (
-        (mkActiveDrag?.source === 'palette' && MK_ASSET_META[mkActiveDrag.type])
-        || (sourceAsset && sourceAsset.type !== 'meter')
-    );
-    if (canDropOnBaseMeter) {
-        event.preventDefault();
-        baseMeterTarget.classList.add('mk-meter-drop-target-active');
-        return;
-    }
-    if (meterTarget && mkActiveDrag?.source === 'palette' && mkActiveDrag.type === 'meter') {
-        const targetObject = mkConfiguratorState.assets.find(asset => asset.id === meterTarget.dataset.mkMeterTarget);
-        const targetMeter = targetObject?.type === 'meter' ? targetObject : null;
-        // Anlagenkarten tragen ebenfalls data-mk-meter-target, damit dort ein
-        // Zähler vorgeschaltet werden kann. Sie dürfen nicht irrtümlich wie
-        // ein Meterknoten behandelt werden.
-        if (targetObject?.type !== 'meter') {
-            if (!targetObject || !mkCanAddMeterToAsset(targetObject)) return;
-            event.preventDefault();
-            meterTarget.classList.add('mk-meter-drop-target-active');
-            return;
-        }
-        if (!mkCanBuildCascadeAfterMeter(targetMeter)) return;
-        event.preventDefault();
-        meterTarget.classList.add('mk-meter-drop-target-active');
-        return;
-    }
-    const canDropPaletteOnMeterGroup = meterGroupTarget
-        && mkActiveDrag?.source === 'palette'
-        && mkActiveDrag.type !== 'meter';
-    const canDropAssetOnMeterGroup = meterGroupTarget
-        && mkActiveDrag?.source === 'asset'
-        && mkActiveDrag.id !== meterGroupTarget.dataset.mkMeterGroupTarget;
-    if (canDropPaletteOnMeterGroup || canDropAssetOnMeterGroup) {
-        event.preventDefault();
-        meterGroupTarget.classList.add('mk-meter-group-target-active');
-        return;
-    }
-    if (mkActiveDrag?.source === 'palette' && mkActiveDrag.type === 'meter') return;
-    if (!zone) return;
-    event.preventDefault();
-    zone.classList.add('dragover');
+    return MK_DRAG_DROP.handleCanvasDragOver(event);
 }
 
 function mkHandleCanvasDragLeave(event) {
-    if (MK_DRAG_DROP.handleCanvasDragLeave) return MK_DRAG_DROP.handleCanvasDragLeave(event);
-    const meterTarget = event.target.closest('[data-mk-meter-target]');
-    const baseMeterTarget = event.target.closest('[data-mk-base-meter-target]');
-    if (meterTarget && !meterTarget.contains(event.relatedTarget)) meterTarget.classList.remove('mk-meter-drop-target-active');
-    if (baseMeterTarget && !baseMeterTarget.contains(event.relatedTarget)) baseMeterTarget.classList.remove('mk-meter-drop-target-active');
-    const meterGroupTarget = event.target.closest('[data-mk-meter-group-target]');
-    if (meterGroupTarget && !meterGroupTarget.contains(event.relatedTarget)) meterGroupTarget.classList.remove('mk-meter-group-target-active');
-    const positionTarget = event.target.closest('[data-mk-position-target]');
-    if (positionTarget && !positionTarget.contains(event.relatedTarget)) positionTarget.classList.remove('mk-position-drop-target-active');
-    const zone = event.target.closest('[data-mk-zone]');
-    if (zone && !zone.contains(event.relatedTarget)) zone.classList.remove('dragover');
+    return MK_DRAG_DROP.handleCanvasDragLeave(event);
 }
 
 function mkHandleCanvasDrop(event) {
-    if (MK_DRAG_DROP.handleCanvasDrop) return MK_DRAG_DROP.handleCanvasDrop(event);
-    const meterTarget = event.target.closest('[data-mk-meter-target]');
-    const meterGroupTarget = event.target.closest('[data-mk-meter-group-target]');
-    const baseMeterTarget = event.target.closest('[data-mk-base-meter-target]');
-    const positionTarget = event.target.closest('[data-mk-position-target]');
-    const zone = event.target.closest('[data-mk-zone]') || baseMeterTarget;
-    if (!zone) return;
-    meterTarget?.classList.remove('mk-meter-drop-target-active');
-    baseMeterTarget?.classList.remove('mk-meter-drop-target-active');
-    meterGroupTarget?.classList.remove('mk-meter-group-target-active');
-    positionTarget?.classList.remove('mk-position-drop-target-active');
-    zone.classList.remove('dragover');
-    mkHandleDrop(
-        event,
-        zone?.dataset.mkZone || baseMeterTarget?.dataset.mkZone || '',
-        meterTarget?.dataset.mkMeterTarget || '',
-        meterGroupTarget?.dataset.mkMeterGroupTarget || '',
-        positionTarget?.dataset.mkPositionTarget || '',
-        baseMeterTarget?.dataset.mkBaseMeterTarget || ''
-    );
+    return MK_DRAG_DROP.handleCanvasDrop(event);
 }
 
 function mkHandleCanvasDragStart(event) {
-    if (MK_DRAG_DROP.handleCanvasDragStart) return MK_DRAG_DROP.handleCanvasDragStart(event);
-    const handle = event.target.closest('[data-mk-drag-asset]');
-    if (!handle) return;
-    mkActiveDrag = { source: 'asset', id: handle.dataset.mkDragAsset };
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('application/json', JSON.stringify({ source: 'asset', id: handle.dataset.mkDragAsset }));
+    return MK_DRAG_DROP.handleCanvasDragStart(event);
 }
 
 function mkHandleCanvasDragEnd() {
-    if (MK_DRAG_DROP.handleCanvasDragEnd) return MK_DRAG_DROP.handleCanvasDragEnd();
-    mkActiveDrag = null;
+    return MK_DRAG_DROP.handleCanvasDragEnd();
 }
 
 function mkHandleCanvasClick(event) {
@@ -1180,12 +886,15 @@ function mkInitialize(elements = MK_BOOTSTRAP.collectElements()) {
     MK_DECISION_CALCULATOR.initialize();
     mkInitializeCanvasPan();
 
+    MK_EDITOR.initialize();
     MK_INTERACTION.initialize();
-    MK_BOOTSTRAP.bindResize(() => mkRender());
+    MK_BOOTSTRAP.bindResize(() => MK_RENDER_CYCLE.render());
     mkObserveConnectorGeometry();
-    mkRenderPresetCards();
-    mkSetBuilderVisibility(false);
+    MK_START_FLOW.initialize();
     mkReset();
+    if (window.location.hash === '#messkonzept') {
+        MK_START_FLOW.showScreen();
+    }
 }
 
 MK_BOOTSTRAP.start(mkInitialize);

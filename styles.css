@@ -19,22 +19,31 @@
        Bezeichnung und Symbol, sie tragen die Bedeutung nicht allein. */
     --mk-meter-fg: #0c4a6e;
     --mk-meter-bg: #7dd3fc;
+    --mk-meter-border: color-mix(in srgb, var(--mk-meter-fg) 58%, var(--mk-meter-bg));
     --mk-generation-fg: #713f12;
     --mk-generation-bg: #fde68a;
+    --mk-generation-border: color-mix(in srgb, var(--mk-generation-fg) 58%, var(--mk-generation-bg));
     --mk-consumer-fg: #0f172a;
     --mk-consumer-bg: #94a3b8;
+    --mk-consumer-border: color-mix(in srgb, var(--mk-consumer-fg) 58%, var(--mk-consumer-bg));
     --mk-steuve-fg: #701a75;
     --mk-steuve-bg: #f5d0fe;
+    --mk-steuve-border: color-mix(in srgb, var(--mk-steuve-fg) 58%, var(--mk-steuve-bg));
     --mk-storage-fg: #4c1d95;
     --mk-storage-bg: #c4b5fd;
+    --mk-storage-border: color-mix(in srgb, var(--mk-storage-fg) 58%, var(--mk-storage-bg));
     --mk-wallbox-fg: #155e75;
     --mk-wallbox-bg: #a5f3fc;
+    --mk-wallbox-border: color-mix(in srgb, var(--mk-wallbox-fg) 58%, var(--mk-wallbox-bg));
     --mk-heatpump-fg: #065f46;
     --mk-heatpump-bg: #a7f3d0;
+    --mk-heatpump-border: color-mix(in srgb, var(--mk-heatpump-fg) 58%, var(--mk-heatpump-bg));
     --mk-climate-fg: #1d4ed8;
     --mk-climate-bg: #bfdbfe;
+    --mk-climate-border: color-mix(in srgb, var(--mk-climate-fg) 58%, var(--mk-climate-bg));
     --mk-nsh-fg: #7c2d12;
     --mk-nsh-bg: #fed7aa;
+    --mk-nsh-border: color-mix(in srgb, var(--mk-nsh-fg) 58%, var(--mk-nsh-bg));
     --mk-hak-fg: #f8fafc;
     --mk-hak-bg: #334155;
     --mk-hak-border: #64748b;
@@ -2272,6 +2281,7 @@ html[data-tool="lastgang"] .landing-main {
 
 .mk-palette-icon,
 .mk-asset-icon {
+    box-sizing: border-box;
     width: 32px;
     height: 32px;
     display: grid;
@@ -2282,21 +2292,29 @@ html[data-tool="lastgang"] .landing-main {
     font-weight: 900;
 }
 
+.mk-asset-icon {
+    box-shadow: inset 0 0 0 1px var(--mk-object-border, transparent);
+}
+
 .mk-palette-icon.meter,
 .mk-asset-icon.meter { color: var(--mk-meter-fg); background: var(--mk-meter-bg); }
+.mk-asset-icon.meter { --mk-object-border: var(--mk-meter-border); }
 .mk-palette-icon.generation,
 .mk-asset-icon.generation { color: var(--mk-generation-fg); background: var(--mk-generation-bg); }
+.mk-asset-icon.generation { --mk-object-border: var(--mk-generation-border); }
 .mk-palette-icon.consumer,
 .mk-asset-icon.consumer {
     color: var(--mk-consumer-fg);
     background: var(--mk-consumer-bg);
 }
+.mk-asset-icon.consumer { --mk-object-border: var(--mk-consumer-border); }
 .mk-palette-icon.steuve,
 .mk-asset-icon.steuve {
     color: var(--mk-steuve-fg);
     background: var(--mk-steuve-bg);
     font-size: 1.15rem;
 }
+.mk-asset-icon.steuve { --mk-object-border: var(--mk-steuve-border); }
 .mk-palette-icon.nsh,
 .mk-asset-icon.nsh {
     min-width: 48px;
@@ -2306,6 +2324,7 @@ html[data-tool="lastgang"] .landing-main {
     background: var(--mk-nsh-bg);
     font-size: 0.62rem;
 }
+.mk-asset-icon.nsh { --mk-object-border: var(--mk-nsh-border); }
 
 /* In der Bausteinleiste bleiben alle Symbole gleich breit. Die breitere
    NSH-Darstellung wird nur innerhalb einer Detailkarte verwendet. */
@@ -2318,7 +2337,7 @@ html[data-tool="lastgang"] .landing-main {
 .mk-asset-icon.storage {
     color: var(--mk-storage-fg);
     background: var(--mk-storage-bg);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mk-storage-fg) 22%, transparent);
+    --mk-object-border: var(--mk-storage-border);
     font-size: 1rem;
 }
 
@@ -2358,15 +2377,21 @@ html[data-tool="lastgang"] .landing-main {
     background: var(--mk-wallbox-bg) !important;
 }
 
+.mk-asset-icon.mk-device-wallbox { --mk-object-border: var(--mk-wallbox-border); }
+
 .mk-device-heatpump {
     color: var(--mk-heatpump-fg) !important;
     background: var(--mk-heatpump-bg) !important;
 }
 
+.mk-asset-icon.mk-device-heatpump { --mk-object-border: var(--mk-heatpump-border); }
+
 .mk-device-climate {
     color: var(--mk-climate-fg) !important;
     background: var(--mk-climate-bg) !important;
 }
+
+.mk-asset-icon.mk-device-climate { --mk-object-border: var(--mk-climate-border); }
 
 .mk-device-generic {
     color: var(--mk-steuve-fg) !important;
@@ -2376,8 +2401,8 @@ html[data-tool="lastgang"] .landing-main {
 .mk-charge-symbol {
     position: relative;
     display: block;
-    width: 22px;
-    height: 22px;
+    width: 25px;
+    height: 25px;
     overflow: visible;
     color: currentColor;
     fill: none;
@@ -2391,13 +2416,14 @@ html[data-tool="lastgang"] .landing-main {
 }
 
 .mk-charge-display {
-    fill: color-mix(in srgb, currentColor 12%, transparent);
-    stroke-width: 1.5;
+    fill: color-mix(in srgb, currentColor 14%, transparent);
+    stroke-width: 1.7;
 }
 
 .mk-charge-bolt {
-    fill: currentColor;
-    stroke: none;
+    fill: #facc15;
+    stroke: #facc15;
+    stroke-width: 0.6;
 }
 
 .mk-charge-cable {
@@ -2407,21 +2433,29 @@ html[data-tool="lastgang"] .landing-main {
 
 .mk-charge-plug {
     fill: color-mix(in srgb, currentColor 68%, var(--mk-wallbox-bg));
-    stroke-width: 1.7;
+    stroke-width: 1.9;
 }
 
-.mk-charge-pin { stroke-width: 1.7; }
+.mk-charge-pin {
+    stroke-width: 2.4;
+}
+
+.mk-charge-pin-dot {
+    fill: currentColor;
+    stroke: none;
+    r: 1.05;
+}
 
 /* Das Kabel darf im kleinen Objektfeld über den Symbolrand hinausragen.
    Das Vektorsymbol bleibt auch auf Touch-Geräten scharf und erkennbar. */
 .mk-palette-icon .mk-charge-symbol,
 .mk-asset-icon .mk-charge-symbol {
-    transform: scale(1.08);
+    transform: scale(1.12);
     transform-origin: center;
 }
 
 .mk-zone-assets.simple-mode .mk-asset-icon .mk-charge-symbol {
-    transform: scale(1.16);
+    transform: scale(1.2);
 }
 
 .mk-fan-symbol {
@@ -2462,14 +2496,16 @@ html[data-tool="lastgang"] .landing-main {
 
 .mk-steuve-editor-hint,
 .mk-steuve-editor-notice,
-.mk-steuve-module-hint {
+.mk-steuve-module-hint,
+.mk-steuve-power-hint {
     margin: 0.5rem 0 0;
     font-size: 0.76rem;
     line-height: 1.4;
 }
 
 .mk-steuve-editor-hint,
-.mk-steuve-module-hint {
+.mk-steuve-module-hint,
+.mk-steuve-power-hint {
     color: var(--text-muted);
 }
 
@@ -2923,6 +2959,115 @@ html[data-tool="lastgang"] .landing-main {
     border-radius: 0;
     background: transparent;
     text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.mk-hak-node:focus-visible {
+    outline: 2px solid var(--mk-hak-accent);
+    outline-offset: 0.22rem;
+    border-radius: var(--radius-sm);
+}
+
+.mk-hak-node--transformer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 2.05rem;
+}
+
+.mk-transformer-symbol {
+    position: relative;
+    display: block;
+    width: 1.75rem;
+    height: 2.05rem;
+    flex: 0 0 2.05rem;
+    color: var(--mk-hak-accent);
+}
+
+.mk-transformer-symbol::before,
+.mk-transformer-symbol::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    z-index: 0;
+    width: 2px;
+    height: 0.34rem;
+    border-radius: 999px;
+    background: currentColor;
+    transform: translateX(-50%);
+}
+
+.mk-transformer-symbol::before {
+    top: -0.34rem;
+}
+
+.mk-transformer-symbol::after {
+    bottom: -0.34rem;
+}
+
+.mk-transformer-symbol i {
+    position: absolute;
+    left: 50%;
+    z-index: 1;
+    display: block;
+    width: 1.28rem;
+    height: 1.28rem;
+    box-sizing: border-box;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    transform: translateX(-50%);
+}
+
+.mk-transformer-symbol i:first-child {
+    top: 0.03rem;
+}
+
+.mk-transformer-symbol i:last-child {
+    bottom: 0.03rem;
+}
+
+.mk-hak-editor-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.22rem;
+    min-width: 3.2rem;
+    min-height: 2rem;
+    padding: 0.28rem 0.42rem;
+    border: 1px solid color-mix(in srgb, var(--mk-hak-accent) 62%, var(--mk-hak-border));
+    border-radius: var(--radius-sm);
+    color: var(--mk-hak-fg);
+    background: var(--mk-hak-bg);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.mk-hak-editor-icon .mk-transformer-symbol {
+    color: var(--mk-hak-accent);
+}
+
+.mk-hak-form {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.mk-hak-form select {
+    width: 100%;
+    min-height: 2rem;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    background: var(--bg-color);
+    font: inherit;
+    font-size: 0.78rem;
+}
+
+.mk-hak-editor-hint {
+    color: var(--text-muted);
+    font-size: 0.72rem;
 }
 
 .mk-hak-node::after {
@@ -3860,7 +4005,7 @@ body.mk-modal-open {
     height: 2.75rem;
     flex-basis: 3.5rem;
     border-radius: 0.75rem;
-    box-shadow: 0 0.35rem 0.9rem rgba(2, 6, 23, 0.22);
+    box-shadow: inset 0 0 0 1px var(--mk-object-border, transparent), 0 0.35rem 0.9rem rgba(2, 6, 23, 0.22);
 }
 
 .mk-zone-assets.simple-mode .mk-asset-icon.steuve.mk-device-climate {
@@ -4047,6 +4192,21 @@ body.mk-modal-open {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
+}
+
+.mk-technical-fields-hint {
+    margin: .45rem 0 .15rem;
+    color: var(--mk-muted, #9fb0c7);
+    font-size: .72rem;
+    line-height: 1.35;
+}
+
+.mk-technical-fields-hint + .mk-storage-form-grid {
+    margin-top: .2rem;
+}
+
+.mk-storage-technical-grid {
+    margin-bottom: .15rem;
 }
 
 .mk-asset-form-grid label:last-child {
@@ -7187,6 +7347,24 @@ body.mk-printing .mk-print-sheet {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.module-logo-link {
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.module-logo-link:hover,
+.module-logo-link:focus-visible {
+    color: var(--secondary-color);
+    background-color: var(--surface-hover);
+}
+
+.module-logo-link:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 3px;
 }
 
 .module-logo img {

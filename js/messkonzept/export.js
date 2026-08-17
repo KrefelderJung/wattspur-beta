@@ -51,6 +51,11 @@
 
         function renderExportDetails() {
             const state = getState();
+            const isMediumVoltage = state.hak?.voltageLevel === 'medium';
+            const voltageLabel = isMediumVoltage
+                ? 'Mittelspannung · Transformator-Darstellung'
+                : 'Niederspannung · Hausanschlusskasten';
+            const connectionBlock = `<article class="mk-print-detail-block"><h4>Netzanschluss</h4><div class="mk-meter-detail-value"><span>Spannungsebene</span><b>${escapeHtml(voltageLabel)}</b></div></article>`;
             const meterBlocks = [];
             const meterCount = state.mode === 'parallel' ? state.cascadeLevels : 1;
             for (let index = 0; index < meterCount; index += 1) {
@@ -64,7 +69,7 @@
                     return `<article class="mk-print-detail-block"><h4>${heading}</h4>${renderAssetSummary(asset, true)}</article>`;
                 }).join('')
                 : '<p class="mk-print-muted">Keine zusätzlichen Bausteine angelegt.</p>';
-            return `<section class="mk-print-details"><h3>Objektdetails</h3><div class="mk-print-detail-grid">${meterBlocks.join('')}${assets}</div></section>`;
+            return `<section class="mk-print-details"><h3>Objektdetails</h3><div class="mk-print-detail-grid">${connectionBlock}${meterBlocks.join('')}${assets}</div></section>`;
         }
 
         /*
