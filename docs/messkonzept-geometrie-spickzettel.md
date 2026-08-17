@@ -80,10 +80,13 @@ Ergänzung zur eindeutigen Benennung: `meterToJunctionLinkPx` ist der kurze
 Zusatz-Zählers bis zu seiner Unter-Sammelschiene. `meterRailTopGapPx` bleibt
 der getrennte Abstand `SK-Z → ZK`.
 
-Für den horizontalen Beginn der Anlagenreihe gilt ebenfalls eine gemeinsame
-Regel: `meterRailNodeCenterOffsetPx` gleicht die linke Rail-Kante auf die
-Mittelachse des Zählerknotens aus. Dadurch ist der Abstand `SK → AK` bei einer
-oberen und einer unteren Sammelschiene identisch.
+Für den horizontalen Beginn der Anlagenreihe gilt eine gemeinsame Regel:
+`primaryRailClearancePx` beschreibt den sichtbaren Abstand von der Messachse
+bis zur ersten Anlagenkarte. Sie gilt für Root- und Unter-Sammelschienen
+gleichermassen. Die Layoutmessung darf diesen Wert nur korrigieren, wenn die
+gerenderte Karte sonst zu nah an der Achse liegt. Der sichtbare Löschbutton
+eines Zählers wird mit `meterRemoveButtonClearancePx` nur bei einer echten
+2D-Überlappung als zusätzlicher Sicherheitsabstand berücksichtigt.
 
 | Strecke | Bedeutung | Ziel der Darstellung |
 | --- | --- | --- |
@@ -97,12 +100,17 @@ oberen und einer unteren Sammelschiene identisch.
 
 Für leere, bewusst erhaltene Unter-Rails gilt dieselbe Regel wie für gefüllte
 Rails: Zähler und Sammelschienenknoten bleiben fachlich sichtbar, auch wenn
-keine Anlage mehr angeschlossen ist. Der erste Unter-Rail liegt im Root-Rail
-wegen des Zonen-Insets optisch etwas anders; `rootRailJunctionInsetPx` gleicht
-diesen Einzug aus. Dadurch sind `SK-Z → ZK` zwischen Z1→Z2, Z2→Z3 und tieferen
-Ebenen gleich definiert. Der sichtbare Sammelschienenknoten ist ein semantischer
-HTML-Anker; SVG zeichnet nur die Leitungen und die übrigen nicht-interaktiven
-Geometrie-Markierungen.
+keine Anlage mehr angeschlossen ist. Für `SK-Z → ZK` gibt es keine Root-
+Sonderregel mehr. Z1→Z2, Z2→Z3 und tiefere Ebenen verwenden denselben
+vertikalen Sicherheitsabstand `meterRailTopGapPx`, derzeit 20 px. Der sichtbare
+Sammelschienenknoten ist ein semantischer HTML-Anker; SVG zeichnet nur die
+Leitungen und die übrigen nicht-interaktiven Geometrie-Markierungen.
+
+Technisch bleibt ein solcher leerer Unterzähler anlagenbezogen (`meterScope: asset`).
+`keepEmptyRail: true` hält ihn sichtbar und `railAnchorOrder` bewahrt den früheren
+Anschlussplatz. Diese drei Informationen gehören zusammen. Wird der Zähler bewusst
+auf ein anderes Ziel gezogen, dürfen sie neu gesetzt werden. Beim bloßen Löschen der
+letzten Anlage dürfen sie nicht in eine normale Kaskadenstufe umgewandelt werden.
 
 Die sichtbare Linie darf nur an einem dieser fachlichen Knoten beginnen oder
 enden. Ein einzelnes Liniensegment ohne `HK`, `SK`, `AK`, `ZK` oder `MK` ist
@@ -158,6 +166,10 @@ Die DOM-Reihenfolge und die SVG-Leitungen dürfen diese fachliche Hierarchie nic
 - Ein neuer Zusatz-Zähler darf auch direkt auf einen Basiszähler (`Z1`, `Z2` im Einzähler-Strang) gezogen werden. Das Modell speichert dafür `parentBaseMeterIndex`; daraus entsteht ein eigener Messknoten hinter dem Basiszähler, ohne den Basiszähler als Anlage zu behandeln.
 - Die HAK-/Z1-Spalte hat keinen zusätzlichen unteren Außenabstand. Dadurch ist der Abstand Z1→Z2 genauso groß wie Z2→Z3 und Z3→Z4.
 - Wenn ein innerer Zähler von einer Einzelmessung zu einer eigenen Sammelschiene erweitert wird, bleibt seine Zielachse am reservierten Platz der ursprünglichen Anlage. Reicht der neue Unter-Rail über den nächsten Eintrag hinaus, reserviert Wattspur automatisch zusätzlichen horizontalen Abstand (`railSiblingClearancePx`); die nachfolgenden Anlagen-/Zählerknoten rücken gemeinsam nach rechts. Dadurch darf eine Erweiterung von Z2 oder Z4 weder den Elternbus schneiden noch einen Zähler in eine andere Schiene verschieben.
+- Ein Unter-Rail darf nie links von der Messachse seines direkten Elternzählers liegen. Wird bei der Rückrechnung des ersten Anlagenplatzes ein negativer Versatz berechnet, korrigiert Wattspur ihn ausschließlich nach rechts (`getRailAxisClampShift`). So bleibt auch der linke Randfall innerhalb des Messbereichs.
+- Ein reservierter Anlagenplatz für einen vorgeschalteten Zähler zählt bei der Achsenberechnung als erste Zelle. Die unsichtbare Platzhalterkarte darf nicht übersprungen werden; sonst verschiebt sich die Sammelschiene beim Ausbau scheinbar nach links.
+- Automatische Ausrichtung verwendet nur positive Korrekturen. Ist eine Reihe bereits ausreichend weit rechts, wird sie nicht zurückgeschoben. Das verhindert, dass die erste Anlage oder ein Unterzähler den Hauptstrang kreuzt.
+- Ob ein Root-Rail ein Einzelast ist, wird am vollständigen Rail-Baum geprüft. Ein Unter-Rail innerhalb des Root-Rails zählt als Sammelschiene; eine Prüfung nur auf direkten Zonen-Kindern ist unzulässig, weil sie beim ersten Ausbau eines Parallel- oder Unterzweigs den Root-Strang falsch ausrichten kann.
 
 ## 7. Typische Fehlerbilder und Ursache
 
@@ -168,6 +180,8 @@ Die DOM-Reihenfolge und die SVG-Leitungen dürfen diese fachliche Hierarchie nic
 | Zähler teleportiert in die obere Schiene | Elternbeziehung fehlt oder `getDisplayParentMeterId()` wird nicht berücksichtigt |
 | Neue Anlage erscheint unten links | Direkte Anlagen wurden nach Gruppen chronologisch statt fachlich sortiert |
 | Starker Rechtsruck | Gruppenoffset wird von der gesamten oberen Reihe statt vom unmittelbaren Elternzähler berechnet |
+| Unter-Rail springt links aus dem Messbereich | Negativer Rail-X-Versatz beim ersten/äußersten Gruppenplatz; Achsen-Clamp fehlt oder wurde nicht angewendet |
+| Erste Anlage eines Parallelzweigs zieht den Strang nach links | Unter-Rail wurde wegen einer zu flachen DOM-Prüfung als Einzelast behandelt; Sammelschienenabstand wird dadurch übersprungen |
 
 ## 8. Änderungsstrategie
 
@@ -179,3 +193,24 @@ Bei einer Geometrieänderung zuerst klären, ob es sich um:
 4. ein reines CSS-Abstandsproblem
 
 handelt. Erst danach die zuständige Datei ändern. Die fachliche Topologie bleibt in `messkonzept-topology.js`, wiederverwendbare Koordinatenregeln in `messkonzept-geometry.js`, und die konkrete Darstellung/Routing-Integration in `messkonzept.js`.
+
+## 9. PDF-Export: Bühne und Leitungen gemeinsam halten
+
+Der PDF-Export verwendet dieselbe bereits geroutete Skizze wie der Editor. Die
+SVG-Leitungsebene wird nicht ein zweites Mal fachlich berechnet. Für den Druck
+wird die komplette `.mk-canvas-stage` deshalb als unveränderte Kopie mit den
+bereits ermittelten Breiten und Höhen übernommen.
+
+Der Rahmen und sein Innenabstand liegen außerhalb der Bühne in
+`.mk-print-canvas-frame`. Padding oder Zoom direkt auf `.mk-canvas-stage` ist
+unzulässig, weil dadurch die HTML-Karten verschoben werden können, während die
+absolut positionierte SVG-Leitungsebene am alten Ursprung bleibt. Der
+Regressionstest `tests/pdf-wire-geometry-test.js` schützt diese Regel.
+
+### 9.1 PDF-Ausgabevarianten
+
+Die kompakte Ausgabe und der Gesamtexport nutzen dieselbe Skizzen-Snapshot-
+Funktion. Der kompakte Export lässt nur die ausführlichen Objektdetails weg;
+Projektangaben, Warnhinweis, Prüfstatus und Kommentar bleiben erhalten. Dadurch
+ist die Skizze für eine schnelle Abstimmung weitergebbar, ohne dass für die
+Kurzfassung eine zweite Leitungslogik gepflegt werden muss.

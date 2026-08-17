@@ -85,11 +85,18 @@
 
             bindClick('btn-open-messkonzept-card', () => call('showScreen'));
             bindClick('btn-mk-back', () => call('hideScreen'));
+            bindClick('btn-mk-start-free', () => call('startFree'));
+            bindClick('btn-mk-change-start', () => call('showStartPanel'));
             bindClick('btn-mk-reset', () => {
                 call('reset');
                 call('notify', 'Messkonzept-Skizze zurückgesetzt.', 'info');
             });
-            bindClick('btn-mk-export-pdf', () => call('downloadPdf'));
+            bindClick('btn-mk-export-sketch', () => call('downloadPdf', { scope: 'sketch' }));
+            bindClick('btn-mk-export-pdf', () => call('downloadPdf', { scope: 'full' }));
+
+            documentRef.querySelectorAll('[data-mk-preset]').forEach(button => {
+                button.addEventListener('click', () => call('loadPreset', button.dataset.mkPreset));
+            });
 
             documentRef.querySelectorAll('[data-mk-project-field]').forEach(field => {
                 field.addEventListener('input', event => {
@@ -159,6 +166,14 @@
             });
             documentRef.addEventListener('click', event => {
                 if (!event.target.closest('.mk-palette-heading') && !event.target.closest('#mk-palette-info')) closePaletteInfo();
+            });
+            documentRef.addEventListener('click', event => {
+                const clickedInfo = event.target.closest?.('.mk-start-group-info');
+                const clickedPanel = event.target.closest?.('.mk-start-info-panel');
+                documentRef.querySelectorAll('.mk-start-group-info[open]').forEach(info => {
+                    if (info === clickedInfo && !clickedPanel) return;
+                    info.open = false;
+                });
             });
             elements.objectModal?.addEventListener('click', event => {
                 if (event.target === elements.objectModal) call('closeModal');

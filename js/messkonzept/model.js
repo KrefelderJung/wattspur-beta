@@ -10,19 +10,33 @@
 
     const assetMeta = Object.freeze({
         meter: { label: 'Zähler', short: 'Z', className: 'meter', detail: 'Zusätzlicher Messpunkt' },
-        generation: { label: 'Erzeugungsanlage', short: 'EA', className: 'generation', detail: 'PV, KWK, Wind, Balkonkraftwerk' },
+        generation: { label: 'Erzeugungsanlage', short: 'EA', className: 'generation', detail: 'PV, BHKW, Windenergieanlage, Steckersolar' },
         consumer: { label: 'Sonstige Verbraucher', short: 'V', className: 'consumer', detail: 'Allgemeine Last' },
         steuve: { label: 'Steuerbare Anlage', short: '⚡', className: 'steuve', detail: 'Leistungsabhängig nach § 14a EnWG prüfen' },
         storage: { label: 'Batteriespeicher', short: '▤', className: 'storage', detail: 'Speicheranlage' },
         nsh: { label: 'Nachtspeicherheizung', short: 'NSH', className: 'nsh', detail: 'Historische Tarif- und Messbehandlung prüfen' }
     });
 
+    // Sichtbare Kurzbezeichnungen werden zentral gepflegt. Die internen Werte
+    // bleiben fachlich stabil (z. B. "KWK" und "Balkonkraftwerk"), damit
+    // bestehende Prüfregeln und gespeicherte Skizzen unverändert funktionieren.
+    const generationDisplay = Object.freeze({
+        PV: Object.freeze({ label: 'PV', prefix: 'PV' }),
+        KWK: Object.freeze({ label: 'BHKW', prefix: 'BHKW' }),
+        Wind: Object.freeze({ label: 'Windenergieanlage', prefix: 'WE' }),
+        Balkonkraftwerk: Object.freeze({ label: 'PV', prefix: 'PV' })
+    });
+    const defaultGenerationDisplay = Object.freeze({ label: 'Erzeugungsanlage', prefix: 'EA' });
+
     const assetTypeOptions = Object.freeze({
         generation: [
-            { value: 'PV', label: 'PV-Anlage' },
-            { value: 'KWK', label: 'KWK / BHKW' },
-            { value: 'Wind', label: 'Windrad / Windenergieanlage' },
-            { value: 'Balkonkraftwerk', label: 'Balkonkraftwerk (Steckersolargerät)' }
+            { value: 'PV', label: generationDisplay.PV.label },
+            { value: 'KWK', label: generationDisplay.KWK.label },
+            { value: 'Wind', label: generationDisplay.Wind.label },
+            // Im Messkonzept bleibt die sichtbare Kurzkennung PV. In
+            // Auswahlfeldern muss die Variante jedoch eindeutig erkennbar
+            // sein, damit normale PV und Stecker-PV nicht gleich aussehen.
+            { value: 'Balkonkraftwerk', label: generationDisplay.Balkonkraftwerk.label, selectionLabel: 'Stecker-PV' }
         ],
         steuve: [
             { value: 'Wärmepumpe', label: 'Wärmepumpe' },
@@ -38,7 +52,12 @@
         { value: 'Modul 3', label: 'Modul 3' }
     ]);
 
-    const storageInfoText = 'Achtung: Die Registrierung des Stromspeichers im Marktstammdatenregister ist zu prüfen. Beim netzbezogenen Laden ist zusätzlich zu prüfen, ob § 14a EnWG greift; Einspeisung und Bezug sind getrennt zu betrachten. Messkonzept mit dem Verteilnetzbetreiber abstimmen.';
+    const storageGridOptions = Object.freeze([
+        { value: 'unknown', label: 'Noch nicht festgelegt' },
+        { value: 'no', label: 'Nein' },
+        { value: 'yes', label: 'Ja' }
+    ]);
+    const storageInfoText = 'Achtung: Die Registrierung des Stromspeichers im Marktstammdatenregister ist zu prüfen. Einspeisung und Bezug sind getrennt zu betrachten. Die konkrete Betriebsweise und das Messkonzept mit dem Verteilnetzbetreiber abstimmen.';
     const balconyInfoText = 'Balkonkraftwerk / Steckersolargerät: Registrierung im Marktstammdatenregister prüfen. Die vereinfachte Behandlung hängt unter anderem von Leistungsgrenzen und der gewählten EEG-Veräußerungsform ab.';
     const meterDetailFields = Object.freeze([
         { key: 'maloBezug', label: 'MaLo Bezug', type: 'text' },
@@ -47,6 +66,52 @@
         { key: 'meterNumber', label: 'Zählernummer', type: 'text' },
         { key: 'installationDate', label: 'Einbaudatum', type: 'date' }
     ]);
+
+    function getGenerationDisplay(energyCarrier) {
+        return generationDisplay[energyCarrier] || defaultGenerationDisplay;
+    }
+
+    function normalizeStorageGridChoice(value) {
+        return ['yes', 'no'].includes(value) ? value : 'unknown';
+    }
+
+    function getStorageOperation(storage) {
+        const feedIn = normalizeStorageGridChoice(storage?.storageGridFeedIn);
+        const gridImport = normalizeStorageGridChoice(storage?.storageGridImport);
+        if (feedIn === 'no' && gridImport === 'no') {
+            return {
+                key: 'pv-surplus-only',
+                label: 'Nur PV-Überschuss laden',
+                notice: 'Kein Netzbezug zum Laden und keine Netzeinspeisung des Speichers ausgewählt. Das entspricht einem reinen PV-Überschussbetrieb, sofern ausschließlich erneuerbarer Strom geladen wird.'
+            };
+        }
+        if (feedIn === 'yes' && gridImport === 'no') {
+            return {
+                key: 'grid-feed-in',
+                label: 'Netzeinspeisung ohne Netzbezug zum Laden',
+                notice: 'Bei Einspeisung aus dem Speicher muss der Vermarktungsweg geklärt werden. Je nach Anlage und Vergütungsweg kann Direktvermarktung erforderlich sein.'
+            };
+        }
+        if (feedIn === 'no' && gridImport === 'yes') {
+            return {
+                key: 'grid-import-only',
+                label: 'Netzbezug zum Laden, keine Netzeinspeisung',
+                notice: 'Netzbezug zum Laden ausgewählt. § 14a EnWG, Messung und die Auswirkungen auf eine mögliche EEG-Behandlung sind fachlich zu prüfen.'
+            };
+        }
+        if (feedIn === 'yes' && gridImport === 'yes') {
+            return {
+                key: 'mixed-grid-operation',
+                label: 'Mischbetrieb mit Netzbezug und Netzeinspeisung',
+                notice: 'Bei Netzbezug zum Laden und späterer Einspeisung können EEG-Förderung und Umlagebehandlung von Betriebsweise und Messung abhängen. Reiner EE-Speicher und Mischbetrieb sind getrennt zu bewerten.'
+            };
+        }
+        return {
+            key: 'open',
+            label: 'Betriebsweise noch offen',
+            notice: 'Bitte festlegen, ob der Speicher aus dem öffentlichen Netz laden oder in das öffentliche Netz einspeisen darf.'
+        };
+    }
 
     function createState() {
         return {
@@ -126,8 +191,8 @@
             && (type !== 'steuve' || asset.steuveType === steuveType)
             && (type !== 'generation' || asset.energyCarrier === selectedEnergyCarrier)).length + 1;
         // Erzeugungsanlagen erhalten eine eigene, energietraegerunabhaengige
-        // laufende Nummer. Dadurch bleiben PV, KWK und Wind im Schema als
-        // EA1, EA2, EA3 eindeutig unterscheidbar.
+        // laufende Nummer. Die sichtbare Kennung (z. B. PV1, BHKW2 oder WE3)
+        // wird aus der gewählten Anlagenart abgeleitet.
         const existingGenerationNumbers = currentState.assets
             .filter(asset => asset.type === 'generation')
             .map((asset, index) => {
@@ -141,7 +206,7 @@
             : null;
         const defaultNames = {
             meter: `Zusatzzaehler ${sameType}`,
-            generation: selectedEnergyCarrier === 'Balkonkraftwerk' ? `Balkonkraftwerk ${generationNumber}` : `EA ${generationNumber}`,
+            generation: `${getGenerationDisplay(selectedEnergyCarrier).prefix}${generationNumber}`,
             consumer: `Sonstiger Verbraucher ${sameType}`,
             steuve: `${steuveType || 'Steuerbare Anlage'} ${sameType}`,
             storage: `Speicher ${sameType}`,
@@ -160,9 +225,15 @@
             commissioningDate: '',
             meterRole: type === 'meter' ? 'Bezug / Lieferung' : '',
             generationMeter: false,
+            storageGridFeedIn: type === 'storage' ? 'unknown' : '',
+            storageGridImport: type === 'storage' ? 'unknown' : '',
             generationNumber,
             meterScope: type === 'meter' ? 'asset' : '',
             targetAssetId: '',
+            // Wird nur bei einer Zielanlagen-Loeschung gesetzt. Der Wert
+            // bewahrt den bisherigen Anschlussplatz der Unter-Sammelschiene,
+            // waehrend der Zaehler auf eine verbleibende Anlage umhaengt.
+            railAnchorOrder: null,
             parentMeterId: '',
             meterId: '',
             keepEmptyRail: false
@@ -311,6 +382,8 @@
     global.WattspurMesskonzeptModel = Object.freeze({
         assetMeta,
         assetTypeOptions,
+        generationDisplay,
+        storageGridOptions,
         steuveModuleOptions,
         storageInfoText,
         balconyInfoText,
@@ -336,6 +409,9 @@
         swapAssetPositions,
         moveAssetBefore,
         moveAssetAfter,
-        moveMeterSubtreeToZone
+        moveMeterSubtreeToZone,
+        getGenerationDisplay,
+        normalizeStorageGridChoice,
+        getStorageOperation
     });
 }(window));

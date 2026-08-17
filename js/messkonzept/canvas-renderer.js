@@ -16,6 +16,7 @@
         const escapeHtml = options.escapeHtml || (value => String(value ?? ''));
         const assetMeta = options.assetMeta || {};
         const assetTypeOptions = options.assetTypeOptions || {};
+        const storageGridOptions = options.storageGridOptions || [];
         const meterDetailFields = options.meterDetailFields || [];
         const layoutGeometry = options.layoutGeometry || {};
 
@@ -81,7 +82,6 @@
             <label>Leistung<input type="text" data-mk-field="power" value="${escapeHtml(asset.power)}" placeholder="kW / kWp"></label>
             <label>Inbetriebnahme<input type="date" data-mk-field="commissioningDate" value="${escapeHtml(asset.commissioningDate)}"></label>
         </div>
-        <p class="mk-meter-assignment-hint">Einen eigenen Zähler setzt du per Drag &amp; Drop aus der Bausteinleiste auf diese Anlage.</p>
     ` : '';
             const steuveFields = asset.type === 'steuve' ? `
         <div class="mk-asset-form-grid">
@@ -95,6 +95,14 @@
         <label>Bestand / Inbetriebnahme<input type="date" data-mk-field="commissioningDate" value="${escapeHtml(asset.commissioningDate)}"></label>
         <p class="mk-nsh-editor-hint">Vor 2024 können historische Tarif- und Messbedingungen gelten. Bei gemeinsamer Messung mit einer aktuellen SteuVE bitte abstimmen.</p>
     ` : '';
+            const storageFields = asset.type === 'storage' ? `
+        <div class="mk-asset-form-grid mk-storage-form-grid">
+            <label>Ins öffentliche Netz einspeisen<select data-mk-field="storageGridFeedIn">${renderOptions(storageGridOptions, asset.storageGridFeedIn, 'Noch nicht festgelegt')}</select></label>
+            <label>Zum Laden Strom aus dem Netz beziehen<select data-mk-field="storageGridImport">${renderOptions(storageGridOptions, asset.storageGridImport, 'Noch nicht festgelegt')}</select></label>
+        </div>
+        <p class="mk-storage-editor-hint" data-mk-storage-notice="${escapeHtml(asset.id)}">${escapeHtml(call('getStorageOperation', { notice: '' }, asset)?.notice || '')}</p>
+        <p class="mk-storage-source-links">Fachliche Orientierung: <a href="https://www.clearingstelle-eeg-kwkg.de/haeufige-rechtsfrage/181" target="_blank" rel="noopener noreferrer">Clearingstelle EEG|KWKG</a> · <a href="https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/ErneuerbareEnergien/Solaranlagen/Nutzung_table.html" target="_blank" rel="noopener noreferrer">Bundesnetzagentur</a></p>
+    ` : '';
             return `
         <div class="mk-object-editor-form" data-mk-asset-id="${escapeHtml(asset.id)}">
             <div class="mk-asset-form">
@@ -103,6 +111,7 @@
                 ${generationFields}
                 ${steuveFields}
                 ${nshFields}
+                ${storageFields}
             </div>
         </div>
     `;
@@ -117,7 +126,7 @@
                 asset.type === 'meter' ? { label: 'Zählerfunktion', value: asset.meterRole } : null,
                 asset.type === 'meter' ? { label: 'Messbereich', value: asset.meterScope === 'base' ? 'Hinter Basiszähler' : asset.meterScope === 'asset' ? 'Vor einzelner Anlage' : 'Vor Anlagengruppe' } : null,
                 asset.type === 'meter' ? { label: 'Zähler vor', value: asset.meterScope === 'base' ? 'Basiszähler der Messstufe' : asset.meterScope === 'asset' ? (currentState.assets.find(item => item.id === asset.targetAssetId)?.name || 'Einzelanlage') : 'Anlagengruppe' } : null,
-                asset.type === 'generation' ? { label: 'Energieträger', value: asset.energyCarrier } : null,
+                asset.type === 'generation' ? { label: 'Anlagenart', value: call('getAssetTypeLabel', asset.energyCarrier, asset) } : null,
                 asset.type === 'generation' ? { label: 'Leistung', value: asset.power } : null,
                 asset.type === 'generation' ? { label: 'Inbetriebnahme', value: asset.commissioningDate } : null,
                 asset.type === 'generation' ? { label: 'Erzeugungszähler', value: asset.generationMeter ? `Ja · Z${getGenerationMeterNumber(asset)}` : (includeEmpty ? 'Nein' : '') } : null,
@@ -128,7 +137,9 @@
                 asset.type === 'steuve' ? { label: '§14a-Modul', value: asset.steuveModule } : null,
                 asset.type === 'nsh' ? { label: 'Bestand / Inbetriebnahme', value: asset.commissioningDate } : null,
                 asset.type === 'nsh' ? { label: 'Einordnung', value: call('getNshRegime', '', asset) } : null,
-                asset.type === 'storage' ? { label: 'Betriebsrolle', value: 'Erzeugung und Bezug · § 14a beim Bezug prüfen' } : null
+                asset.type === 'storage' ? { label: 'Betriebsweise', value: call('getStorageOperation', { label: 'Betriebsweise noch offen' }, asset)?.label } : null,
+                asset.type === 'storage' ? { label: 'Netzeinspeisung', value: asset.storageGridFeedIn === 'yes' ? 'Ja' : asset.storageGridFeedIn === 'no' ? 'Nein' : 'Noch offen' } : null,
+                asset.type === 'storage' ? { label: 'Netzbezug zum Laden', value: asset.storageGridImport === 'yes' ? 'Ja' : asset.storageGridImport === 'no' ? 'Nein' : 'Noch offen' } : null
             ].filter(Boolean).filter(entry => includeEmpty || String(entry.value || '').trim());
             return entries.map(entry => `<div class="mk-meter-detail-value"><span>${escapeHtml(entry.label)}</span><b>${escapeHtml(String(entry.value || '—'))}</b></div>`).join('');
         }

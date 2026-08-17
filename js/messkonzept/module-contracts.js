@@ -11,6 +11,8 @@
 
     const REQUIRED_FACTORIES = Object.freeze([
         'WattspurMesskonzeptModel',
+        'WattspurMesskonzeptPresets',
+        'WattspurMesskonzeptPresetLoader',
         'WattspurMesskonzeptGeometry',
         'WattspurMesskonzeptTopology',
         'WattspurMesskonzeptRules',

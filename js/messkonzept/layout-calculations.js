@@ -43,13 +43,19 @@
                 }))
                 .filter(entry => entry.child.meterScope === 'asset'
                     && entry.meter?.id
-                    && entry.meter.targetAssetId)
+                    && (entry.meter.targetAssetId
+                        || (Number.isFinite(Number(entry.meter.railAnchorOrder))
+                            && Number(entry.meter.railAnchorOrder) >= 0)))
                 .map(entry => ({
                     id: entry.meter.id,
-                    targetAssetId: entry.meter.targetAssetId,
-                    order: getAssetOrder(entry.meter.targetAssetId)
+                    targetAssetId: entry.meter.targetAssetId || '',
+                    order: Number.isFinite(Number(entry.meter.railAnchorOrder))
+                        && Number(entry.meter.railAnchorOrder) >= 0
+                        ? Number(entry.meter.railAnchorOrder)
+                        : getAssetOrder(entry.meter.targetAssetId)
                 }))
-                .filter(slot => slot.order >= 0 && !visibleAssetIds.has(slot.targetAssetId));
+                .filter(slot => slot.order >= 0
+                    && (!slot.targetAssetId || !visibleAssetIds.has(slot.targetAssetId)));
         }
 
         function getRailEntries(rail) {

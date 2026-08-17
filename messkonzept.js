@@ -8,9 +8,15 @@
 const MK_MODULE_CONTRACTS = window.WattspurMesskonzeptModuleContracts;
 MK_MODULE_CONTRACTS.assertLoaded();
 const MK_MODEL = window.WattspurMesskonzeptModel;
+const MK_PRESETS = window.WattspurMesskonzeptPresets;
+const MK_PRESET_LOADER = window.WattspurMesskonzeptPresetLoader.createPresetLoader({
+    model: MK_MODEL,
+    presets: MK_PRESETS
+});
 const MK_ASSET_META = MK_MODEL.assetMeta;
 const MK_ASSET_TYPE_OPTIONS = MK_MODEL.assetTypeOptions;
 const MK_STEUVE_MODULE_OPTIONS = MK_MODEL.steuveModuleOptions;
+const MK_STORAGE_GRID_OPTIONS = MK_MODEL.storageGridOptions;
 const MK_STORAGE_INFO_TEXT = MK_MODEL.storageInfoText;
 const MK_BALCONY_INFO_TEXT = MK_MODEL.balconyInfoText;
 const MK_ASSETS_PER_ROW = 3;
@@ -40,6 +46,7 @@ const MK_LAYOUT = window.WattspurMesskonzeptLayout.createLayoutController({
     getAdditionalMeters: () => mkGetAdditionalMeters(),
     getStageScale: stage => MK_GEOMETRY.getStageScale(stage),
     getRailSiblingCollisionShift: (railRight, nextLeft, clearance) => MK_GEOMETRY.getRailSiblingCollisionShift(railRight, nextLeft, clearance),
+    getRailAxisClampShift: (parentAxisCenter, childAxisCenter, clearance) => MK_GEOMETRY.getRailAxisClampShift(parentAxisCenter, childAxisCenter, clearance),
     assetsPerRowDefault: MK_ASSETS_PER_ROW,
     layoutGeometry: MK_LAYOUT_GEOMETRY
 });
@@ -66,7 +73,8 @@ const MK_RENDER = window.WattspurMesskonzeptRender.createRenderer({
     getAssetsPerRow: mkGetAssetsPerRow,
     getLayoutGeometry: () => MK_LAYOUT_GEOMETRY,
     storageInfoText: MK_STORAGE_INFO_TEXT,
-    balconyInfoText: MK_BALCONY_INFO_TEXT
+    balconyInfoText: MK_BALCONY_INFO_TEXT,
+    getStorageOperation: asset => MK_MODEL.getStorageOperation(asset)
 });
 
 const MK_HISTORY = window.WattspurMesskonzeptHistory.createHistoryController({
@@ -102,6 +110,8 @@ const MK_PROJECT_META = window.WattspurMesskonzeptProjectMeta.createProjectMetaC
     bindHistoryButtons: () => MK_HISTORY.bindButtons()
 });
 
+const MK_DECISION_CALCULATOR = window.WattspurMesskonzeptDecisionCalculator.createController();
+
 const MK_VALIDATION_STATUS = window.WattspurMesskonzeptValidationStatus.createValidationStatusController({
     getState: () => mkConfiguratorState,
     getElements: () => mkElements,
@@ -121,6 +131,7 @@ const MK_CANVAS_RENDERER = window.WattspurMesskonzeptCanvasRenderer.createCanvas
     getElements: () => mkElements,
     assetMeta: MK_ASSET_META,
     assetTypeOptions: MK_ASSET_TYPE_OPTIONS,
+    storageGridOptions: MK_STORAGE_GRID_OPTIONS,
     steuveModuleOptions: MK_STEUVE_MODULE_OPTIONS,
     meterDetailFields: MK_METER_DETAIL_FIELDS,
     layoutGeometry: MK_LAYOUT_GEOMETRY,
@@ -132,6 +143,8 @@ const MK_CANVAS_RENDERER = window.WattspurMesskonzeptCanvasRenderer.createCanvas
     renderSteuveModuleFields: asset => mkRenderSteuveModuleFields(asset),
     getAssetMeterNumber: asset => mkGetAssetMeterNumber(asset),
     getGenerationMeterNumber: asset => mkGetGenerationMeterNumber(asset),
+    getGenerationDisplay: asset => mkGetGenerationDisplay(asset),
+    getStorageOperation: asset => MK_MODEL.getStorageOperation(asset),
     getSteuveRegime: asset => mkGetSteuveRegime(asset),
     getNshRegime: asset => mkGetNshRegime(asset),
     getSteuveIconClass: asset => mkGetSteuveIconClass(asset),
@@ -190,9 +203,12 @@ const MK_INTERACTION = window.WattspurMesskonzeptInteraction.createInteractionCo
     callbacks: {
         showScreen: () => mkShowScreen(),
         hideScreen: () => mkHideScreen(),
+        startFree: () => mkStartFreeConfigurator(),
+        showStartPanel: () => mkShowStartPanel(),
+        loadPreset: presetId => mkLoadPreset(presetId),
         reset: () => MK_COMMANDS.reset(),
         notify: (message, type) => mkNotify(message, type),
-        downloadPdf: () => mkDownloadPdf(),
+        downloadPdf: options => mkDownloadPdf(options),
         changeMode: mode => MK_COMMANDS.changeMode(mode),
         changeCascadeLevels: level => MK_COMMANDS.changeCascadeLevels(level),
         changeViewMode: view => MK_COMMANDS.changeViewMode(view),
@@ -285,7 +301,92 @@ function mkEscapeHtml(value) {
 
 function mkRenderSelectOptions(options, selectedValue, placeholder = 'Bitte auswählen') {
     const placeholderMarkup = selectedValue ? '' : `<option value="" disabled selected>${mkEscapeHtml(placeholder)}</option>`;
-    return `${placeholderMarkup}${options.map(option => `<option value="${mkEscapeHtml(option.value)}" ${option.value === selectedValue ? 'selected' : ''}>${mkEscapeHtml(option.label)}</option>`).join('')}`;
+    return `${placeholderMarkup}${options.map(option => {
+        const visibleLabel = option.selectionLabel || option.label;
+        return `<option value="${mkEscapeHtml(option.value)}" ${option.value === selectedValue ? 'selected' : ''}>${mkEscapeHtml(visibleLabel)}</option>`;
+    }).join('')}`;
+}
+
+function mkGetPresetFlowChipClass(label) {
+    const normalized = String(label || '').toLocaleLowerCase('de-DE');
+    const kinds = [];
+    if (normalized.includes('haushalt')) kinds.push('consumer');
+    if (normalized.includes('pv')) kinds.push('generation');
+    if (normalized.includes('speicher')) kinds.push('storage');
+    if (normalized.includes('wallbox')) kinds.push('wallbox');
+    if (normalized.includes('wärmepumpe')) kinds.push('heatpump');
+    if (normalized.includes('klimaanlage')) kinds.push('climate');
+    if (normalized.includes('nachtspeicher')) kinds.push('nsh');
+    if (kinds.length > 1) return 'mk-start-flow-chip--mixed';
+    return kinds.length === 1 ? `mk-start-flow-chip--${kinds[0]}` : 'mk-start-flow-chip--neutral';
+}
+
+function mkRenderPresetInfo(groupId) {
+    const info = MK_PRESETS.getGroupInfo?.(groupId);
+    if (!info) return '';
+    const renderList = items => `<ul>${items.map(item => `<li>${mkEscapeHtml(item)}</li>`).join('')}</ul>`;
+    const renderLinks = links => links?.length
+        ? `<div class="mk-start-info-links"><span>Mehr erfahren:</span>${links.map(link => `<a href="${mkEscapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${mkEscapeHtml(link.label)} ↗</a>`).join('')}</div>`
+        : '';
+    return `
+        <p class="mk-start-info-intro">${mkEscapeHtml(info.intro)}</p>
+        <div class="mk-start-info-columns">
+            <div><strong>Vorteile</strong>${renderList(info.advantages)}</div>
+            <div><strong>Worauf achten?</strong>${renderList(info.cautions)}</div>
+        </div>
+        ${renderLinks(info.links)}
+    `;
+}
+
+function mkRenderPresetCards() {
+    const startPanel = mkElements.startPanel;
+    if (!startPanel) return;
+    startPanel.querySelectorAll('[data-mk-preset-group]').forEach(group => {
+        const groupId = group.dataset.mkPresetGroup;
+        const entries = MK_PRESETS.getCatalog().filter(entry => entry.group === groupId);
+        const infoHost = group.closest('.mk-start-group')?.querySelector('[data-mk-preset-info]');
+        if (infoHost) infoHost.innerHTML = mkRenderPresetInfo(groupId);
+        group.innerHTML = entries.map(entry => `
+            <button type="button" class="mk-start-card" data-mk-preset="${mkEscapeHtml(entry.id)}" aria-label="${mkEscapeHtml(`Vorlage ${entry.title} laden. ${entry.summary}`)}">
+                <span class="mk-start-card-title">${mkEscapeHtml(entry.title)}</span>
+                <span class="mk-start-card-flow" aria-hidden="true">${entry.flow.map(label => `<span class="mk-start-flow-chip ${mkGetPresetFlowChipClass(label)}">${mkEscapeHtml(label)}</span>`).join('')}</span>
+            </button>
+        `).join('');
+        group.querySelectorAll('[data-mk-preset]').forEach(button => {
+            button.addEventListener('click', () => mkLoadPreset(button.dataset.mkPreset));
+        });
+    });
+}
+
+function mkSetBuilderVisibility(showBuilder) {
+    if (mkElements.startPanel) mkElements.startPanel.classList.toggle('hidden', showBuilder);
+    if (mkElements.builderShell) mkElements.builderShell.classList.toggle('hidden', !showBuilder);
+}
+
+function mkShowStartPanel() {
+    mkRenderPresetCards();
+    mkSetBuilderVisibility(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function mkStartFreeConfigurator() {
+    MK_COMMANDS.reset();
+    MK_MODEL.history.undo = [];
+    MK_MODEL.history.redo = [];
+    mkSetBuilderVisibility(true);
+    mkRender();
+}
+
+function mkLoadPreset(presetId) {
+    try {
+        MK_PRESET_LOADER.applyPreset(mkConfiguratorState, presetId);
+        MK_MODEL.history.undo = [];
+        MK_MODEL.history.redo = [];
+        mkSetBuilderVisibility(true);
+        mkRender();
+    } catch (error) {
+        mkNotify(error.message || 'Vorlage konnte nicht geladen werden.', 'error');
+    }
 }
 
 function mkCreateMeterDetails() {
@@ -468,6 +569,10 @@ function mkGetAssetTypeLabel(asset) {
     return '';
 }
 
+function mkGetGenerationDisplay(asset) {
+    return MK_MODEL.getGenerationDisplay(asset?.energyCarrier);
+}
+
 function mkGetSteuveIconClass(asset) {
     if (asset?.type !== 'steuve') return '';
     const classes = {
@@ -547,15 +652,22 @@ function mkGetGenerationAssetNumber(asset) {
     return index < 0 ? null : index + 1;
 }
 
+function mkSyncGenerationName(asset) {
+    if (asset?.type !== 'generation' || !/^(?:EA|PV|BHKW|WE)\s*\d+$|^Balkonkraftwerk\s+\d+$/.test(String(asset.name || '').trim())) return;
+    const number = mkGetGenerationAssetNumber(asset);
+    if (number) asset.name = `${mkGetGenerationDisplay(asset).prefix}${number}`;
+}
+
 function mkRenderAssetIcon(asset) {
     const meta = MK_ASSET_META[asset.type];
     if (asset.type === 'generation') {
         const number = mkGetGenerationAssetNumber(asset);
-        return number ? `EA${number}` : meta.short;
+        const prefix = mkGetGenerationDisplay(asset).prefix;
+        return number ? `${prefix}${number}` : meta.short;
     }
     if (asset.type === 'storage') return '<span class="mk-battery-symbol" aria-hidden="true"><span class="mk-battery-level"></span></span>';
     if (asset.type === 'steuve') {
-        if (asset.steuveType === 'Wallbox') return '<span class="mk-charge-symbol" aria-hidden="true"><span class="mk-charge-bolt">⚡</span><span class="mk-charge-cable"></span></span>';
+        if (asset.steuveType === 'Wallbox') return '<svg class="mk-charge-symbol" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="mk-charge-body" x="4.5" y="3" width="13" height="18.5" rx="2.6"></rect><rect class="mk-charge-display" x="7.2" y="6" width="7.6" height="5.8" rx="1.4"></rect><path class="mk-charge-bolt" d="m11.8 6.8-2.1 3.1h1.8l-.5 2.3 2.9-3.7h-1.7l.9-1.7z"></path><path class="mk-charge-cable" d="M17.5 15.5c4.8 0 7 2.1 7 5.4v1.3"></path><rect class="mk-charge-plug" x="20.8" y="21.8" width="6.5" height="5.4" rx="1.4"></rect><path class="mk-charge-pin" d="M22.5 21.8v-2.1m3.1 2.1v-2.1"></path></svg>';
         if (asset.steuveType === 'Wärmepumpe') return '<span class="mk-fan-symbol" aria-hidden="true"><span class="mk-fan-blade mk-fan-blade-1"></span><span class="mk-fan-blade mk-fan-blade-2"></span><span class="mk-fan-blade mk-fan-blade-3"></span><span class="mk-fan-hub"></span></span>';
         const icons = { Klimaanlage: '❄' };
         return mkEscapeHtml(icons[asset.steuveType] || meta.short);
@@ -767,6 +879,10 @@ function mkScheduleConnectorGeometry() {
         // kann den Unterzaehler bei einer erneuten Erweiterung verschieben.
         mkUpdateSimpleAssetStrands();
         mkUpdateMeterGroupOffsets();
+        // Die Rail-Ausrichtung wird nach den Zielkarten-/Kollisionsversetzen
+        // ein zweites Mal gemessen. Dadurch verwenden Root- und Unter-
+        // Sammelschienen denselben echten DOM-Abstand zur ersten Karte.
+        mkUpdateSimpleAssetStrands();
         mkUpdateParallelBus();
         mkUpdateDynamicConnections();
         mkCenterParallelViewport();
@@ -845,6 +961,12 @@ function mkUpdateAssetField(event) {
     const previousState = mkGetFieldHistoryBefore(event);
     const field = event.target.dataset.mkField;
     asset[field] = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    if (asset.type === 'generation' && field === 'energyCarrier') mkSyncGenerationName(asset);
+    if (asset.type === 'storage' && ['storageGridFeedIn', 'storageGridImport'].includes(field)) {
+        const notice = card.querySelector(`[data-mk-storage-notice="${mkEscapeHtml(asset.id)}"]`);
+        if (notice) notice.textContent = MK_MODEL.getStorageOperation(asset).notice;
+        mkRender();
+    }
     if (asset.type === 'steuve' && ['power', 'steuveType'].includes(field)) {
         const notice = card.querySelector(`[data-mk-steuve-notice="${asset.id}"]`);
         if (notice) notice.innerHTML = mkRenderSteuveNotice(asset);
@@ -881,12 +1003,12 @@ function mkRenderExportDetails() {
     return MK_EXPORT.renderExportDetails();
 }
 
-function mkRenderPrintSheet(stand) {
-    return MK_EXPORT.renderPrintSheet(stand);
+function mkRenderPrintSheet(stand, options) {
+    return MK_EXPORT.renderPrintSheet(stand, options);
 }
 
-function mkDownloadPdf() {
-    return MK_EXPORT.downloadPdf();
+function mkDownloadPdf(options) {
+    return MK_EXPORT.downloadPdf(options);
 }
 
 function mkShowScreen() {
@@ -894,6 +1016,8 @@ function mkShowScreen() {
     if (upload) upload.classList.add('hidden');
     if (dashboard) dashboard.classList.add('hidden');
     if (screen) screen.classList.remove('hidden');
+    mkRenderPresetCards();
+    mkSetBuilderVisibility(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     window.requestAnimationFrame(() => mkRender());
 }
@@ -1053,11 +1177,14 @@ function mkHandleCanvasClick(event) {
 function mkInitialize(elements = MK_BOOTSTRAP.collectElements()) {
     mkElements = elements || {};
     if (!mkElements.canvas) return;
+    MK_DECISION_CALCULATOR.initialize();
     mkInitializeCanvasPan();
 
     MK_INTERACTION.initialize();
     MK_BOOTSTRAP.bindResize(() => mkRender());
     mkObserveConnectorGeometry();
+    mkRenderPresetCards();
+    mkSetBuilderVisibility(false);
     mkReset();
 }
 

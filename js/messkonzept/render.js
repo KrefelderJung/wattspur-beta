@@ -29,6 +29,7 @@
         const getRailEntries = deps.getRailEntries || (rail => (rail.assets || []).map(asset => ({ kind: 'asset', asset, order: 0 })));
         const getAssetsPerRow = deps.getAssetsPerRow || (count => Math.max(1, count));
         const getLayoutGeometry = deps.getLayoutGeometry || (() => ({}));
+        const getStorageOperation = deps.getStorageOperation || (() => ({ notice: '' }));
         const storageInfoText = deps.storageInfoText || '';
         const balconyInfoText = deps.balconyInfoText || '';
 
@@ -46,8 +47,10 @@
             const generationMeterNumber = asset.type === 'generation' && asset.generationMeter && !attachedMeter
                 ? getGenerationMeterNumber(asset)
                 : null;
+            const storageOperation = asset.type === 'storage' ? getStorageOperation(asset) : null;
+            const storageNotice = [storageInfoText, storageOperation?.notice].filter(Boolean).join(' ');
             const storageInfoMarkup = asset.type === 'storage' && viewMode === 'detail'
-                ? `<span class="mk-storage-info" data-tooltip="${escapeHtml(storageInfoText)}" title="${escapeHtml(storageInfoText)}" role="img" tabindex="0" aria-label="Hinweis zum Speicher">i</span>`
+                ? `<span class="mk-storage-info" data-tooltip="${escapeHtml(storageNotice)}" title="${escapeHtml(storageNotice)}" role="img" tabindex="0" aria-label="Hinweis zum Speicher">i</span>`
                 : '';
             const balconyInfoMarkup = asset.type === 'generation' && asset.energyCarrier === 'Balkonkraftwerk' && viewMode === 'detail'
                 ? `<span class="mk-storage-info" data-tooltip="${escapeHtml(balconyInfoText)}" title="${escapeHtml(balconyInfoText)}" role="img" tabindex="0" aria-label="Hinweis zum Balkonkraftwerk">i</span>`
@@ -107,7 +110,9 @@
                 && railChildren.length === 0
             );
             const geometry = getLayoutGeometry();
-            const railAttributes = ` data-mk-meter-rail="${escapeHtml(rail.meterId || 'root')}" data-mk-depth="${rail.depth}"${rail.meterId ? ` data-mk-parent-meter="${escapeHtml(parentMeter)}" style="--mk-meter-rail-top-gap-px: ${geometry.meterRailTopGapPx}px; --mk-meter-rail-node-center-offset-px: ${geometry.meterRailNodeCenterOffsetPx}px;"` : ` data-mk-root-rail="true" style="--mk-root-rail-junction-inset-px: ${geometry.rootRailJunctionInsetPx}px;"`}`;
+            const railAssetStartGap = Number(geometry.primaryRailClearancePx) || 12.8;
+            const meterRemoveClearance = Number(geometry.meterRemoveButtonClearancePx) || 8;
+            const railAttributes = ` data-mk-meter-rail="${escapeHtml(rail.meterId || 'root')}" data-mk-depth="${rail.depth}"${rail.meterId ? ` data-mk-parent-meter="${escapeHtml(parentMeter)}" style="--mk-meter-rail-top-gap-px: ${geometry.meterRailTopGapPx}px; --mk-rail-asset-start-gap-px: ${railAssetStartGap}px; --mk-meter-remove-button-clearance-px: ${meterRemoveClearance}px;"` : ` data-mk-root-rail="true" style="--mk-rail-asset-start-gap-px: ${railAssetStartGap}px;"`}`;
             const meterAttributes = rail.meterId ? ` data-mk-meter-group="${escapeHtml(rail.meterId)}"` : '';
             const isAssetGroupRail = Boolean(railMeter?.meterScope === 'asset');
             const railRoleLabel = isAssetGroupRail ? 'gemeinsamer Messpunkt' : 'Kaskadenstufe';

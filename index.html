@@ -10,7 +10,7 @@
     <!-- PapaParse -->
     <script src="lib/papaparse.min.js"></script>
     
-    <link rel="stylesheet" href="styles.css?v=221">
+    <link rel="stylesheet" href="styles.css?v=257">
     <link rel="icon" type="image/svg+xml" href="wattspur-mark.svg">
     <!-- PWA Meta tags -->
     <link rel="manifest" href="manifest.json">
@@ -31,9 +31,7 @@
                     <img class="landing-brand-icon" src="wattspur-mark.svg" alt="" aria-hidden="true">
                     <span class="landing-brand-copy"><strong>Wattspur</strong><span class="landing-brand-meta"><small>Energiewerkzeuge</small><span class="beta-badge landing-brand-beta">Beta</span></span></span>
                 </a>
-                    <nav class="landing-links" aria-label="Bereiche">
-                        <a href="#modules">Werkzeuge</a>
-                        <a href="kontakt.html">Kontakt</a>
+                    <nav class="landing-links" aria-label="Anzeigeoptionen">
                         <button type="button" class="btn btn-icon theme-toggle" data-theme-toggle title="Tag- oder Nachtmodus wählen" aria-label="Tag- oder Nachtmodus wählen"></button>
                 </nav>
             </header>
@@ -176,8 +174,8 @@
 
             <footer class="landing-footer">
                 <div class="footer-meta">
-                    <span>Wattspur · Energiewerkzeuge · öffentliche Beta</span>
-                    <span>Lokale Verarbeitung · keine EDM-Anbindung · unverbindliche Ergebnisse</span>
+                    <span>Wattspur · öffentliche Beta</span>
+                    <span>Lokal verarbeitet · unverbindliche Ergebnisse</span>
                 </div>
                 <nav class="footer-links" aria-label="Rechtliche Hinweise">
                     <a href="kontakt.html">Kontakt</a>
@@ -191,16 +189,165 @@
         <!-- Messkonzept-Konfigurator MVP -->
         <div id="messkonzept-screen" class="screen hidden">
             <header class="mk-header">
-                <button type="button" class="btn btn-secondary btn-sm" id="btn-mk-back" aria-label="Zur Werkzeugauswahl" title="Zur Werkzeugauswahl">← Zur Werkzeugauswahl</button>
-                <div class="mk-brand"><img class="mk-brand-mark" src="wattspur-mark.svg" alt=""><span><strong>Wattspur</strong><small>Messkonzept-Konfigurator</small></span></div>
+                <a class="mk-brand mk-brand-link" id="btn-mk-back" href="index.html#top" aria-label="Zur Werkzeugauswahl" title="Zur Werkzeugauswahl"><img class="mk-brand-mark" src="wattspur-mark.svg" alt=""><span class="mk-brand-copy"><strong>Wattspur</strong><small>Messkonzept-Konfigurator</small></span></a>
                 <button type="button" class="btn btn-icon theme-toggle mk-theme-toggle" data-theme-toggle title="Tag- oder Nachtmodus wählen" aria-label="Tag- oder Nachtmodus wählen"></button>
             </header>
             <main class="mk-main">
                 <div class="mk-intro">
                     <h1>Messkonzept zusammenstellen</h1>
-                    <p>Bausteine anordnen und Messbereiche prüfen. Die Skizze ist VBEW-inspiriert, dient nur zur Orientierung und ersetzt keine technische Abstimmung mit Netzbetreiber, Messstellenbetreiber und Elektrofachbetrieb. <a class="mk-reference-link" href="https://shop.vbew-gmbh.de/produkt/vbew-messkonzepte-handout/" target="_blank" rel="noopener noreferrer" title="Offizielle VBEW-Publikationsseite mit Lizenzhinweisen">VBEW-Referenz &amp; Lizenzhinweise ↗</a></p>
                 </div>
 
+                <aside class="mk-fachhinweis" role="note" aria-label="Wichtiger fachlicher Hinweis">
+                    <span class="mk-fachhinweis-icon" aria-hidden="true">!</span>
+                    <p><strong>Wichtiger Hinweis:</strong> Dieser Konfigurator dient nur als Orientierung. Er ersetzt keine fachliche Prüfung und keine technische Abstimmung oder Genehmigung. Die Skizze ist VBEW-inspiriert. Bevor etwas umgebaut oder neu angeschlossen wird, lassen Sie das Messkonzept von einem zugelassenen Elektrofachbetrieb prüfen und mit Ihrem zuständigen Netzbetreiber abstimmen. <a class="mk-reference-link" href="https://shop.vbew-gmbh.de/produkt/vbew-messkonzepte-handout/" target="_blank" rel="noopener noreferrer" title="Offizielle VBEW-Publikationsseite mit Lizenzhinweisen">VBEW-Referenz &amp; Lizenzhinweise ↗</a></p>
+                </aside>
+
+                <section id="mk-start-panel" class="mk-start-panel" aria-labelledby="mk-start-title">
+                    <div class="mk-start-free">
+                        <span class="landing-kicker">Schneller Einstieg</span>
+                        <button type="button" class="btn landing-primary mk-start-free-button" id="btn-mk-start-free">
+                            <span class="mk-start-free-button-core">
+                                <span class="mk-start-free-button-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" focusable="false">
+                                        <circle cx="12" cy="12" r="8.5"></circle>
+                                        <path d="M12 7v10M7 12h10"></path>
+                                    </svg>
+                                </span>
+                                <span class="mk-start-free-button-copy">
+                                    <strong>Freier Konfigurator</strong>
+                                </span>
+                            </span>
+                            <span class="mk-start-free-button-arrow" aria-hidden="true">→</span>
+                        </button>
+                    </div>
+                    <div class="mk-start-cases-heading">
+                        <h2 id="mk-start-title">Typische Messkonzepte</h2>
+                        <div class="mk-decision-callout">
+                            <p class="mk-decision-question">Lohnt sich ein Umbau auf eine Zweitmessung?</p>
+                            <button type="button" class="mk-decision-trigger" id="btn-mk-decision-calculator" aria-haspopup="dialog" aria-controls="mk-decision-calculator" aria-label="Wirtschaftlichkeits-Check öffnen">
+                                <span class="mk-decision-trigger-icon" aria-hidden="true">€</span>
+                                <span>Wirtschaftlichkeits-Check <small>Beta</small></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mk-start-groups">
+                        <section class="mk-start-group mk-start-group--shared" aria-labelledby="mk-start-single-title">
+                            <div class="mk-start-group-heading">
+                                <span class="mk-start-group-title">
+                                    <svg class="mk-start-group-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <rect x="8" y="2.5" width="8" height="6" rx="1.5"></rect>
+                                        <path d="M12 8.5V13M5 13H19M5 13V19M12 13V19M19 13V19"></path>
+                                    </svg>
+                                    <h3 id="mk-start-single-title">Gemeinsame Messung</h3>
+                                </span>
+                                <details class="mk-start-group-info">
+                                    <summary class="mk-start-info-button" title="Infos zu gemeinsamer Messung" aria-label="Infos zu gemeinsamer Messung"><span aria-hidden="true">i</span></summary>
+                                    <div class="mk-start-info-panel" data-mk-preset-info></div>
+                                </details>
+                            </div>
+                            <div class="mk-start-grid" data-mk-preset-group="single"></div>
+                        </section>
+                        <section class="mk-start-group mk-start-group--parallel" aria-labelledby="mk-start-parallel-title">
+                            <div class="mk-start-group-heading">
+                                <span class="mk-start-group-title">
+                                    <svg class="mk-start-group-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <rect x="3" y="4" width="7" height="7" rx="1.5"></rect>
+                                        <rect x="14" y="4" width="7" height="7" rx="1.5"></rect>
+                                        <path d="M6.5 11v8M17.5 11v8"></path>
+                                    </svg>
+                                    <h3 id="mk-start-parallel-title">Parallelmessung</h3>
+                                </span>
+                                <details class="mk-start-group-info">
+                                    <summary class="mk-start-info-button" title="Infos zur Parallelmessung" aria-label="Infos zur Parallelmessung"><span aria-hidden="true">i</span></summary>
+                                    <div class="mk-start-info-panel" data-mk-preset-info></div>
+                                </details>
+                            </div>
+                            <div class="mk-start-grid" data-mk-preset-group="parallel"></div>
+                        </section>
+                        <section class="mk-start-group mk-start-group--cascade" aria-labelledby="mk-start-cascade-title">
+                            <div class="mk-start-group-heading">
+                                <span class="mk-start-group-title">
+                                    <svg class="mk-start-group-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <rect x="8" y="1.5" width="8" height="4.5" rx="1.3"></rect>
+                                        <rect x="8" y="9.5" width="8" height="4.5" rx="1.3"></rect>
+                                        <rect x="8" y="17.5" width="8" height="4.5" rx="1.3"></rect>
+                                        <path d="M12 6V9.5M12 14V17.5"></path>
+                                    </svg>
+                                    <h3 id="mk-start-cascade-title">Kaskadenmessung</h3>
+                                </span>
+                                <details class="mk-start-group-info">
+                                    <summary class="mk-start-info-button" title="Infos zur Kaskadenmessung" aria-label="Infos zur Kaskadenmessung"><span aria-hidden="true">i</span></summary>
+                                    <div class="mk-start-info-panel" data-mk-preset-info></div>
+                                </details>
+                            </div>
+                            <div class="mk-start-grid" data-mk-preset-group="cascade"></div>
+                        </section>
+                    </div>
+                </section>
+
+                <div id="mk-decision-calculator" class="mk-decision-overlay hidden" aria-hidden="true">
+                    <section class="mk-decision-dialog" role="dialog" aria-modal="true" aria-labelledby="mk-decision-title" aria-describedby="mk-decision-description">
+                        <header class="mk-decision-header">
+                            <div>
+                                <span class="mk-decision-kicker">Orientierung · Beta-Prototyp</span>
+                                <h2 id="mk-decision-title">Wirtschaftlichkeit einer separaten Messung</h2>
+                            </div>
+                            <button type="button" class="mk-decision-close" id="btn-mk-decision-close" aria-label="Wirtschaftlichkeits-Check schließen">×</button>
+                        </header>
+                        <p id="mk-decision-description" class="mk-decision-description">Vergleiche mögliche Einsparungen mit Umbau- und laufenden Messkosten. Das Ergebnis ist eine grobe Spanne und keine Tarif- oder Investitionsentscheidung.</p>
+                        <form id="mk-decision-form" class="mk-decision-form" novalidate>
+                            <fieldset>
+                                <legend>Einmalige Kosten</legend>
+                                <label><span class="mk-decision-label-line"><span>Umbau und zusätzlicher Zähler</span><small class="mk-decision-unit">€</small></span><input type="number" min="0" step="50" inputmode="decimal" data-mk-decision-input="oneTimeCost" value="5250" placeholder="z. B. 5250"></label>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Jährliche Grundlagen</legend>
+                                <label><span class="mk-decision-label-line"><span>Messentgelt für zweiten Zähler</span><small class="mk-decision-unit">€/Jahr</small></span><input type="number" min="0" step="10" inputmode="decimal" data-mk-decision-input="meterFee" value="120" placeholder="z. B. 120"></label>
+                                <label><span class="mk-decision-label-line"><span>Verbrauch Wärmepumpe oder Wallbox</span><small class="mk-decision-unit">kWh/Jahr</small></span><input type="number" min="0" step="100" inputmode="decimal" data-mk-decision-input="consumption" value="3500" placeholder="z. B. 3500"></label>
+                                <label><span class="mk-decision-label-line"><span>Arbeitspreis gemeinsamer Zähler</span><small class="mk-decision-unit">ct/kWh</small></span><input type="number" min="0" step="0.1" inputmode="decimal" data-mk-decision-input="commonElectricityPrice" value="40" placeholder="z. B. 40"></label>
+                                <label><span class="mk-decision-label-line"><span>Arbeitspreis Wärmepumpen- / Wallboxtarif</span><small class="mk-decision-unit">ct/kWh</small></span><input type="number" min="0" step="0.1" inputmode="decimal" data-mk-decision-input="specialTariffPrice" value="22" placeholder="z. B. 22"></label>
+                                <p class="mk-decision-field-note">Das sind Lieferantentarife, nicht die Netzentgeltreduzierung nach § 14a EnWG. Die Werte sind veränderbare Näherungen ohne Grundpreise.</p>
+                                <details class="mk-decision-field-info">
+                                    <summary class="mk-decision-info-button" aria-label="Informationen zu den Arbeitspreisen" title="Informationen zu den Arbeitspreisen">i</summary>
+                                    <div>Für die Orientierung sind 40 ct/kWh für den gemeinsamen Zähler und 22 ct/kWh für einen Sondertarif voreingestellt. Die tatsächlichen Preise hängen von Lieferant, Region, Verbrauch und Tarif ab. Ein Wärmepumpentarif und ein Wallboxtarif können unterschiedlich ausfallen. <a href="https://data.bundesnetzagentur.de/Bundesnetzagentur/SharedDocs/Mediathek/Monitoringberichte/MonitoringberichtEnergie2025.pdf" target="_blank" rel="noopener noreferrer">BNetzA: Monitoringbericht 2025 ↗</a> <a href="https://www.verivox.de/heizstrom/waermepumpenstrom-preisentwicklung/" target="_blank" rel="noopener noreferrer">Wärmepumpenstrom: Preisorientierung ↗</a></div>
+                                </details>
+                            </fieldset>
+                            <fieldset class="mk-decision-benefits-fieldset">
+                                <legend>§ 14a EnWG: Netzentgelt</legend>
+                                <label>Vergleich <select data-mk-decision-input="netEntgeltModule">
+                                    <option value="both">Modul 1 und Modul 2</option>
+                                    <option value="module1">Nur Modul 1</option>
+                                    <option value="module2">Nur Modul 2</option>
+                                </select></label>
+                                <label><span class="mk-decision-label-line"><span>Modul 1: pauschale Reduzierung</span><small class="mk-decision-unit">€/Jahr</small></span><input type="number" min="0" step="10" inputmode="decimal" data-mk-decision-input="module1Reduction" value="150" placeholder="z. B. 150"></label>
+                                <label><span class="mk-decision-label-line"><span>Modul 2: Netzentgelt-Arbeitspreis</span><small class="mk-decision-unit">ct/kWh</small></span><input type="number" min="0" step="0.1" inputmode="decimal" data-mk-decision-input="module2WorkPrice" value="8" placeholder="z. B. 8"></label>
+                                <p class="mk-decision-field-note">Modul 2 wird mit einer Reduzierung von 60 % gerechnet und setzt einen separaten Zählpunkt voraus.</p>
+                                <details class="mk-decision-field-info">
+                                    <summary class="mk-decision-info-button" aria-label="Informationen zu Modul 1 und Modul 2" title="Informationen zu Modul 1 und Modul 2">i</summary>
+                                    <div>Die Höhe von Modul 1 hängt vom Netzgebiet ab. Die Bundesnetzagentur nennt als Orientierung 110 bis 190 Euro pro Jahr. Bei Modul 2 werden 60 % des Netzentgelt-Arbeitspreises angesetzt. Der Arbeitspreis des Stromliefervertrags ist damit nicht gemeint. <a href="https://www.bundesnetzagentur.de/DE/Vportal/Energie/SteuerbareVBE/Netzentgelt_table.html" target="_blank" rel="noopener noreferrer">BNetzA: Netzentgelt-Module ↗</a></div>
+                                </details>
+                            </fieldset>
+                            <fieldset class="mk-decision-benefits-fieldset">
+                                <legend>Wärmepumpenprivilegierung</legend>
+                                <label class="mk-decision-check-label"><input type="checkbox" data-mk-decision-input="heatPumpPrivilege"><span>§ 22 EnFG berücksichtigen</span></label>
+                                <details class="mk-decision-field-info">
+                                    <summary class="mk-decision-info-button" aria-label="Informationen zur Wärmepumpenprivilegierung" title="Informationen zur Wärmepumpenprivilegierung">i</summary>
+                                    <div>§ 22 EnFG kann die KWKG- und Offshore-Umlage für den Netzbezug einer elektrisch angetriebenen Wärmepumpe auf null reduzieren. Voraussetzung ist unter anderem ein eigener Zählpunkt. Für 2026 sind dies zusammen 1,387 ct/kWh. Die Werte ändern sich und müssen vom Lieferanten geprüft werden. <a href="https://www.gesetze-im-internet.de/enfg/__22.html" target="_blank" rel="noopener noreferrer">§ 22 EnFG ↗</a> <a href="https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/ErneuerbareEnergien/EnFG_AufsichtUmlagepflichten/artikel.html" target="_blank" rel="noopener noreferrer">BNetzA: FAQ ↗</a></div>
+                                </details>
+                            </fieldset>
+                            <div class="mk-decision-actions">
+                                <button type="button" class="mk-decision-example" id="btn-mk-decision-example">Beispielwerte einsetzen</button>
+                                <button type="submit" class="mk-decision-submit">Spanne berechnen</button>
+                            </div>
+                        </form>
+                        <div id="mk-decision-result" class="mk-decision-result" aria-live="polite">
+                            <p class="mk-decision-result-placeholder">Trage Werte ein oder lade die Beispielwerte. Danach wird eine Orientierungs-Spanne berechnet.</p>
+                        </div>
+                        <p class="mk-decision-disclaimer">Beta-Orientierung: Preise, Tarife, technische Voraussetzungen und Förderungen müssen mit Lieferant, Netzbetreiber und Fachbetrieb geprüft werden.</p>
+                    </section>
+                </div>
+
+                <div id="mk-builder-shell" class="mk-builder-shell hidden">
                 <details class="mk-project-meta" aria-labelledby="mk-project-meta-title">
                     <summary class="mk-project-meta-heading" title="Projektangaben ein- oder ausblenden">
                         <span class="mk-project-meta-summary-copy">
@@ -267,7 +414,7 @@
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="generation" title="Erzeugungsanlage einfügen"><span class="mk-palette-icon generation" aria-hidden="true">EA</span><span class="mk-palette-label">Erzeugungs&shy;anlage</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="storage" title="Batteriespeicher einfügen"><span class="mk-palette-icon storage" aria-hidden="true"><span class="mk-battery-symbol"><span class="mk-battery-level"></span></span></span><span class="mk-palette-label">Batterie&shy;speicher</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="consumer" title="Sonstigen Verbraucher einfügen"><span class="mk-palette-icon consumer" aria-hidden="true">V</span><span class="mk-palette-label">Sonstige Verbraucher</span></button>
-                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wallbox" title="Wallbox einfügen"><span class="mk-palette-icon steuve mk-device-wallbox" aria-hidden="true"><span class="mk-charge-symbol"><span class="mk-charge-bolt">⚡</span><span class="mk-charge-cable"></span></span></span><span class="mk-palette-label">Wallbox</span></button>
+                            <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wallbox" title="Wallbox einfügen"><span class="mk-palette-icon steuve mk-device-wallbox" aria-hidden="true"><svg class="mk-charge-symbol" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="mk-charge-body" x="4.5" y="3" width="13" height="18.5" rx="2.6"></rect><rect class="mk-charge-display" x="7.2" y="6" width="7.6" height="5.8" rx="1.4"></rect><path class="mk-charge-bolt" d="m11.8 6.8-2.1 3.1h1.8l-.5 2.3 2.9-3.7h-1.7l.9-1.7z"></path><path class="mk-charge-cable" d="M17.5 15.5c4.8 0 7 2.1 7 5.4v1.3"></path><rect class="mk-charge-plug" x="20.8" y="21.8" width="6.5" height="5.4" rx="1.4"></rect><path class="mk-charge-pin" d="M22.5 21.8v-2.1m3.1 2.1v-2.1"></path></svg></span><span class="mk-palette-label">Wallbox</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Wärmepumpe" title="Wärmepumpe einfügen"><span class="mk-palette-icon steuve mk-device-heatpump" aria-hidden="true"><span class="mk-fan-symbol"><span class="mk-fan-blade mk-fan-blade-1"></span><span class="mk-fan-blade mk-fan-blade-2"></span><span class="mk-fan-blade mk-fan-blade-3"></span><span class="mk-fan-hub"></span></span></span><span class="mk-palette-label">Wärme&shy;pumpe</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="steuve" data-mk-steuve-type="Klimaanlage" title="Klimaanlage einfügen"><span class="mk-palette-icon steuve mk-device-climate" aria-hidden="true">❄</span><span class="mk-palette-label">Klima&shy;anlage</span></button>
                             <button type="button" class="mk-palette-item" draggable="true" data-mk-type="nsh" title="Nachtspeicherheizung einfügen"><span class="mk-palette-icon nsh" aria-hidden="true">NSH</span><span class="mk-palette-label">Nachtspeicher&shy;heizung</span></button>
@@ -308,6 +455,13 @@
                                 </div>
                             </div>
                             <div class="mk-history-actions" aria-label="Messkonzept-Änderungen">
+                                <button type="button" class="mk-history-button mk-start-switch-button" id="btn-mk-change-start" title="Vorlage oder freien Start wählen" aria-label="Vorlage oder freien Start wählen">
+                                    <svg class="mk-start-home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="m3 10 9-7 9 7"></path>
+                                        <path d="M5 9.5V21h14V9.5"></path>
+                                        <path d="M9 21v-6h6v6"></path>
+                                    </svg>
+                                </button>
                                 <button type="button" class="mk-history-button" id="btn-mk-undo" title="Letzte Messkonzept-Änderung rückgängig" aria-label="Letzte Messkonzept-Änderung rückgängig" disabled>
                                     <svg class="mk-history-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                         <path d="M9 7 4 12l5 5"></path>
@@ -339,8 +493,12 @@
                     <aside class="mk-summary-panel" aria-labelledby="mk-summary-title">
                         <div class="mk-panel-heading"><span id="mk-summary-title">Prüfstatus</span><span id="mk-status-badge" class="mk-status-badge neutral">Start</span></div>
                         <div id="mk-validation-list" class="mk-validation-list"></div>
-                        <button type="button" class="btn landing-primary mk-export-button" id="btn-mk-export-pdf">Messkonzept als PDF ausgeben</button>
+                        <div class="mk-export-actions" aria-label="PDF-Export">
+                            <button type="button" class="btn mk-export-button mk-export-button--sketch" id="btn-mk-export-sketch" title="Kompakte Skizze mit Projektangaben, Warnungen und Kommentar als PDF drucken">Skizze als PDF</button>
+                            <button type="button" class="btn landing-primary mk-export-button" id="btn-mk-export-pdf" title="Skizze und vollständige Objektdetails als PDF drucken">Gesamtexport als PDF</button>
+                        </div>
                     </aside>
+                </div>
                 </div>
             </main>
             <div id="mk-object-modal" class="mk-object-modal hidden" aria-hidden="true">
@@ -380,7 +538,10 @@
                 <header class="dashboard-header">
                     <a class="brand brand-link" href="index.html#top" aria-label="Zur Werkzeugauswahl" title="Zur Werkzeugauswahl">
                         <img src="wattspur-mark.svg" alt="">
-                        <h2>Wattspur <span class="dashboard-product-label">· Lastganganalyse</span></h2>
+                        <span class="brand-copy">
+                            <strong>Wattspur</strong>
+                            <small>Lastganganalyse</small>
+                        </span>
                     </a>
                     
                     <div class="header-center">
@@ -1575,25 +1736,28 @@
     <script src="parser.js?v=304"></script>
     <script src="charts.js?v=304"></script>
     <script src="app.js?v=309"></script>
-    <script src="js/messkonzept/model.js?v=2"></script>
-    <script src="messkonzept-geometry.js?v=9"></script>
+    <script src="js/messkonzept/model.js?v=6"></script>
+    <script src="js/messkonzept/presets.js?v=13"></script>
+    <script src="js/messkonzept/preset-loader.js?v=2"></script>
+    <script src="messkonzept-geometry.js?v=13"></script>
     <script src="messkonzept-topology.js?v=1"></script>
-    <script src="js/messkonzept/rules.js?v=2"></script>
-    <script src="js/messkonzept/layout-calculations.js?v=1"></script>
+    <script src="js/messkonzept/rules.js?v=3"></script>
+    <script src="js/messkonzept/layout-calculations.js?v=3"></script>
     <script src="js/messkonzept/validation-status.js?v=1"></script>
-    <script src="js/messkonzept/layout.js?v=2"></script>
-    <script src="js/messkonzept/render.js?v=3"></script>
+    <script src="js/messkonzept/layout.js?v=9"></script>
+    <script src="js/messkonzept/render.js?v=6"></script>
     <script src="js/messkonzept/connections.js?v=3"></script>
-    <script src="js/messkonzept/export.js?v=1"></script>
+    <script src="js/messkonzept/export.js?v=4"></script>
     <script src="js/messkonzept/viewport.js?v=1"></script>
     <script src="js/messkonzept/history.js?v=1"></script>
     <script src="js/messkonzept/commands.js?v=1"></script>
     <script src="js/messkonzept/project-meta.js?v=1"></script>
-    <script src="js/messkonzept/canvas-renderer.js?v=1"></script>
-    <script src="js/messkonzept/drag-drop.js?v=1"></script>
-    <script src="js/messkonzept/interaction.js?v=5"></script>
+    <script src="js/messkonzept/decision-calculator.js?v=4"></script>
+    <script src="js/messkonzept/canvas-renderer.js?v=2"></script>
+    <script src="js/messkonzept/drag-drop.js?v=5"></script>
+    <script src="js/messkonzept/interaction.js?v=7"></script>
     <script src="js/messkonzept/bootstrap.js?v=2"></script>
     <script src="js/messkonzept/module-contracts.js?v=1"></script>
-    <script src="messkonzept.js?v=111"></script>
+    <script src="messkonzept.js?v=120"></script>
 </body>
 </html>

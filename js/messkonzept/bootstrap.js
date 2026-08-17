@@ -27,7 +27,9 @@
         viewButtons: '[data-mk-view]',
         uploadScreen: '#upload-screen',
         dashboardScreen: '#dashboard-screen',
-        messkonzeptScreen: '#messkonzept-screen'
+        messkonzeptScreen: '#messkonzept-screen',
+        startPanel: '#mk-start-panel',
+        builderShell: '#mk-builder-shell'
     });
 
     function collectElements(documentRef = global.document) {
@@ -53,7 +55,9 @@
             viewButtons: queryAll(SELECTORS.viewButtons),
             uploadScreen: query(SELECTORS.uploadScreen),
             dashboardScreen: query(SELECTORS.dashboardScreen),
-            messkonzeptScreen: query(SELECTORS.messkonzeptScreen)
+            messkonzeptScreen: query(SELECTORS.messkonzeptScreen),
+            startPanel: query(SELECTORS.startPanel),
+            builderShell: query(SELECTORS.builderShell)
         };
     }
 

@@ -1,4 +1,4 @@
-const APP_VERSION = '2026.08.15-beta.211';
+const APP_VERSION = '2026.08.17-beta.286';
 const CACHE_NAME = `lastgang-analyse-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
@@ -17,6 +17,8 @@ const ASSETS_TO_CACHE = [
     'charts.js',
     'app.js',
     'js/messkonzept/model.js',
+    'js/messkonzept/presets.js',
+    'js/messkonzept/preset-loader.js',
     'js/messkonzept/rules.js',
     'js/messkonzept/validation-status.js',
     'js/messkonzept/layout-calculations.js',

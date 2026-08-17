@@ -21,6 +21,48 @@
             return typeof callback === 'function' ? callback(...args) : undefined;
         };
 
+        /*
+         * Ein HTML5-Drop kann auf einem verschachtelten Element, dem
+         * Kartenrand oder einem transparenten Trefferbereich landen. Deshalb
+         * wird der semantische Anker zuerst aus dem Event-Pfad und danach aus
+         * dem sichtbaren Anlagenast ermittelt. Die Fachlogik darf nicht davon
+         * abhängen, ob zufällig gerade das innere Zähler-Symbol getroffen
+         * wurde.
+         */
+        function findEventTarget(event, selector) {
+            const directTarget = event?.target?.closest?.(selector);
+            if (directTarget) return directTarget;
+            const path = typeof event?.composedPath === 'function' ? event.composedPath() : [];
+            return path.find(item => item?.matches?.(selector)) || null;
+        }
+
+        function findDropAnchors(event) {
+            let meterTarget = findEventTarget(event, '[data-mk-meter-target]');
+            let meterGroupTarget = findEventTarget(event, '[data-mk-meter-group-target]');
+            const baseMeterTarget = findEventTarget(event, '[data-mk-base-meter-target]');
+            const positionTarget = findEventTarget(event, '[data-mk-position-target]');
+
+            /*
+             * Bei einem Drop auf den Rand eines Anlagenastes liegt der Event-
+             * Target manchmal auf dem Branch selbst. Ein eigener sichtbarer
+             * Zähler ist dann trotzdem das fachliche Ziel. Der Fallback gilt
+             * nur für Anlagenäste mit einem expliziten Zähleranker und greift
+             * nicht in die normale Positions- oder Anlagenlogik ein.
+             */
+            if (!meterTarget && !meterGroupTarget) {
+                const branch = findEventTarget(event, '.mk-asset-branch');
+                const branchMeter = branch?.querySelector?.(
+                    ':scope > .mk-inline-meter-wrap[data-mk-meter-target], :scope > .mk-rail-meter-node[data-mk-meter-target]'
+                );
+                if (branchMeter) {
+                    meterTarget = branchMeter;
+                    meterGroupTarget = branchMeter;
+                }
+            }
+
+            return { meterTarget, meterGroupTarget, baseMeterTarget, positionTarget };
+        }
+
         function parseTransfer(event) {
             try {
                 return JSON.parse(event.dataTransfer.getData('application/json'));
@@ -47,10 +89,7 @@
         function handleCanvasDragOver(event) {
             const activeDrag = getActiveDrag();
             const state = getState();
-            const meterTarget = event.target.closest('[data-mk-meter-target]');
-            const meterGroupTarget = event.target.closest('[data-mk-meter-group-target]');
-            const baseMeterTarget = event.target.closest('[data-mk-base-meter-target]');
-            const positionTarget = event.target.closest('[data-mk-position-target]');
+            const { meterTarget, meterGroupTarget, baseMeterTarget, positionTarget } = findDropAnchors(event);
             const zone = event.target.closest('[data-mk-zone]');
             const sourceAsset = activeDrag?.source === 'asset'
                 ? state.assets.find(asset => asset.id === activeDrag.id)
@@ -116,23 +155,17 @@
         }
 
         function handleCanvasDragLeave(event) {
-            const meterTarget = event.target.closest('[data-mk-meter-target]');
-            const baseMeterTarget = event.target.closest('[data-mk-base-meter-target]');
+            const { meterTarget, meterGroupTarget, baseMeterTarget, positionTarget } = findDropAnchors(event);
             if (meterTarget && !meterTarget.contains(event.relatedTarget)) meterTarget.classList.remove('mk-meter-drop-target-active');
             if (baseMeterTarget && !baseMeterTarget.contains(event.relatedTarget)) baseMeterTarget.classList.remove('mk-meter-drop-target-active');
-            const meterGroupTarget = event.target.closest('[data-mk-meter-group-target]');
             if (meterGroupTarget && !meterGroupTarget.contains(event.relatedTarget)) meterGroupTarget.classList.remove('mk-meter-group-target-active');
-            const positionTarget = event.target.closest('[data-mk-position-target]');
             if (positionTarget && !positionTarget.contains(event.relatedTarget)) positionTarget.classList.remove('mk-position-drop-target-active');
             const zone = event.target.closest('[data-mk-zone]');
             if (zone && !zone.contains(event.relatedTarget)) zone.classList.remove('dragover');
         }
 
         function handleCanvasDrop(event) {
-            const meterTarget = event.target.closest('[data-mk-meter-target]');
-            const meterGroupTarget = event.target.closest('[data-mk-meter-group-target]');
-            const baseMeterTarget = event.target.closest('[data-mk-base-meter-target]');
-            const positionTarget = event.target.closest('[data-mk-position-target]');
+            const { meterTarget, meterGroupTarget, baseMeterTarget, positionTarget } = findDropAnchors(event);
             const zone = event.target.closest('[data-mk-zone]') || baseMeterTarget;
             if (!zone) return;
             meterTarget?.classList.remove('mk-meter-drop-target-active');
@@ -174,6 +207,20 @@
                 : null;
             const targetAsset = targetObject?.type !== 'meter' ? targetObject : null;
             const directMeterTarget = targetObject?.type === 'meter' ? targetObject : null;
+            const draggedType = transfer.source === 'palette'
+                ? transfer.type
+                : state.assets.find(item => item.id === transfer.id)?.type;
+
+            // Ein Rail-Zähler besitzt zwei semantische Drop-Anker. Bei älteren
+            // oder sehr kleinen DOM-Treffern kann beim Drop nur der allgemeine
+            // `data-mk-meter-target`-Anker ankommen, während der zusätzliche
+            // Gruppenanker nicht mitgeliefert wird. Ohne diese Normalisierung
+            // würde eine neue Anlage dann fälschlich in die Root-Sammelschiene
+            // fallen. Ein Nicht-Zähler, der direkt auf einen Zähler gezogen
+            // wird, gehört immer zu genau diesem Messpunkt.
+            if (!meterGroupTargetId && directMeterTarget && draggedType !== 'meter') {
+                meterGroupTargetId = directMeterTarget.id;
+            }
 
             // Der gemeinsame Messpunkt wird aus der Zielanlage abgeleitet,
             // wenn der kleine Zaehler-Hitbereich nicht direkt getroffen wurde.
@@ -181,7 +228,6 @@
                 const draggedAsset = transfer.source === 'asset'
                     ? state.assets.find(item => item.id === transfer.id)
                     : null;
-                const draggedType = transfer.source === 'palette' ? transfer.type : draggedAsset?.type;
                 if (targetAsset && draggedType !== 'meter' && draggedAsset?.id !== targetAsset.id) {
                     meterGroupTargetId = call('getMeterForAsset', targetAsset)?.id || '';
                 }
@@ -328,6 +374,9 @@
                 asset.zone = target.zone;
                 asset.meterScope = 'asset';
                 asset.targetAssetId = target.id;
+                // Ein bewusst verschobener Zaehler soll sich am neuen Ziel
+                // ausrichten und keinen alten Loesch-Anker mitnehmen.
+                asset.railAnchorOrder = null;
                 asset.parentMeterId = parentMeter?.id === asset.id ? '' : parentMeter?.id || '';
                 target.meterId = asset.id;
                 call('moveMeterSubtreeToZone', asset, target.zone);
@@ -349,9 +398,20 @@
             const state = getState();
             const removeMeterButton = event.target.closest('[data-mk-remove-meter]');
             if (removeMeterButton) {
-                const previousState = call('captureHistoryState');
                 const removedId = removeMeterButton.dataset.mkRemoveMeter;
                 const removedMeter = call('getAdditionalMeters').find(asset => asset.id === removedId);
+                const assignedAssets = state.assets.filter(asset => asset.type !== 'meter'
+                    && (asset.meterId === removedId
+                        || asset.targetAssetId === removedId
+                        || removedMeter?.targetAssetId === asset.id));
+                const childMeters = state.assets.filter(asset => asset.type === 'meter' && asset.parentMeterId === removedId);
+                if (assignedAssets.length || childMeters.length) {
+                    const assetText = assignedAssets.length === 1 ? 'die zugeordnete Anlage' : 'die zugeordneten Anlagen';
+                    const meterText = childMeters.length ? ' oder nachgeordneten Zähler' : '';
+                    call('notify', `Bitte entfernen Sie zuerst ${assetText}${meterText}, bevor Sie den Zähler entfernen.`, 'warning');
+                    return;
+                }
+                const previousState = call('captureHistoryState');
                 state.assets = state.assets.filter(asset => asset.id !== removedId);
                 state.assets.forEach(asset => {
                     if (asset.type === 'meter' && asset.parentMeterId === removedId) asset.parentMeterId = removedMeter?.parentMeterId || '';
@@ -369,6 +429,7 @@
             if (removeButton) {
                 const previousState = call('captureHistoryState');
                 const removedId = removeButton.dataset.mkRemoveAsset;
+                const removedOrder = state.assets.findIndex(asset => asset.id === removedId);
                 const replacementMeters = call('getAdditionalMeters')
                     .filter(meter => meter.targetAssetId === removedId)
                     .map(meter => ({
@@ -388,11 +449,26 @@
                     const currentMeter = call('getAdditionalMeters').find(asset => asset.id === meter.id);
                     if (!currentMeter) return;
                     if (replacement) {
+                        // Das Entfernen des bisherigen Zielobjekts darf den
+                        // Zaehler nicht in die Hauptkette zurueckstufen. Der
+                        // visuelle Anschlussplatz bleibt bis zu einer
+                        // bewussten Umplatzierung erhalten.
+                        currentMeter.meterScope = 'asset';
                         currentMeter.targetAssetId = replacement.id;
+                        if (removedOrder >= 0) currentMeter.railAnchorOrder = removedOrder;
                         currentMeter.keepEmptyRail = false;
                         replacement.meterId = currentMeter.id;
                     } else {
+                        // Auch ohne verbleibende Anlage bleibt dies ein
+                        // anlagenbezogener Messpunkt. Er darf nicht zur
+                        // normalen Kaskadenstufe werden, sonst wird die
+                        // leere Rail beim nächsten Rendern in die Hauptkette
+                        // einsortiert und ihre Leitung schneidet andere
+                        // Zähler. Der bisherige Listenplatz ist der letzte
+                        // stabile geometrische Anker.
+                        currentMeter.meterScope = 'asset';
                         currentMeter.targetAssetId = '';
+                        if (removedOrder >= 0) currentMeter.railAnchorOrder = removedOrder;
                         currentMeter.keepEmptyRail = true;
                     }
                 });

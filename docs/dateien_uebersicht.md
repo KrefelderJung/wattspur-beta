@@ -12,7 +12,7 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`styles.css`** | `/` | Modernes CSS3-Designsystem (Darkmode, Glasmorphismus, Layout-Grid, Ampel-Badges, Buttons, Tabellen). |
 | **`manifest.json`** | `/` | Web App Manifest (PWA) für die Installation als eigenständige App auf Desktop und Smartphone. |
 | **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.08.14-beta.192`). Speichert alle Modulpfade lokal im Browser für den Offlinebetrieb. |
-| **`tests.html`** | `/` | Automatische Test-Engine im Browser. Führt 130 Unit-, Integrations- und Regressionstests aus. |
+| **`tests.html`** | `/` | Automatische Test-Engine im Browser. Führt aktuell 142 Unit-, Integrations- und Regressionstests aus. |
 | **`js/app.js`** | `js/` | Schlanker Anwendungsstarter (`initializeApp()`). Verbindet Controller und startet die App beim Laden. |
 
 ---
@@ -122,5 +122,22 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`interaction.js`** | DOM-Verkabelung für Dialoge, Felder, Buttons und Tastaturinteraktion. |
 | **`bootstrap.js`** | Sammelt statische DOM-Anker und verbindet Resize-/Lebenszyklus-Ereignisse mit dem Einstiegspunkt. |
 | **`export.js`** | Erzeugt die verständliche PDF-/Druckansicht aus dem aktuellen Zustand. |
+
+### Qualitätssicherung
+
+| Datei | Funktion |
+| :--- | :--- |
+| **`tests/architecture-smoke-test.js`** | Browserfreier Architekturtest für Dateistruktur, Ladereihenfolge, Modulverträge, DOM-Grenzen, Prüfregelwerk und Offline-Cache. |
+| **`docs/architecture-smoke-test.md`** | Verständliche Beschreibung des Smoke-Tests, Aufruf und Akzeptanzkriterium. |
+| **`js/messkonzept/presets.js`** | DOM-freier Katalog der häufigsten Messkonzept-Startvorlagen. |
+| **`js/messkonzept/preset-loader.js`** | Übersetzt eine Vorlage in normale, bearbeitbare Modellobjekte und Zählerbeziehungen. |
+| **`js/messkonzept/decision-calculator.js`** | Reine Orientierungsrechnung für Umbaukosten, Messentgelt, Tarifdifferenz, Modul 1, Modul 2 und Wärmepumpenprivileg mit Sensitivitätsspanne und Verlaufsgrafik. |
+| **`docs/messkonzept-startvorlagen.md`** | Spezifikation, Akzeptanzkriterien und technische Trennung der Startauswahl. |
+| **`tests/project-quality-test.js`** | Browserfreier projektweiter Qualitäts-Gate-Test für Pflichtdateien, Syntax, lokale Verarbeitung und Release-Schutz. |
+| **`tests/link-check-test.js`** | Prüft lokale `href`-/`src`-Verweise; externe Links können mit `--external` als separates Release-Gate geprüft werden. |
+| **`tests/storage-operation-test.js`** | Prüft die Speicher-Betriebsweisen für Netzeinspeisung, Netzbezug zum Laden und reinen PV-Überschussbetrieb. |
+| **`tests/wallbox-icon-test.js`** | Sichert das sichtbare Wallbox-Kabel mit Steckergehäuse und Kontaktstiften in Palette und Messskizze ab. |
+| **`tests/z5-second-asset-test.js`** | Regressionstest für einen zweiten Anschluss an einem verschachtelten Anlagenzähler. Prüft, dass der Unter-Rail erhalten bleibt und die Layout-Routine ihren Root-Anker kennt. |
+| **`docs/projekt-teststandard.md`** | Verständlicher Spickzettel für die fünf Testebenen und die Abnahmekriterien neuer Änderungen. |
 
 Der Einstiegspunkt [`messkonzept.js`](../messkonzept.js) orchestriert diese Module weiterhin. Zustandsänderungen werden über `commands.js` geführt; weitere Auslagerungen sollten diese Grenze beibehalten und nicht erneut DOM-, Geometrie- und Fachlogik vermischen.

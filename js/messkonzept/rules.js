@@ -11,19 +11,12 @@
 (function exposeMesskonzeptRules(global) {
     'use strict';
 
-    const RULESET_VERSION = '2026-08-14-beta.1';
+    const RULESET_VERSION = '2026-08-17-beta.4';
     const RULE_CATALOG = Object.freeze({
-        EMPTY_STATE: Object.freeze({ id: 'MK-DATA-001', title: 'Leerer Messbereich', category: 'Datenqualität' }),
-        ASSET_COUNT: Object.freeze({ id: 'MK-DATA-002', title: 'Bausteine im Schema', category: 'Datenqualität' }),
-        EXTRA_METER: Object.freeze({ id: 'MK-TOPO-001', title: 'Zusätzliche Zähler', category: 'Topologie' }),
         STORAGE_ROLE: Object.freeze({ id: 'MK-ASSET-001', title: 'Speicher – Betriebsrolle und Meldungen', category: 'Anlage' }),
         STEUVE_THRESHOLD: Object.freeze({ id: 'MK-ASSET-002', title: 'Steuerbare Anlage über 4,2 kW', category: 'Anlage' }),
         NSH_REGIME: Object.freeze({ id: 'MK-ASSET-003', title: 'Nachtspeicherheizung – zeitliche Einordnung', category: 'Anlage' }),
-        SINGLE_MIXED_LOAD: Object.freeze({ id: 'MK-SINGLE-001', title: 'Steuerbare Anlage und weitere Verbraucher', category: 'Messung' }),
-        GENERATION_OWN_METER: Object.freeze({ id: 'MK-SINGLE-002', title: 'Eigene Erzeugungsmessung', category: 'Messung' }),
-        GENERATION_SHARED: Object.freeze({ id: 'MK-SINGLE-003', title: 'Mehrere Erzeugungsanlagen ohne Erzeugungszähler', category: 'Messung' }),
-        PARALLEL_READY: Object.freeze({ id: 'MK-PARALLEL-001', title: 'Parallele Messzweige', category: 'Messung' }),
-        PARALLEL_EMPTY: Object.freeze({ id: 'MK-PARALLEL-002', title: 'Leerer Parallelzweig', category: 'Messung' })
+        SINGLE_MIXED_LOAD: Object.freeze({ id: 'MK-SINGLE-001', title: 'Steuerbare Anlage und weitere Verbraucher', category: 'Messung' })
     });
 
     const DEFAULT_STORAGE_INFO_TEXT = 'Achtung: Die Registrierung des Stromspeichers im Marktstammdatenregister ist zu prüfen. Beim netzbezogenen Laden ist zusätzlich zu prüfen, ob § 14a EnWG greift; Einspeisung und Bezug sind getrennt zu betrachten. Messkonzept mit dem Verteilnetzbetreiber abstimmen.';
@@ -52,32 +45,38 @@
         };
     }
 
+    function getStorageOperationHint(storage) {
+        const feedIn = ['yes', 'no'].includes(storage?.storageGridFeedIn) ? storage.storageGridFeedIn : 'unknown';
+        const gridImport = ['yes', 'no'].includes(storage?.storageGridImport) ? storage.storageGridImport : 'unknown';
+        if (feedIn === 'no' && gridImport === 'no') {
+            return 'Kein Netzbezug zum Laden und keine Netzeinspeisung ausgewählt. Das ist als reiner PV-Überschussbetrieb nur dann belastbar, wenn ausschließlich erneuerbarer Strom geladen wird.';
+        }
+        if (feedIn === 'yes' && gridImport === 'no') {
+            return 'Netzeinspeisung aus dem Speicher ausgewählt. Der Vermarktungsweg ist zu klären. Je nach Anlage und Vergütungsweg kann Direktvermarktung erforderlich sein.';
+        }
+        if (feedIn === 'no' && gridImport === 'yes') {
+            return 'Netzbezug zum Laden ausgewählt. § 14a EnWG, Messung und die Auswirkungen auf eine mögliche EEG-Behandlung sind fachlich zu prüfen.';
+        }
+        if (feedIn === 'yes' && gridImport === 'yes') {
+            return 'Mischbetrieb mit Netzbezug und Netzeinspeisung ausgewählt. EEG-Förderung und Umlagebehandlung können von Betriebsweise und Messung abhängen.';
+        }
+        return 'Die Betriebsweise des Speichers ist noch nicht festgelegt.';
+    }
+
     function evaluate(state, options = {}) {
         const assets = Array.isArray(state?.assets) ? state.assets : [];
-        const getAssets = options.getZoneAssets || ((zone) => getZoneAssets(state, zone));
         const parsePower = options.parsePower || parsePowerNumber;
         const storageInfoText = options.storageInfoText || DEFAULT_STORAGE_INFO_TEXT;
-        const generations = assets.filter(asset => asset.type === 'generation');
         const consumers = assets.filter(asset => asset.type === 'consumer');
         const steuves = assets.filter(asset => asset.type === 'steuve');
         const overThresholdSteuves = steuves.filter(asset => parsePower(asset.power) > 4.2);
         const storages = assets.filter(asset => asset.type === 'storage');
         const nshAssets = assets.filter(asset => asset.type === 'nsh');
-        const extraMeters = assets.filter(asset => asset.type === 'meter');
         const checks = [];
 
-        if (!assets.length) {
-            checks.push(makeCheck('EMPTY_STATE', 'neutral', 'Noch keine Bausteine angelegt.'));
-        } else {
-            checks.push(makeCheck('ASSET_COUNT', 'ok', `${assets.length} Baustein${assets.length === 1 ? '' : 'e'} im Schema.`));
-        }
-
-        if (extraMeters.length) {
-            checks.push(makeCheck('EXTRA_METER', 'warning', 'Zusätzliche Zähler sind angelegt. Prüfe die Zuordnung zu Anlagen und Unterzählern; die Skizze ersetzt keine fachliche Abstimmung.'));
-        }
-
         if (storages.length) {
-            checks.push(makeCheck('STORAGE_ROLE', 'warning', `Speicher bleibt ein eigenes Objekt. Betriebsrolle (Erzeugung und Bezug) fachlich festlegen. ${storageInfoText}`));
+            const storageHints = storages.map(getStorageOperationHint).filter(Boolean);
+            checks.push(makeCheck('STORAGE_ROLE', 'warning', `Speicher bleibt ein eigenes Objekt. Betriebsrolle, MaStR, mögliche §14a-Relevanz und Messkonzept fachlich prüfen. ${storageInfoText} ${storageHints.join(' ')}`));
         }
 
         if (overThresholdSteuves.length) {
@@ -98,23 +97,6 @@
         if (state?.mode === 'single') {
             if (steuves.length && consumers.length) {
                 checks.push(makeCheck('SINGLE_MIXED_LOAD', 'warning', 'Steuerbare Anlagen und weitere Verbraucher liegen im selben Messbereich. Tarif- und Messabgrenzung fachlich prüfen.'));
-            }
-            if (generations.some(asset => asset.generationMeter)) {
-                checks.push(makeCheck('GENERATION_OWN_METER', 'ok', 'Mindestens eine EA ist mit eigener Erzeugungsmessung markiert.'));
-            }
-            if (generations.length > 1 && generations.every(asset => !asset.generationMeter)) {
-                checks.push(makeCheck('GENERATION_SHARED', 'warning', 'Mehrere EA teilen sich den gemeinsamen Messbereich ohne Erzeugungszähler. Energieträger, Vergütung und Zusammenfassung prüfen.'));
-            }
-        }
-
-        if (state?.mode === 'parallel') {
-            const emptyBranches = [];
-            for (let index = 0; index < (state.cascadeLevels || 0); index += 1) {
-                if (!getAssets(`parallel-${index}`).length) emptyBranches.push(`Z${index + 1}`);
-            }
-            checks.push(makeCheck('PARALLEL_READY', 'ok', `Parallelmessung mit ${state.cascadeLevels} direkt verzweigten Zählern vorbereitet.`));
-            if (emptyBranches.length) {
-                checks.push(makeCheck('PARALLEL_EMPTY', 'warning', `${emptyBranches.join(', ')} hat noch keinen zugeordneten Messbereich.`));
             }
         }
 

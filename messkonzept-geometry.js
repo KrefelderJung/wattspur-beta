@@ -18,7 +18,11 @@
         // Sammelschiene und dem Zusatzzaehler. Dieser Abstand liegt bewusst
         // außerhalb der Kartenhoehe, damit das Loeschsymbol nicht in die
         // erste Anlage ragt.
-        meterRailTopGapPx: 16,
+        // Mindestabstand zwischen oberer Anlagenreihe und dem darunter
+        // liegenden Zusatzzaehler. 20px halten dessen Loeschsymbol aus der
+        // ersten Anlagenkarte heraus, ohne die Sammelschiene selbst zu
+        // verschieben.
+        meterRailTopGapPx: 20,
         // MK -> SK am Basiszaehler: sichtbare Verbindung vom Zaehler bis zum
         // ersten Sammelschienen-Knoten. Dieser Abstand ist bewusst kuerzer
         // als der Abstand zu einer Unter-Sammelschiene.
@@ -26,11 +30,21 @@
         // MK -> SK: eigener, kuerzerer Abstand vom unteren Zaehleranschluss
         // bis zum Knoten der naechsten Unter-Sammelschiene.
         meterToSubBusGapPx: 14,
-        // Horizontaler Ausgleich: Das Rail-Element beginnt an der linken
-        // Kante des Zusatzzaehler-Knotens, die Sammelschiene aber auf dessen
-        // Mittelachse. So starten obere und untere SK -> AK gleich.
-        meterRailNodeCenterOffsetPx: 16,
         railSiblingClearancePx: 18,
+        // Unterzähler dürfen auf der Achse ihres Elternzählers stehen, aber
+        // niemals links davon. Der Wert ist bewusst null: Die sichtbare
+        // Distanz zwischen den Schienen wird durch den Rail-/Kartenabstand
+        // geregelt, nicht durch einen künstlichen seitlichen Versatz.
+        railAxisClearancePx: 0,
+        // Sichtbarer Abstand von der Messachse bis zur ersten Anlagenkarte.
+        // Dieser Wert gilt fuer die Root-Sammelschiene und jede Unter-
+        // Sammelschiene gleichermassen; er wird nach dem Rendern am echten
+        // DOM-Anker feinjustiert.
+        primaryRailClearancePx: 12.8,
+        // Der Loeschbutton gehoert zur sichtbaren Ausdehnung eines Zaehler-
+        // Knotens. Er wird nur bei einer tatsaechlichen 2D-Ueberlappung als
+        // zusaetzlicher horizontaler Sicherheitsabstand verwendet.
+        meterRemoveButtonClearancePx: 8,
         // Rueckwaertskompatibler Name fuer bestehende Aufrufer und Tests.
         meterToBusGapPx: 14,
         // Parallelzweige besitzen einen 16px breiten Zaehlerknoten. Die
@@ -38,19 +52,7 @@
         // die erste Karte nicht links in den senkrechten Hauptstrang ragt.
         parallelMeterAxisOffsetPx: 16,
         parallelAssetClearancePx: 12.8,
-        // Gemeinsamer Mindestabstand zwischen dem senkrechten Messstrang und
-        // der ersten Karte eines aufgeklappten Anlagen-Rails. Dieser Wert ist
-        // bewusst eine eigene Regel: Die Kartenbreite und die Zahl der
-        // Unterzaehler duerfen die Messachse nicht wieder ueberdecken.
-        primaryRailClearancePx: 12.8,
         busToAssetGapPx: 28,
-        // Der HTML-Knoten liegt innerhalb der gepaddeten Zonenflaeche. Der
-        // erste Unterzaehler wuerde dadurch sonst um diese sichtbare
-        // Knoten-Inset-Laenge weiter entfernt stehen als Z3/Z4 unter einem
-        // Zusatzzaehler. Die Korrektur macht SK-Z -> ZK in jeder Ebene gleich.
-        // Der Root-Inset gleicht den 0.9rem Zonenabstand aus. Dadurch gilt
-        // fuer den ersten und jeden weiteren ZK-Abgang derselbe 16px-Standard.
-        rootRailJunctionInsetPx: 14
     });
 
     function getStageScale(stage) {
@@ -103,6 +105,15 @@
         return Math.max(0, railRight + safeClearance - nextLeft);
     }
 
+    // Ein Unter-Rail darf niemals links von der Messachse seines direkten
+    // Elternzählers liegen. Positive Werte sind der notwendige zusätzliche
+    // Versatz nach rechts; ein negativer Versatz wird bewusst zu null.
+    function getRailAxisClampShift(parentAxisCenter, childAxisCenter, clearance = 0) {
+        if (!Number.isFinite(parentAxisCenter) || !Number.isFinite(childAxisCenter)) return 0;
+        const safeClearance = Number.isFinite(clearance) ? Math.max(0, clearance) : 0;
+        return Math.max(0, (parentAxisCenter + safeClearance) - childAxisCenter);
+    }
+
     function findIncomingMeterLayout(zone) {
         const previous = zone?.previousElementSibling;
         if (!previous) return null;
@@ -119,6 +130,7 @@
         getAssetBranchAnchor,
         buildDynamicNode,
         getRailSiblingCollisionShift,
+        getRailAxisClampShift,
         findIncomingMeterLayout
     });
 }(window));

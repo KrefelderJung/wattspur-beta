@@ -161,7 +161,7 @@ Modul greift nicht auf `document`, CSS-Messungen oder SVG zu. Der Einstiegspunkt
 reicht ihm nur die fachlichen Hilfsfunktionen und bleibt damit kompatibel zur
 bestehenden Topologie.
 
-`js/messkonzept/rules.js` führt mit `2026-08-14-beta.1` einen versionierten
+`js/messkonzept/rules.js` führt mit `2026-08-17-beta.4` einen versionierten
 Regelkatalog ein. Jede aktive Prüfung liefert neben Stufe und Text eine stabile
 Regel-ID, die im [Regelwerk](messkonzept-regelwerk.md), in der UI und in den
 Regressionstests wiederverwendet wird. Das Regelwerk dokumentiert bewusst auch
@@ -196,6 +196,15 @@ jetzt 111 Tests und ist vollständig grün; zusätzlich wurde der PDF-Export im
 Browser mit einem simulierten Druckdialog auf Aufbau und Bereinigung geprüft.
 Die Arbeit bleibt lokal; eine Veröffentlichung auf GitHub Pages ist damit
 ausdrücklich noch nicht erfolgt.
+
+Der PDF-Export bietet nun zwei bewusst getrennte Ausgaben über dieselbe
+Export-API. Der **Skizzenexport** enthält Logo, Exportstand, Projektangaben,
+Orientierungshinweis, Prüfstatus und Kommentar, lässt aber die ausführlichen
+Objektdetails weg. Der **Gesamtexport** enthält zusätzlich diese Details. Beide
+Varianten verwenden dieselbe eingefrorene Editor-Bühne, sodass Leitungen und
+Karten geometrisch identisch bleiben. Die Auswahl wird nur als `scope:
+'sketch'` oder `scope: 'full'` an `export.js` übergeben; es gibt kein zweites,
+abweichendes PDF-Layout.
 
 ## Aktualisierter Architekturstatus (14.08.2026)
 
@@ -252,3 +261,37 @@ Regressionstest prüft die Modul-Isolation, die Lade-/Cache-Reihenfolge und eine
 einfache Canvas-Komposition ohne globale Konfiguratorvariablen. Der Cache steht
 auf `2026.08.14-beta.193`; die Änderungen bleiben lokal und wurden nicht
 veröffentlicht.
+
+## Aktualisierter Architekturstatus – Browserfreier Smoke-Test (16.08.2026)
+
+Mit `tests/architecture-smoke-test.js` gibt es jetzt einen kleinen, von einem
+Browser unabhängigen Vorabtest. Er prüft vor jedem UI-Test, ob alle aktiven
+Messkonzept-Dateien vorhanden sind, in `index.html` in der vereinbarten Reihenfolge
+geladen werden und ihre öffentlichen Modulverträge bereitstellen. Außerdem
+verhindert er DOM-Zugriffe in den fachlichen Kernmodulen, veraltete Prüfregel-IDs
+im UI-Code und fehlende Einträge im Offline-Cache.
+
+Der Test wird mit der vorhandenen Node-Laufzeit gestartet:
+
+```text
+node tests/architecture-smoke-test.js
+```
+
+Der aktuelle Lauf endet mit `Architektur-Smoke-Test: OK`. Die Browser-Testseite
+prüft zusätzlich, dass Testdatei und Dokumentation vorhanden sind. Damit gibt es
+vor künftigen Auslagerungen eine schnelle technische Leitplanke, ohne die
+fachliche Prüfung oder den visuellen Test zu ersetzen.
+
+## Aktualisierter Architekturstatus – dynamische Startvorlagen (16.08.2026)
+
+Die neue Startauswahl arbeitet mit drei getrennten Schichten: `presets.js`
+enthält nur den verständlichen Katalog, `preset-loader.js` baut daraus normale
+Modellobjekte und `messkonzept.js` schaltet lediglich zwischen Startauswahl und
+Konfigurator um. Vorlagen verwenden deshalb denselben Renderer, dieselbe
+Topologie und dieselben Leitungsregeln wie ein freier Entwurf.
+
+Die acht Vorlagen decken die abgestimmten häufigen Fälle ab: vier gemeinsame
+Messungen, zwei parallele Zweitzähler und zwei Kaskaden. Der browserfreie
+`tests/preset-loader-test.js` prüft insbesondere, dass „Haushalt“ intern ein
+`consumer` bleibt und dass PV sowie Speicher in der Kaskade tatsächlich hinter
+dem erzeugten Z2 hängen. Der Cache steht auf `2026.08.16-beta.217`.

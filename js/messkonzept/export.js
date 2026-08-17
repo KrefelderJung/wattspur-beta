@@ -67,38 +67,89 @@
             return `<section class="mk-print-details"><h3>Objektdetails</h3><div class="mk-print-detail-grid">${meterBlocks.join('')}${assets}</div></section>`;
         }
 
-        function renderPrintSheet(stand = getExportStand()) {
-            const state = getState();
-            const elements = getElements();
-            const topology = elements.canvas?.innerHTML || '<p class="mk-print-muted">Keine Skizze vorhanden.</p>';
+        /*
+         * Die Editor-Skizze besteht aus zwei Ebenen: dem HTML mit den Karten
+         * und einer darüberliegenden SVG-Leitungsebene. Im Drucklayout darf
+         * diese Kombination nicht durch Padding, Zoom oder eine neue
+         * Mindestbreite auseinandergezogen werden. Deshalb wird die Bühne
+         * für den Export in einen eigenen Rahmen gelegt und auf die bereits
+         * berechneten SVG-Maße eingefroren. Die Leitungen bleiben damit an
+         * exakt denselben Ankern wie im Editor.
+         */
+        function getTopologyMarkup() {
+            const canvas = getElements().canvas;
+            const stage = canvas?.querySelector?.('.mk-canvas-stage');
+            if (!stage) return '<p class="mk-print-muted">Keine Skizze vorhanden.</p>';
+
+            const clone = stage.cloneNode(true);
+            const connectorLayer = clone.querySelector('.mk-connector-layer');
+            const viewBox = String(connectorLayer?.getAttribute('viewBox') || '')
+                .trim()
+                .split(/\s+/)
+                .map(Number);
+            const parseDimension = (value, fallback) => {
+                const number = Number.parseFloat(String(value || ''));
+                return Number.isFinite(number) && number > 0 ? number : fallback;
+            };
+            const width = parseDimension(connectorLayer?.getAttribute('width'), parseDimension(viewBox[2], stage.scrollWidth || stage.offsetWidth || 1));
+            const height = parseDimension(connectorLayer?.getAttribute('height'), parseDimension(viewBox[3], stage.scrollHeight || stage.offsetHeight || 1));
+
+            clone.classList.add('mk-print-canvas-stage');
+            clone.style.setProperty('width', `${Math.ceil(width)}px`);
+            clone.style.setProperty('min-width', `${Math.ceil(width)}px`);
+            clone.style.setProperty('height', `${Math.ceil(height)}px`);
+            clone.style.setProperty('min-height', `${Math.ceil(height)}px`);
+            clone.style.setProperty('zoom', '1');
+            clone.style.setProperty('transform', 'none');
+            clone.style.setProperty('--mk-canvas-zoom', '1');
+
+            if (connectorLayer) {
+                connectorLayer.setAttribute('width', String(Math.ceil(width)));
+                connectorLayer.setAttribute('height', String(Math.ceil(height)));
+                connectorLayer.style.setProperty('width', `${Math.ceil(width)}px`);
+                connectorLayer.style.setProperty('height', `${Math.ceil(height)}px`);
+            }
+
+            return `<div class="mk-print-canvas-frame">${clone.outerHTML}</div>`;
+        }
+
+        function renderPrintSheet(stand = getExportStand(), options = {}) {
+            const scope = options.scope === 'sketch' ? 'sketch' : 'full';
+            const isSketchExport = scope === 'sketch';
+            const topology = getTopologyMarkup();
             const checks = validate().map(check => `<li class="${check.level}">${escapeHtml(check.text)}</li>`).join('');
             return `
-        <section class="mk-print-sheet" aria-label="Messkonzept-Export">
+        <section class="mk-print-sheet mk-print-sheet--${scope}" data-mk-export-scope="${scope}" aria-label="${isSketchExport ? 'Messskizzen-Export' : 'Messkonzept-Export'}">
             <header class="mk-print-header">
-                <div><span class="mk-print-kicker">Wattspur · Messkonzept-Konfigurator</span><h1>${escapeHtml(state.project?.name || 'Messkonzept')}</h1></div>
-                <div class="mk-print-meta"><b>Exportstand</b><span>${escapeHtml(stand.label)}</span><span>${state.mode === 'parallel' ? `Parallelmessung · ${state.cascadeLevels} Zähler` : 'Gemeinsame Messung · dynamische Unterzähler'}</span></div>
+                <div class="mk-print-brand" aria-label="Wattspur Messkonzept-Konfigurator">
+                    <img class="mk-print-brand-mark" src="wattspur-mark.svg" alt="Wattspur">
+                    <span class="mk-print-brand-copy"><strong>Wattspur</strong><span>Messkonzept-Konfigurator</span></span>
+                </div>
+                <div class="mk-print-meta"><b>Exportstand</b><span>${escapeHtml(stand.label)}</span></div>
             </header>
             ${renderProjectDetails()}
             <p class="mk-print-notice">Dieser Export dokumentiert den zum Ausgabezeitpunkt erfassten Stand. Spätere Änderungen am Konzept sind in dieser Datei nicht enthalten. Die Skizze ist eine unverbindliche Orientierung und ersetzt keine fachliche Prüfung.</p>
             <section class="mk-print-topology"><h2>Messskizze</h2>${topology}</section>
             ${renderNotes()}
             <section class="mk-print-status"><h3>Prüfstatus</h3><ul>${checks}</ul></section>
-            ${renderExportDetails()}
-            <footer class="mk-print-footer">Wattspur Beta · lokal im Browser erstellt · Stand ${escapeHtml(stand.label)}</footer>
+            ${isSketchExport ? '' : renderExportDetails()}
+            <footer class="mk-print-footer">Wattspur Beta · ${isSketchExport ? 'Skizzenexport' : 'Gesamtexport'} · lokal im Browser erstellt · Stand ${escapeHtml(stand.label)}</footer>
         </section>
     `;
         }
 
-        function downloadPdf() {
+        function downloadPdf(options = {}) {
             const doc = getDocument();
             const win = getWindow();
             const stand = getExportStand();
+            const scope = options.scope === 'sketch' ? 'sketch' : 'full';
+            const isSketchExport = scope === 'sketch';
             const wrapper = doc.createElement('div');
-            wrapper.innerHTML = renderPrintSheet(stand);
+            wrapper.innerHTML = renderPrintSheet(stand, { scope });
             const printSheet = wrapper.firstElementChild;
             doc.body.appendChild(printSheet);
             const previousTitle = doc.title;
-            doc.title = `Wattspur-Messkonzept-${stand.iso.slice(0, 10)}`;
+            doc.title = `Wattspur-${isSketchExport ? 'Messskizze' : 'Messkonzept'}-${stand.iso.slice(0, 10)}`;
             const cleanup = () => {
                 printSheet.remove();
                 doc.title = previousTitle;
@@ -112,7 +163,7 @@
                     if (doc.body.contains(printSheet)) cleanup();
                 }, 250);
             }, 40);
-            notify('Druckdialog geöffnet. Wähle dort „Als PDF speichern“.', 'info');
+            notify(`${isSketchExport ? 'Skizzenexport' : 'Gesamtexport'} geöffnet. Wähle dort „Als PDF speichern“.`, 'info');
         }
 
         return Object.freeze({
@@ -120,6 +171,7 @@
             renderNotes,
             renderProjectDetails,
             renderExportDetails,
+            getTopologyMarkup,
             renderPrintSheet,
             downloadPdf
         });

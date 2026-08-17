@@ -1,6 +1,6 @@
 # Wattspur – Regelwerk für Messkonzept-Hinweise
 
-**Regelwerksstand:** `2026-08-14-beta.1`  
+**Regelwerksstand:** `2026-08-17-beta.4`
 **Geltungsbereich:** öffentliche Beta, lokale Orientierungsskizze  
 **Verbindlichkeit:** keine technische, rechtliche oder abrechnungsseitige Freigabe
 
@@ -18,21 +18,48 @@ Hinweise nur anhand ihres Textes suchen zu müssen.
 | `warning` | Eine fachliche Prüfung oder Abstimmung ist erforderlich. |
 | `error` | Wird derzeit bewusst nicht automatisch verwendet. Ein Fehler darf erst nach fachlicher Freigabe als harte Blockade eingeführt werden. |
 
+## Sichtbare Kennungen für Erzeugungsanlagen
+
+Die sichtbare Kurzkennung hilft auch ungeübten Nutzern, Anlagen im Schema
+schnell zu unterscheiden. Die interne Auswahl bleibt davon getrennt, damit
+Regeln und gespeicherte Konzepte stabil bleiben:
+
+| Interner Typ | Sichtbare Art | Beispielkennung |
+| --- | --- | --- |
+| `PV` | PV | `PV1` |
+| `KWK` | BHKW | `BHKW2` |
+| `Wind` | Windenergieanlage | `WE3` |
+| `Balkonkraftwerk` | PV | `PV4` |
+
+Bei der letzten Zeile bleibt die technische Unterscheidung im Detailhinweis
+„Balkonkraftwerk / Steckersolargerät“ erhalten. So bleibt die Oberfläche kurz,
+ohne die fachlich relevante Einordnung zu verlieren.
+
 ## Aktive Regeln
 
 | ID | Auslöser | Stufe | Aktueller Hinweis / Zweck |
 | --- | --- | --- | --- |
-| `MK-DATA-001` | Das Schema enthält noch keinen Baustein. | `neutral` | Startzustand anzeigen. |
-| `MK-DATA-002` | Mindestens ein Baustein ist vorhanden. | `ok` | Anzahl der erfassten Bausteine anzeigen. |
-| `MK-TOPO-001` | Mindestens ein zusätzlicher Zähler ist im Zustand vorhanden. | `warning` | Zuordnung zu Anlage, Unterzähler und Messbereich prüfen. |
-| `MK-ASSET-001` | Mindestens ein Speicher ist vorhanden. | `warning` | Betriebsrolle, MaStR, mögliche §14a-Relevanz und Abstimmung mit dem Netzbetreiber prüfen. |
+| `MK-ASSET-001` | Mindestens ein Speicher ist vorhanden. | `warning` | Betriebsrolle, Netzeinspeisung, Netzbezug zum Laden, MaStR, mögliche §14a-Relevanz und Abstimmung mit dem Netzbetreiber prüfen. |
 | `MK-ASSET-002` | Eine SteuVE hat eine eingetragene Leistung über `4,2 kW`. | `warning` | §14a-EnWG-Einordnung, Anmeldung und passendes Modul prüfen. |
 | `MK-ASSET-003` | Mindestens eine Nachtspeicherheizung ist vorhanden. | `warning` | Bei unbekanntem Datum oder Inbetriebnahme vor 2024 historische Tarif-/Messbedingungen berücksichtigen; ab 2024 nicht automatisch als aktuelle SteuVE behandeln. |
 | `MK-SINGLE-001` | Im Modus „Gemeinsame Messung“ liegen SteuVE und weitere Verbraucher gemeinsam im Messbereich. | `warning` | Tarif- und Messabgrenzung fachlich prüfen. |
-| `MK-SINGLE-002` | Mindestens eine Erzeugungsanlage ist mit eigener Erzeugungsmessung markiert. | `ok` | Kennzeichnung im Prüfstatus bestätigen. |
-| `MK-SINGLE-003` | Mehr als eine Erzeugungsanlage vorhanden und keine besitzt einen eigenen Erzeugungszähler. | `warning` | Energieträger, Vergütung und Zusammenfassung prüfen. |
-| `MK-PARALLEL-001` | Der Parallelmodus ist aktiv. | `ok` | Anzahl der vorbereiteten, direkt verzweigten Zähler anzeigen. |
-| `MK-PARALLEL-002` | Ein vorbereiteter Parallelzweig enthält noch keinen Baustein. | `warning` | Dem betreffenden Zähler ist noch kein Messbereich zugeordnet. |
+
+## Bewusst entfernte Prüf- und Komfortmeldungen
+
+Mit Regelwerksstand `2026-08-17-beta.4` erscheinen diese sieben Meldungen
+nicht mehr im Prüfstatus:
+
+- `MK-DATA-001`: leerer Messbereich
+- `MK-DATA-002`: Anzahl der Bausteine im Schema
+- `MK-TOPO-001`: zusätzliche Zähler
+- `MK-PARALLEL-001`: vorbereitete Parallelmessung
+- `MK-PARALLEL-002`: noch leerer Parallelzweig
+- `MK-SINGLE-002`: eigene Erzeugungsmessung
+- `MK-SINGLE-003`: mehrere Erzeugungsanlagen ohne Erzeugungszähler
+
+Diese Informationen bleiben aus der aktiven Prüfliste entfernt, weil sie keine
+für den Nutzer notwendige Handlungsempfehlung liefern. Die fachliche Prüfung
+erfolgt weiterhin über die verbleibenden, konkreten Warnhinweise.
 
 ## Hinweise außerhalb der globalen Prüfliste
 
@@ -47,6 +74,10 @@ Einige Hinweise erscheinen absichtlich direkt am Objekt oder im Detailfenster:
   angezeigt.
 - Speicher: Der ausführliche MaStR-/§14a-Hinweis wird im Detailmodus als
   Info-Element angezeigt.
+- Speicher: Die Auswahl „Netzeinspeisung“ und „Netzbezug zum Laden“ wird im
+  Detailfenster getrennt erfasst. Bei „Nein“ und „Nein“ wird die Betriebsweise
+  als reiner PV-Überschussbetrieb bezeichnet. Das setzt voraus, dass tatsächlich
+  ausschließlich erneuerbarer Strom geladen wird.
 
 Diese Objekttexte sind keine zusätzlichen Regeln. Sie erklären eine bereits
 erfasste Anlage und müssen bei Änderungen der globalen Regel gemeinsam mit
@@ -61,6 +92,13 @@ Noch nicht als automatische Regel umgesetzt sind insbesondere:
 3. verbindliche Schwellenwerte für alle Steuerbarkeits- und Tarifmodelle,
 4. die rechtliche Bewertung einer konkreten Kaskade,
 5. eine harte Blockade gegen fachlich unzulässige Kombinationen.
+
+Für Speicher ist insbesondere die Unterscheidung zwischen reinem EE-Betrieb
+und Mischbetrieb wichtig. Die Anwendung ersetzt keine Prüfung der aktuellen
+Vermarktungs- und Messregeln. Als fachliche Ausgangspunkte dienen die
+[Clearingstelle zur Graustrombeladung](https://www.clearingstelle-eeg-kwkg.de/haeufige-rechtsfrage/181),
+die [Bundesnetzagentur zu Speichern und EEG-Förderung](https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/ErneuerbareEnergien/Solaranlagen/Nutzung_table.html)
+und die [Bundesnetzagentur zur Marktintegration von Speichern und Ladepunkten](https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/ErneuerbareEnergien/EEG_Aufsicht/MiSpeL/artikel.html).
 
 Wattspur darf in der Beta keine Genehmigung simulieren. Neue Regeln sollten
 zunächst als `warning` eingeführt und erst nach fachlicher Abstimmung zu einer
