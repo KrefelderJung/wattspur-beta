@@ -3816,6 +3816,22 @@ body.mk-modal-open {
     justify-self: center;
 }
 
+/* Mieterstromnutzer bleiben als besondere, nicht regulär abgerechnete
+   Nutzer sichtbar. Die Karte ist transparent, ihre graue Kennung bleibt
+   lesbar und der gestrichelte Rand trennt sie vom normalen Verbraucher. */
+.mk-zone-assets .mk-asset-card.mk-mieterstrom-user {
+    color: var(--mk-consumer-fg);
+    border: 1px dashed var(--mk-consumer-border);
+    background: transparent;
+    box-shadow: none;
+}
+
+.mk-zone-assets .mk-asset-card.mk-mieterstrom-user .mk-asset-icon.consumer {
+    color: var(--mk-consumer-fg);
+    background: transparent;
+    box-shadow: none;
+}
+
 .mk-zone-assets.simple-mode .mk-asset-branch {
     position: relative;
     display: flex;

@@ -45,6 +45,7 @@
                 : '';
             const typeLabel = getAssetTypeLabel(asset);
             const mieterstromMeterClass = asset.mieterstromObject === 'external-meter' ? 'mk-mieterstrom-participating-meter' : '';
+            const mieterstromUserClass = asset.mieterstromObject === 'user' ? ' mk-mieterstrom-user' : '';
             const attachedMeter = getMeterForAsset(asset);
             const ownedMeter = getAssetMeters(asset.id)[0];
             const meterLabel = attachedMeter ? getMeterLabel(attachedMeter) : '';
@@ -77,7 +78,7 @@
         <div class="mk-asset-branch ${viewMode === 'detail' ? 'detail-mode' : 'simple-mode'} ${generationMeterMarkup ? 'has-generation-meter' : ''} ${meterGroupSize > 1 ? 'has-meter-group' : ''} ${sharedMeterMarkup ? 'has-shared-meter' : ''}" ${meterDropTargetMarkup}>
             ${generationMeterMarkup}
             ${sharedMeterMarkup}
-            <article class="mk-asset-card ${viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" draggable="true" data-mk-asset-id="${escapeHtml(asset.id)}" data-mk-drag-asset="${escapeHtml(asset.id)}" data-mk-select-asset="${escapeHtml(asset.id)}" data-mk-position-target="${escapeHtml(asset.id)}" data-mk-meter-target="${escapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${escapeHtml(asset.name)} auswählen und verschieben">
+            <article class="mk-asset-card ${viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}${mieterstromUserClass}" draggable="true" data-mk-asset-id="${escapeHtml(asset.id)}" data-mk-drag-asset="${escapeHtml(asset.id)}" data-mk-select-asset="${escapeHtml(asset.id)}" data-mk-position-target="${escapeHtml(asset.id)}" data-mk-meter-target="${escapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${escapeHtml(asset.name)} auswählen und verschieben">
                 <div class="mk-asset-head">
                     <span class="mk-asset-icon ${meta.className} ${mieterstromMeterClass} ${getSteuveIconClass(asset)}" aria-label="${asset.type === 'storage' ? 'Batteriespeicher' : escapeHtml(typeLabel || meta.label)}">${renderAssetIcon(asset)}</span>
                     ${balconyInfoMarkup}

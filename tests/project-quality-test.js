@@ -139,7 +139,7 @@ localCoreFiles.forEach(relativePath => {
     assert(!networkApiPattern.test(source), `${relativePath}: Netzwerk-API gehört nicht in den lokalen Messkonzept-Kern`);
 });
 assert(serviceWorkerText.includes('event.request.mode === \'navigate\''), 'service-worker.js: Offline-/Navigationsstrategie fehlt');
-assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && /beta\.319/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
+assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && /beta\.320/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
 
 // Der Netzanschluss ist ein eigenes, bearbeitbares Objekt. Diese Prüfungen
 // verhindern, dass ein späteres Refactoring den HAK nur visuell anklickbar
@@ -197,6 +197,7 @@ assert(indexText.includes('Mieterstromzähler') && indexText.includes('mk-mieter
 assert(identifiersText.includes('getConsumerAssetNumber') && identifiersText.includes('getMieterstromMeterNumber') && identifiersText.includes('getMeterLabel') && identifiersText.includes('ZN${number}') && assetDisplayText.includes('`N${number}`') && assetDisplayText.includes('`V${number}`'), 'Mieterstrom: Nutzer, Verbraucher und Mieterstromzähler brauchen getrennte, stabile Kennungen');
 assert(renderText.includes('getMeterLabel') && renderText.includes('mk-mieterstrom-participating-meter') && canvasRendererText.includes('getMeterLabel') && canvasRendererText.includes('Teilnehmender Mieterstromzähler') && exportText.includes('getMeterLabel'), 'Mieterstrom: eigene Zählerkennung muss in Skizze, Editor und PDF verwendet werden');
 assert(stylesText.includes('background: transparent') && stylesText.includes('border: 1px dashed var(--primary-color)'), 'Mieterstrom: teilnehmender Zähler braucht transparente Fläche und gestrichelten Rand');
+assert(renderText.includes('mk-mieterstrom-user') && stylesText.includes('.mk-asset-card.mk-mieterstrom-user') && stylesText.includes('border: 1px dashed var(--mk-consumer-border)') && stylesText.includes('.mk-asset-icon.consumer'), 'Mieterstrom: Nutzerobjekt braucht transparente Fläche, graue Kennung und gestrichelten Rand');
 assert(stylesText.includes('.mk-palette-item {') && stylesText.includes('border: 1px solid color-mix(in srgb, var(--primary-color) 45%, var(--border-color))'), 'Palette: alle Messobjekte brauchen den dezenten blauen Standardrahmen');
 
 // Syntax-Gate für alle ausgelagerten Messkonzept-Module. Ein solcher Fehler
