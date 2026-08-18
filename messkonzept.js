@@ -160,6 +160,7 @@ const MK_ASSET_DISPLAY = window.WattspurMesskonzeptAssetDisplay.createAssetDispl
     renderSelectOptions: (options, selected, placeholder) => mkRenderSelectOptions(options, selected, placeholder),
     steuveModuleOptions: MK_STEUVE_MODULE_OPTIONS,
     getGenerationAssetNumber: asset => MK_IDENTIFIERS.getGenerationAssetNumber(asset),
+    getConsumerAssetNumber: asset => MK_IDENTIFIERS.getConsumerAssetNumber(asset),
     getMeterNumber: meter => MK_IDENTIFIERS.getMeterNumber(meter),
     getMeterDetailIndex: meter => MK_IDENTIFIERS.getMeterDetailIndex(meter),
     canBuildCascadeAfterMeter: meter => MK_METER_POLICY.canBuildCascadeAfterMeter(meter),
@@ -626,6 +627,10 @@ function mkGetGenerationMeterNumber(asset) {
 
 function mkGetGenerationAssetNumber(asset) {
     return MK_IDENTIFIERS.getGenerationAssetNumber(asset);
+}
+
+function mkGetConsumerAssetNumber(asset) {
+    return MK_IDENTIFIERS.getConsumerAssetNumber(asset);
 }
 
 function mkSyncGenerationName(asset) {

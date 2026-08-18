@@ -2,8 +2,10 @@
 
 **Status:** Historischer Beratungsentwurf. Im aktuellen MVP gibt es bewusst
 keinen eigenen Mieterstrommodus. Stattdessen stehen zwei optionale
-Mieterstromobjekte in der bestehenden Palette bereit: „Nutzer“ und „Zähler
-außerhalb Mieterstrom“. Die technische Messlogik bleibt unverändert.
+Mieterstromobjekte in der bestehenden Palette bereit: „Nutzer“ und
+„Mieterstromzähler“. Der Zähler wird als teilnehmender technischer
+Modellbaustein mit transparenter, gestrichelter Darstellung geführt. Die
+technische Messlogik bleibt unverändert.
 **Quellenstand:** VBEW-Auswahlblatt, Stand 24.09.2024; die konkrete Zulässigkeit
 ist immer mit Netzbetreiber, Messstellenbetreiber und Fachbetrieb abzustimmen.
 

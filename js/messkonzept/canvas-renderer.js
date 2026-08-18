@@ -145,8 +145,8 @@
                 asset.type === 'meter' ? { label: 'Zählerfunktion', value: asset.meterRole } : null,
                 asset.type === 'meter' ? { label: 'Messbereich', value: asset.meterScope === 'base' ? 'Hinter Basiszähler' : asset.meterScope === 'asset' ? 'Vor einzelner Anlage' : 'Vor Anlagengruppe' } : null,
                 asset.type === 'meter' ? { label: 'Zähler vor', value: asset.meterScope === 'base' ? 'Basiszähler der Messstufe' : asset.meterScope === 'asset' ? (currentState.assets.find(item => item.id === asset.targetAssetId)?.name || 'Einzelanlage') : 'Anlagengruppe' } : null,
-                asset.mieterstromObject === 'external-meter' ? { label: 'Mieterstrom', value: 'Nicht beteiligt' } : null,
-                asset.mieterstromObject === 'external-meter' ? { label: 'Marktlokation', value: 'Nicht aktiv (technische Modellannahme)' } : null,
+                asset.mieterstromObject === 'external-meter' ? { label: 'Mieterstromrolle', value: 'Teilnehmender Zähler' } : null,
+                asset.mieterstromObject === 'external-meter' ? { label: 'Abrechnung', value: 'Nicht über Netzbetreiber (Modellannahme)' } : null,
                 asset.mieterstromObject === 'user' ? { label: 'Mieterstromrolle', value: 'Nutzer / gesamter Haushalt' } : null,
                 asset.type === 'generation' ? { label: 'Anlagenart', value: call('getAssetTypeLabel', asset.energyCarrier, asset) } : null,
                 asset.type === 'generation' ? { label: 'Nennleistung', value: asset.power } : null,
@@ -175,14 +175,14 @@
             const details = call('getMeterDetails', {}, index) || {};
             const meter = getAdditionalMeters().find(item => call('getMeterDetailIndex', null, item) === index);
             const mieterstromNote = meter?.mieterstromObject === 'external-meter'
-                ? '<p class="mk-mieter-meter-note" role="note"><b>Außerhalb Mieterstrom</b> Dieser Zähler bleibt sichtbar, nimmt aber nicht am Mieterstrom teil. Die Marktlokation ist hier nur als technische Modellannahme deaktiviert.</p>'
+                ? '<p class="mk-mieter-meter-note" role="note"><b>Teilnehmender Mieterstromzähler</b> Dieser Zähler wird als technischer Modellbaustein ohne reguläre Netzbetreiberabrechnung dargestellt.</p>'
                 : '';
             const fields = meterDetailFields.map(field => `
         <label>${escapeHtml(field.label)}<input type="${field.type}"${field.maxLength ? ` maxlength="${field.maxLength}"` : ''} data-mk-meter-field="${escapeHtml(field.key)}" data-mk-meter-index="${index}" value="${escapeHtml(details[field.key])}"></label>
     `).join('');
             return `
         <div class="mk-object-editor-head">
-            <span class="mk-asset-icon meter">Z${index + 1}</span>
+                <span class="mk-asset-icon meter${meter?.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : ''}">Z${index + 1}</span>
         </div>
         <div class="mk-object-editor-form"><div class="mk-meter-form">${fields}</div>${mieterstromNote}</div>
     `;
@@ -220,9 +220,10 @@
             const asset = currentState.assets.find(item => item.id === selection?.id);
             if (!asset) return '<p class="mk-empty-editor">Objekt nicht mehr vorhanden.</p>';
             const meta = assetMeta[asset.type] || { className: '', label: 'Baustein' };
+            const mieterstromMeterClass = asset.mieterstromObject === 'external-meter' ? 'mk-mieterstrom-participating-meter' : '';
             return `
         <div class="mk-object-editor-head">
-            <span class="mk-asset-icon ${meta.className} ${call('getSteuveIconClass', '', asset)}" aria-label="${asset.type === 'storage' ? 'Batteriespeicher' : escapeHtml(call('getAssetTypeLabel', meta.label, asset) || meta.label)}">${call('renderAssetIcon', '', asset)}</span>
+            <span class="mk-asset-icon ${meta.className} ${mieterstromMeterClass} ${call('getSteuveIconClass', '', asset)}" aria-label="${asset.type === 'storage' ? 'Batteriespeicher' : escapeHtml(call('getAssetTypeLabel', meta.label, asset) || meta.label)}">${call('renderAssetIcon', '', asset)}</span>
             <span><b>${escapeHtml(asset.name)}</b><small>${escapeHtml(meta.label)}</small></span>
         </div>
         ${renderAssetEditorFields(asset)}

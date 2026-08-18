@@ -6863,12 +6863,6 @@ body.mk-modal-open {
     letter-spacing: 0.02em;
 }
 
-.mk-palette-subheading small {
-    color: var(--text-muted);
-    font-size: 0.62rem;
-    font-weight: 600;
-}
-
 .mk-palette-items--mieterstrom .mk-palette-item {
     border-color: color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
 }
@@ -6883,11 +6877,13 @@ body.mk-modal-open {
     background: color-mix(in srgb, var(--mk-heatpump-bg) 55%, var(--surface-color));
 }
 
-.mk-palette-section-note {
-    margin: 0.55rem 0 0;
-    color: var(--text-muted);
-    font-size: 0.64rem;
-    line-height: 1.4;
+.mk-palette-icon.mk-mieterstrom-participating-meter,
+.mk-asset-icon.mk-mieterstrom-participating-meter,
+.mk-generation-meter.mk-mieterstrom-participating-meter {
+    color: var(--primary-color);
+    background: transparent;
+    border: 1px dashed var(--primary-color);
+    box-shadow: none;
 }
 
 .mk-mieter-meter-note {

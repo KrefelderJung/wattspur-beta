@@ -220,9 +220,11 @@
         const selectedEnergyCarrier = type === 'generation' ? energyCarrier || 'PV' : '';
         const selectedSteuveType = type === 'steuve' ? normalizeSteuveType(steuveType) : '';
         const selectedSteuveLabel = assetTypeOptions.steuve.find(option => option.value === selectedSteuveType)?.label || 'Fachliche Einordnung offen';
+        const isMieterstromUser = type === 'consumer' && assetOptions.mieterstromObject === 'user';
         const sameType = currentState.assets.filter(asset => asset.type === type
             && (type !== 'steuve' || normalizeSteuveType(asset.steuveType) === selectedSteuveType)
-            && (type !== 'generation' || asset.energyCarrier === selectedEnergyCarrier)).length + 1;
+            && (type !== 'generation' || asset.energyCarrier === selectedEnergyCarrier)
+            && (type !== 'consumer' || (asset.mieterstromObject === 'user') === isMieterstromUser)).length + 1;
         // Erzeugungsanlagen erhalten eine eigene, energietraegerunabhaengige
         // laufende Nummer. Die sichtbare Kennung (z. B. PV1, BHKW2 oder WE3)
         // wird aus der gewählten Anlagenart abgeleitet.
@@ -278,7 +280,10 @@
             parentMeterId: '',
             meterId: '',
             // Mieterstromrollen sind bewusst nur technische Kennzeichnungen.
-            // Sie ändern keine rechtliche oder abrechnungstechnische Bewertung.
+            // Der historische Wert "external-meter" bleibt aus Kompatibilitäts-
+            // gründen erhalten. Er beschreibt hier den teilnehmenden Zähler,
+            // der aus der regulären Netzbetreiberabrechnung herausgenommen ist.
+            // Das ist eine Modellannahme und keine automatische Rechtsprüfung.
             mieterstromObject: assetOptions.mieterstromObject || '',
             mieterstromParticipation: assetOptions.mieterstromObject === 'external-meter' ? 'excluded' : '',
             marketLocationStatus: assetOptions.mieterstromObject === 'external-meter' ? 'inactive' : '',

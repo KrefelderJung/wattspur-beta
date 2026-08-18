@@ -175,7 +175,7 @@ Verbindungsmodul weder `mkConfiguratorState` noch `mkElements` und kann nicht
 mehr versehentlich fachliche Zustände verändern. Die bisherige Geometrie bleibt
 bewusst unverändert; lediglich die Zuständigkeit ist verschoben.
 
-Der Cache wurde auf `2026.08.18-beta.313` angehoben und enthält das neue
+Der Cache wurde auf `2026.08.18-beta.314` angehoben und enthält das neue
 Verbindungsmodul sowie die überarbeitete Trafo-Darstellung. Der HTTP-Testlauf umfasst jetzt 110 Tests und ist vollständig
 grün. Zusätzlich prüft ein Architekturtest, dass die Leitungslogik nicht in
 `messkonzept.js` zurückwandert, das Modul offline gecacht wird und keine globalen
@@ -421,7 +421,7 @@ Editor nicht mehr versehentlich die Diagramm- oder Kapazitätslogik duplizieren.
 Die Auslagerung ist bewusst schrittweise: Der Editor nutzt vorerst die
 bestehenden State- und Dashboard-Adapter, damit sich das Nutzerverhalten nicht
 ändert. Ein isolierter Node-Test prüft die API und eine echte Zelländerung ohne
-Browser-DOM. Der Offline-Cache wurde auf `2026.08.18-beta.313` angehoben und
+Browser-DOM. Der Offline-Cache wurde auf `2026.08.18-beta.314` angehoben und
 enthält die neue Datei. Als nächster sinnvoller Schritt bleibt die spätere
 Injektion dieser Adapter; dafür besteht aktuell kein Änderungsdruck.
 

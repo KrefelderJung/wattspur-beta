@@ -40,6 +40,7 @@
                 ? `<div class="mk-asset-detail-slide" aria-label="Details zu ${escapeHtml(asset.name)}">${renderAssetSummary(asset, true)}</div>`
                 : '';
             const typeLabel = getAssetTypeLabel(asset);
+            const mieterstromMeterClass = asset.mieterstromObject === 'external-meter' ? 'mk-mieterstrom-participating-meter' : '';
             const attachedMeter = getMeterForAsset(asset);
             const ownedMeter = getAssetMeters(asset.id)[0];
             const meterNumber = attachedMeter ? getMeterNumber(attachedMeter) : null;
@@ -74,7 +75,7 @@
             ${sharedMeterMarkup}
             <article class="mk-asset-card ${viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" draggable="true" data-mk-asset-id="${escapeHtml(asset.id)}" data-mk-drag-asset="${escapeHtml(asset.id)}" data-mk-select-asset="${escapeHtml(asset.id)}" data-mk-position-target="${escapeHtml(asset.id)}" data-mk-meter-target="${escapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${escapeHtml(asset.name)} auswählen und verschieben">
                 <div class="mk-asset-head">
-                    <span class="mk-asset-icon ${meta.className} ${getSteuveIconClass(asset)}" aria-label="${asset.type === 'storage' ? 'Batteriespeicher' : escapeHtml(typeLabel || meta.label)}">${renderAssetIcon(asset)}</span>
+                    <span class="mk-asset-icon ${meta.className} ${mieterstromMeterClass} ${getSteuveIconClass(asset)}" aria-label="${asset.type === 'storage' ? 'Batteriespeicher' : escapeHtml(typeLabel || meta.label)}">${renderAssetIcon(asset)}</span>
                     ${balconyInfoMarkup}
                     ${storageInfoMarkup}
                     <button type="button" class="mk-remove-asset" data-mk-remove-asset="${escapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${escapeHtml(asset.name)} entfernen">×</button>
@@ -123,7 +124,7 @@
             // SVG-Router gezeichnet. Ein zusätzlicher HTML-Strich würde bei
             // Unterkaskaden dieselbe Strecke doppelt überlagern.
             const railMeterMarkup = railMeter
-                ? `<div class="mk-rail-meter-node" data-mk-meter-rail-node="${escapeHtml(railMeter.id)}" data-mk-meter-role="${isAssetGroupRail ? 'asset-group' : 'cascade'}" data-mk-meter-target="${escapeHtml(railMeter.id)}" data-mk-meter-group-target="${escapeHtml(railMeter.id)}" title="Z${getMeterNumber(railMeter)} · ${railRoleLabel} · ${railDropHint}"><span class="mk-generation-meter mk-rail-meter" data-mk-select-meter="${getMeterDetailIndex(railMeter)}" role="button" tabindex="0" aria-label="Z${getMeterNumber(railMeter)} auswählen"><b>Z${getMeterNumber(railMeter)}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${escapeHtml(railMeter.id)}" title="Z${getMeterNumber(railMeter)} entfernen" aria-label="Zähler Z${getMeterNumber(railMeter)} entfernen">×</button></div>`
+                ? `<div class="mk-rail-meter-node" data-mk-meter-rail-node="${escapeHtml(railMeter.id)}" data-mk-meter-role="${isAssetGroupRail ? 'asset-group' : 'cascade'}" data-mk-meter-target="${escapeHtml(railMeter.id)}" data-mk-meter-group-target="${escapeHtml(railMeter.id)}" title="Z${getMeterNumber(railMeter)} · ${railRoleLabel} · ${railDropHint}"><span class="mk-generation-meter mk-rail-meter${railMeter.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : ''}" data-mk-select-meter="${getMeterDetailIndex(railMeter)}" role="button" tabindex="0" aria-label="Z${getMeterNumber(railMeter)} auswählen"><b>Z${getMeterNumber(railMeter)}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${escapeHtml(railMeter.id)}" title="Z${getMeterNumber(railMeter)} entfernen" aria-label="Zähler Z${getMeterNumber(railMeter)} entfernen">×</button></div>`
                 : '';
             const railJunctionMarkup = railMeter && !isSingleAssetRail
                 ? `<span class="mk-rail-junction-anchor" data-mk-node-kind="SK" data-mk-rail-junction="${escapeHtml(railMeter.id)}" aria-hidden="true"><span class="mk-rail-junction"></span></span>`

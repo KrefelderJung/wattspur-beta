@@ -18,6 +18,7 @@
         const renderSelectOptions = options.renderSelectOptions || (() => '');
         const steuveModuleOptions = options.steuveModuleOptions || [];
         const getGenerationAssetNumber = options.getGenerationAssetNumber || (() => null);
+        const getConsumerAssetNumber = options.getConsumerAssetNumber || (() => null);
         const getMeterNumber = options.getMeterNumber || (() => null);
         const getMeterDetailIndex = options.getMeterDetailIndex || (() => null);
         const canBuildCascadeAfterMeter = options.canBuildCascadeAfterMeter || (() => false);
@@ -25,7 +26,7 @@
 
         function getAssetTypeLabel(asset) {
             if (asset?.mieterstromObject === 'user') return 'Nutzer';
-            if (asset?.mieterstromObject === 'external-meter') return 'Zähler außerhalb Mieterstrom';
+            if (asset?.mieterstromObject === 'external-meter') return 'Mieterstromzähler';
             if (asset?.type === 'generation') {
                 return getAssetTypeOptions().generation?.find(option => option.value === asset.energyCarrier)?.label || '';
             }
@@ -88,7 +89,11 @@
 
         function renderAssetIcon(asset) {
             const meta = getAssetMeta()[asset.type] || { short: '' };
-            if (asset?.mieterstromObject === 'user') return 'N';
+            if (asset?.type === 'consumer') {
+                const number = getConsumerAssetNumber(asset);
+                if (asset.mieterstromObject === 'user') return number ? `N${number}` : 'N';
+                return number ? `V${number}` : 'V';
+            }
             if (asset.type === 'generation') {
                 const number = getGenerationAssetNumber(asset);
                 const prefix = getGenerationDisplayForAsset(asset).prefix;
@@ -108,11 +113,12 @@
             const number = getMeterNumber(meter);
             if (!number) return '';
             const detailIndex = getMeterDetailIndex(meter);
+            const meterClass = meter?.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : '';
             const dropHint = canBuildCascadeAfterMeter(meter)
                 ? 'Weitere Anlagen oder Zähler hierher ziehen'
                 : 'Weitere Anlagen hierher ziehen · keine weitere Kaskadenstufe';
             const label = `Z${number}: Zusatzzaehler vor ${asset?.name || 'Anlage'}; ${dropHint}`;
-            return `<span class="mk-inline-meter-wrap" data-mk-meter-target="${escapeHtml(meter.id)}" data-mk-meter-group-target="${escapeHtml(meter.id)}" title="Z${number} vor ${escapeHtml(asset?.name || 'Anlage')} · ${dropHint}"><span class="mk-meter-drop-hitbox" aria-hidden="true"></span><span class="mk-generation-meter mk-inline-meter" data-mk-select-meter="${detailIndex}" role="button" tabindex="0" aria-label="${escapeHtml(label)}"><b>Z${number}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${escapeHtml(meter.id)}" title="Z${number} entfernen" aria-label="Zähler Z${number} entfernen">×</button></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`;
+            return `<span class="mk-inline-meter-wrap" data-mk-meter-target="${escapeHtml(meter.id)}" data-mk-meter-group-target="${escapeHtml(meter.id)}" title="Z${number} vor ${escapeHtml(asset?.name || 'Anlage')} · ${dropHint}"><span class="mk-meter-drop-hitbox" aria-hidden="true"></span><span class="mk-generation-meter mk-inline-meter${meterClass}" data-mk-select-meter="${detailIndex}" role="button" tabindex="0" aria-label="${escapeHtml(label)}"><b>Z${number}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${escapeHtml(meter.id)}" title="Z${number} entfernen" aria-label="Zähler Z${number} entfernen">×</button></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`;
         }
 
         return Object.freeze({

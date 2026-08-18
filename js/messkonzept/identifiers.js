@@ -50,6 +50,16 @@
             return index < 0 ? null : index + 1;
         }
 
+        function getConsumerAssetNumber(asset) {
+            if (!asset || asset.type !== 'consumer') return null;
+            const isMieterstromUser = asset.mieterstromObject === 'user';
+            const assets = getState()?.assets || [];
+            const sameCategory = assets.filter(item => item.type === 'consumer'
+                && (item.mieterstromObject === 'user') === isMieterstromUser);
+            const index = sameCategory.findIndex(item => item.id === asset.id);
+            return index < 0 ? null : index + 1;
+        }
+
         function getGenerationMeterNumber(asset) {
             if (!asset || asset.type !== 'generation' || !asset.generationMeter) return null;
             const attachedNumber = getAssetMeterNumber(asset);
@@ -73,6 +83,7 @@
             getConfiguredMeterCount,
             getGenerationMeterNumber,
             getGenerationAssetNumber,
+            getConsumerAssetNumber,
             syncGenerationName
         });
     }
