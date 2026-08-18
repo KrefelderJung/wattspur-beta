@@ -415,17 +415,27 @@
             if (removeMeterButton) {
                 const removedId = removeMeterButton.dataset.mkRemoveMeter;
                 const removedMeter = call('getAdditionalMeters').find(asset => asset.id === removedId);
+                const fallbackMeterId = removedMeter?.parentMeterId || '';
                 const previousState = call('captureHistoryState');
                 state.assets = state.assets.filter(asset => asset.id !== removedId);
                 state.assets.forEach(asset => {
                     // Zugeordnete Anlagen fallen beim direkten Löschen in den
-                    // übergeordneten Messbereich zurück. Nachgeordnete Zähler
-                    // bleiben erhalten und hängen am bisherigen Elternzähler.
-                    if (asset.type === 'meter' && asset.parentMeterId === removedId) asset.parentMeterId = removedMeter?.parentMeterId || '';
-                    if (asset.meterId === removedId || asset.targetAssetId === removedId) {
-                        asset.meterId = '';
+                    // übergeordneten Messbereich zurück. Entscheidend ist,
+                    // dass die bisherige Eltern-Sammelschiene erhalten bleibt;
+                    // ohne diesen Fallback würde die Anlage fälschlich in der
+                    // Root-Schiene erscheinen.
+                    if (asset.type === 'meter' && asset.parentMeterId === removedId) {
+                        asset.parentMeterId = fallbackMeterId;
+                    }
+                    if (asset.meterId === removedId) {
+                        asset.meterId = fallbackMeterId;
+                    }
+                    if (asset.targetAssetId === removedId) {
                         asset.targetAssetId = '';
-                        asset.meterScope = asset.type === 'meter' ? 'zone' : '';
+                        if (asset.type === 'meter') {
+                            asset.parentMeterId = fallbackMeterId;
+                            asset.meterScope = fallbackMeterId ? 'asset' : 'zone';
+                        }
                     }
                 });
                 call('render');

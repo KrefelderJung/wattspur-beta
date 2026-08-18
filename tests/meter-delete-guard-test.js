@@ -65,4 +65,12 @@ controller.handleCanvasClick(createRemoveEvent(parentMeter.id));
 if (state.assets.some(asset => asset.id === parentMeter.id) || childMeter.parentMeterId !== '') throw new Error('Beim Löschen eines Elternzählers muss die nachgeordnete Kaskade am übergeordneten Messbereich bleiben.');
 if (childAsset.meterId !== childMeter.id) throw new Error('Das Löschen eines Elternzählers darf die nachgeordnete Anlagenmessung nicht lösen.');
 
+const fallbackMeter = { id: 'meter-fallback', type: 'meter', meterScope: 'asset', parentMeterId: '' };
+const removedNestedMeter = { id: 'meter-nested', type: 'meter', meterScope: 'asset', parentMeterId: fallbackMeter.id };
+const nestedAsset = { id: 'asset-nested', type: 'consumer', meterId: removedNestedMeter.id };
+state.assets = [fallbackMeter, removedNestedMeter, nestedAsset];
+notification = '';
+controller.handleCanvasClick(createRemoveEvent(removedNestedMeter.id));
+if (state.assets.some(asset => asset.id === removedNestedMeter.id) || nestedAsset.meterId !== fallbackMeter.id) throw new Error('Beim Löschen eines verschachtelten Zählers muss die Anlage an der Eltern-Sammelschiene bleiben.');
+
 console.log('Meter-Delete-Test: OK (belegte und leere Zähler direkt löschbar)');

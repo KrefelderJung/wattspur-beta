@@ -10,7 +10,7 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
 
 2. **Zustands- und Topologietests**
 
-   Prüfen, ob Zähler, Anlagen, Elternbeziehungen und leere Sammelschienen fachlich erhalten bleiben. Besonders wichtig sind Z1 → Z2 → Z3, ein Einzelzähler mit nur einer Anlage, das Hinzufügen einer zweiten Anlage und das Löschen der letzten Anlage. Ein Zusatzzaehler darf direkt gelöscht werden. Zugeordnete Anlagen müssen dabei in den übergeordneten Messbereich zurückfallen, ohne Daten oder Kaskadenbeziehungen zu verlieren.
+   Prüfen, ob Zähler, Anlagen, Elternbeziehungen und leere Sammelschienen fachlich erhalten bleiben. Besonders wichtig sind Z1 → Z2 → Z3, ein Einzelzähler mit nur einer Anlage, das Hinzufügen einer zweiten Anlage und das Löschen der letzten Anlage. Ein Zusatzzaehler darf direkt gelöscht werden. Zugeordnete Anlagen müssen dabei an die Eltern-Sammelschiene zurückfallen, ohne Daten oder Kaskadenbeziehungen zu verlieren.
 
    Für jeden Drop auf einen sichtbaren Zusatz-Zähler gilt zusätzlich: Der
    allgemeine Zähler-Anker und der Gruppen-Anker müssen zum gleichen Messpunkt
