@@ -14,7 +14,7 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`styles.css`** | `/` | Modernes CSS3-Designsystem (Darkmode, Glasmorphismus, Layout-Grid, Ampel-Badges, Buttons, Tabellen). |
 | **`manifest.json`** | `/` | Web App Manifest (PWA) für die Installation als eigenständige App auf Desktop und Smartphone. |
 | **`robots.txt` / `sitemap.xml`** | `/` | Legen Indexierungsregeln und die öffentlichen Kernseiten für Suchmaschinen fest. |
-| **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.08.18-beta.321`). Speichert alle Modulpfade lokal im Browser für den Offlinebetrieb. |
+| **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.08.18-beta.322`). Speichert alle Modulpfade lokal im Browser für den Offlinebetrieb. |
 | **`tests.html`** | `/` | Automatische Test-Engine im Browser. Führt aktuell 155 Unit-, Integrations- und Regressionstests aus. |
 | **`tests/seo-test.js`** | `tests/` | Prüft stabile URLs, Meta-Daten, Canonicals, robots.txt und Sitemap. |
 | **`js/app.js`** | `js/` | Schlanker Anwendungsstarter (`initializeApp()`). Verbindet Controller und startet die App beim Laden. |
@@ -166,5 +166,6 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`tests/wallbox-icon-test.js`** | Sichert das sichtbare Wallbox-Kabel mit Steckergehäuse und Kontaktstiften in Palette und Messskizze ab. |
 | **`tests/z5-second-asset-test.js`** | Regressionstest für einen zweiten Anschluss an einem verschachtelten Anlagenzähler. Prüft, dass der Unter-Rail erhalten bleibt und die Layout-Routine ihren Root-Anker kennt. |
 | **`docs/projekt-teststandard.md`** | Verständlicher Spickzettel für die fünf Testebenen und die Abnahmekriterien neuer Änderungen. |
+| **`docs/mieterstrom-d1-anforderungen.md`** | Anforderungen und Abnahmekriterien für die erste Mieterstromvorlage „Mieterstromgemeinschaft“. |
 
 Der Einstiegspunkt [`messkonzept.js`](../messkonzept.js) orchestriert diese Module weiterhin. Zustandsänderungen werden über `commands.js` geführt; weitere Auslagerungen sollten diese Grenze beibehalten und nicht erneut DOM-, Geometrie- und Fachlogik vermischen.

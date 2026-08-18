@@ -12,8 +12,8 @@ freier Entwurf verändert oder zurückgesetzt werden.
 ## Akzeptanzkriterien
 
 - Der freie Konfigurator ist als eigene, gut sichtbare Aktion verfügbar.
-- Die Fälle sind in drei Gruppen verständlich geordnet: gemeinsamer Zähler,
-  paralleler Zweitzähler und Kaskadenmessung.
+- Die Fälle sind in vier Gruppen verständlich geordnet: gemeinsame Messung,
+  Parallelmessung, Kaskadenmessung und Mieterstromkonzept.
 - Eine Vorlage öffnet direkt den passenden Modus und enthält bereits die
   richtigen Objekte und Zählerbeziehungen.
 - „Haushalt“ ist nur die sichtbare Bezeichnung; der interne Modelltyp bleibt
@@ -32,7 +32,7 @@ freier Entwurf verändert oder zurückgesetzt werden.
   der freie Konfigurator. Es gibt keine Vorlage-Sonderkoordinaten.
 - Die Oberfläche bleibt auf Smartphone-Breite bedienbar; Karten werden bei
   kleinen Breiten untereinander angeordnet.
-- Jede der drei Gruppen besitzt einen auffälligen, aber standardmäßig
+- Jede der vier Gruppen besitzt einen auffälligen, aber standardmäßig
   geschlossenen Info-Button. Dort stehen Vorteile, mögliche Nachteile und
   neutrale Prüfhinweise. So bleibt die Startauswahl übersichtlich, ohne die
   fachlich wichtigen Unterschiede zu verstecken.
@@ -49,6 +49,19 @@ Die Gruppenbeschreibung beginnt jeweils mit einer verständlichen Zielgruppe:
   gemessen werden.
 - Kaskadenmessung: Wärmepumpe oder Wallbox sollen separat gemessen, aber
   weiterhin durch PV-Strom mitversorgt werden.
+- Mieterstromkonzept: Eine Mieterstromgemeinschaft möchte alle
+  Anschlussnutzer in einer gemeinsamen, bearbeitbaren Skizze abbilden.
+
+## Mieterstrom D1
+
+Die erste Mieterstromvorlage heißt „Mieterstromgemeinschaft“. Sie lädt eine
+PV-Anlage, einen sichtbaren Erzeugungszähler sowie vier Mieterstromnutzer mit
+je einem `ZN…`-Zähler. Die Nutzerzähler sind im Modell als technische
+Modellannahme mit nicht aktiver Marktlokation markiert. Sie bleiben sichtbar,
+damit spätere Änderungen der Versorgung nachvollziehbar bleiben.
+
+Die Vorlage führt keinen eigenen Messmodus ein. Sie nutzt den vorhandenen Modus
+„Gemeinsame Messung“ und dieselben Renderer-, Topologie- und Geometrieregeln.
 
 Für die gemeinsame Messung gilt in der Oberfläche ausdrücklich:
 

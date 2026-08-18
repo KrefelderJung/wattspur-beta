@@ -75,6 +75,20 @@
                 Object.freeze({ label: 'Wärmepumpenprivilegierung nach § 22 EnFG', href: 'https://www.gesetze-im-internet.de/enfg/__22.html' }),
                 Object.freeze({ label: 'KAV: Konzessionsabgaben', href: 'https://www.gesetze-im-internet.de/kav/BJNR000120992.html' })
             ])
+        }),
+        mieterstrom: Object.freeze({
+            intro: 'Geeignet für eine Mieterstromgemeinschaft, in der alle Anschlussnutzer von der Erzeugungsanlage versorgt werden sollen.',
+            advantages: Object.freeze([
+                'Die Erzeugungsanlage und alle teilnehmenden Anschlussnutzer sind in einer gemeinsamen Skizze sichtbar.',
+                'Mieterstromzähler bleiben je Nutzer zugeordnet und können später wieder als reguläre Netzanschlüsse berücksichtigt werden.',
+                'Die Vorlage eignet sich als verständlicher Ausgangspunkt für PV- oder BHKW-Mieterstromgemeinschaften.'
+            ]),
+            cautions: Object.freeze([
+                'Die nicht aktive Marktlokation der teilnehmenden Mieterstromzähler ist hier nur eine technische Modellannahme.',
+                'Belieferung, Abrechnung und die konkrete Rolle der Zähler müssen mit Betreiber, Messstellenbetreiber, Netzbetreiber und Lieferant abgestimmt werden.',
+                'Wenn ein Nutzer später wieder einen freien Lieferanten wählen soll, muss die Mess- und Abrechnungsstruktur angepasst werden.'
+            ]),
+            links: Object.freeze([])
         })
     });
 
@@ -154,6 +168,16 @@
             flow: ['Wallbox', 'Haushalt', 'PV', 'Speicher'],
             kind: 'cascade',
             steuveType: 'Wallbox'
+        }),
+        Object.freeze({
+            id: 'mieterstrom-d1',
+            group: 'mieterstrom',
+            title: 'Mieterstromgemeinschaft',
+            summary: 'Alle Anschlussnutzer werden von der Erzeugungsanlage versorgt.',
+            flow: ['PV', 'Mieterstromnutzer', 'Mieterstromzähler'],
+            kind: 'mieterstrom',
+            energyCarrier: 'PV',
+            userCount: 4
         })
     ]);
 

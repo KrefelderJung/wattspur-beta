@@ -15,7 +15,9 @@
         const SINGLE_ZONE = 'single-main';
 
         function addAsset(state, type, config = {}) {
-            const asset = model.createAsset(state, type, config.zone || SINGLE_ZONE, config.steuveType || '', config.energyCarrier || '');
+            const asset = model.createAsset(state, type, config.zone || SINGLE_ZONE, config.steuveType || '', config.energyCarrier || '', {
+                mieterstromObject: config.mieterstromObject || ''
+            });
             if (config.name) asset.name = config.name;
             if (config.meterId) asset.meterId = config.meterId;
             state.assets.push(asset);
@@ -45,6 +47,41 @@
             return { steuve, household, meter, pv, storage };
         }
 
+        function addMieterstromD1(state, definition) {
+            const pv = addAsset(state, 'generation', {
+                name: 'PV',
+                energyCarrier: definition.energyCarrier || 'PV'
+            });
+            // Die D1-Skizze zeigt neben dem Bezugszähler einen eigenen
+            // Erzeugungszähler. Er bleibt eine normale technische
+            // Kennzeichnung und wird nicht als eigener Modus modelliert.
+            pv.generationMeter = true;
+
+            const users = [];
+            const meters = [];
+            const userCount = Math.max(1, Number(definition.userCount) || 4);
+            for (let index = 1; index <= userCount; index += 1) {
+                const user = addAsset(state, 'consumer', {
+                    name: `Mieterstromnutzer ${index}`,
+                    zone: 'single-main',
+                    mieterstromObject: 'user'
+                });
+                const meter = model.addAsset(
+                    state,
+                    'meter',
+                    'single-main',
+                    '',
+                    '',
+                    { targetAssetId: user.id, mieterstromObject: 'external-meter' }
+                );
+                if (!meter) throw new Error(`Mieterstrom-Vorlage konnte ZN${index} nicht anlegen.`);
+                meter.name = `Mieterstromzähler ${index}`;
+                users.push(user);
+                meters.push(meter);
+            }
+            return { pv, users, meters };
+        }
+
         function buildPresetState(id) {
             const definition = presets.getById(id);
             if (!definition) throw new Error(`Unbekannte Messkonzept-Vorlage: ${id}`);
@@ -57,6 +94,8 @@
                 addAsset(state, 'steuve', { zone: 'parallel-1', steuveType: definition.steuveType, name: definition.steuveType });
             } else if (definition.kind === 'cascade') {
                 addCascade(state, definition.steuveType);
+            } else if (definition.kind === 'mieterstrom') {
+                addMieterstromD1(state, definition);
             } else {
                 definition.assets.forEach(type => {
                     const config = { name: type === 'consumer' ? 'Haushalt' : type === 'generation' ? 'PV' : type === 'storage' ? 'Speicher' : definition.steuveType };

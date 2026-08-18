@@ -32,12 +32,13 @@ const labelAssets = ['PV', 'KWK', 'Wind', 'Balkonkraftwerk'].map(energyCarrier =
 assert(labelAssets.map(asset => asset.name).join('|') === 'PV1|BHKW2|WE3|PV4', 'Erzeugungsanlagen müssen ihre sichtbare Kurzkennung mit einer fortlaufenden Nummer erhalten.');
 
 const catalog = presets.getCatalog();
-assert(catalog.length === 8, 'Der Katalog muss acht Startvorlagen enthalten.');
+assert(catalog.length === 9, 'Der Katalog muss neun Startvorlagen enthalten.');
 assert(catalog.filter(entry => entry.group === 'single').length === 4, 'Vier gemeinsame Messungen erwartet.');
 assert(catalog.filter(entry => entry.group === 'parallel').length === 2, 'Zwei Parallelvorlagen erwartet.');
 assert(catalog.filter(entry => entry.group === 'cascade').length === 2, 'Zwei Kaskadenvorlagen erwartet.');
+assert(catalog.filter(entry => entry.group === 'mieterstrom').length === 1, 'Eine Mieterstromvorlage erwartet.');
 
-const infoTexts = ['single', 'parallel', 'cascade']
+const infoTexts = ['single', 'parallel', 'cascade', 'mieterstrom']
     .map(group => presets.getGroupInfo(group))
     .flatMap(info => [info.intro, ...info.advantages, ...info.cautions]);
 assert(infoTexts.every(text => !/[–—]/.test(text)), 'Die sichtbaren Infobox-Texte dürfen keine Gedankenstriche enthalten.');
@@ -64,9 +65,18 @@ assert(cascade.mode === 'single' && cascadeMeter && cascadeMeter.meterScope === 
 assert(cascade.assets.some(asset => asset.type === 'steuve' && !asset.meterId), 'Die Steueranlage muss auf der oberen Schiene bleiben.');
 assert(cascade.assets.filter(asset => asset.type !== 'meter' && asset.type !== 'steuve').every(asset => asset.meterId === cascadeMeter.id), 'Haushalt, PV und Speicher müssen gemeinsam hinter Z2 gemessen werden.');
 
+const mieterstrom = loader.buildPresetState('mieterstrom-d1');
+const mieterstromUsers = mieterstrom.assets.filter(asset => asset.mieterstromObject === 'user');
+const mieterstromMeters = mieterstrom.assets.filter(asset => asset.mieterstromObject === 'external-meter');
+assert(mieterstrom.mode === 'single', 'Mieterstrom D1 darf keinen eigenen Messmodus einführen.');
+assert(mieterstromUsers.length === 4 && mieterstromMeters.length === 4, 'Mieterstrom D1 muss vier Nutzer und vier zugeordnete Mieterstromzähler enthalten.');
+assert(mieterstrom.assets.some(asset => asset.type === 'generation' && asset.energyCarrier === 'PV' && asset.generationMeter), 'Mieterstrom D1 muss eine PV-Anlage mit sichtbarem Erzeugungszähler enthalten.');
+assert(mieterstromUsers.every(user => user.meterId && mieterstromMeters.some(meter => meter.id === user.meterId && meter.targetAssetId === user.id)), 'Jeder Mieterstromnutzer muss genau seinem Mieterstromzähler zugeordnet sein.');
+assert(mieterstromMeters.every(meter => meter.marketLocationStatus === 'inactive' && meter.mieterstromParticipation === 'excluded'), 'Die in D1 sichtbaren Mieterstromzähler müssen als technische Modellannahme markiert sein.');
+
 const target = model.createState();
 presets.getById('single-household-pv');
 loader.applyPreset(target, 'single-household-pv');
 assert(target.assets.length === 2 && target.assets.some(asset => asset.name === 'Haushalt'), 'applyPreset muss den vorhandenen Zustand ersetzen.');
 
-console.log('Preset-Loader-Test: OK (8 Vorlagen, Single/Parallel/Kaskade geprüft)');
+console.log('Preset-Loader-Test: OK (9 Vorlagen, Single/Parallel/Kaskade/Mieterstrom geprüft)');

@@ -1761,7 +1761,7 @@ html[data-tool="lastgang"] .landing-main {
 
 .mk-start-groups {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.85rem;
 }
 
@@ -1985,6 +1985,11 @@ html[data-tool="lastgang"] .landing-main {
     --mk-group-icon-bg: var(--mk-storage-fg);
 }
 
+.mk-start-group--mieterstrom {
+    --mk-group-icon-fg: var(--mk-wallbox-bg);
+    --mk-group-icon-bg: var(--mk-wallbox-fg);
+}
+
 /* Die hellen Objektfarben sind im Nachtmodus gute Akzente, verlieren im
  * Tag-Modus auf hellen Karten aber an Kontur. Dort bleiben die Farbfamilien
  * erhalten, die Linien werden jedoch bewusst dunkler und damit lesbar. */
@@ -2001,6 +2006,11 @@ html[data-tool="lastgang"] .landing-main {
 [data-theme="light"] .mk-start-group--cascade {
     --mk-group-icon-fg: #6d28d9;
     --mk-group-icon-bg: #ede9fe;
+}
+
+[data-theme="light"] .mk-start-group--mieterstrom {
+    --mk-group-icon-fg: #9f1239;
+    --mk-group-icon-bg: #fce7f3;
 }
 
 .mk-start-group-icon path,
@@ -2104,6 +2114,11 @@ html[data-tool="lastgang"] .landing-main {
 .mk-start-flow-chip--nsh {
     --mk-chip-fg: var(--mk-nsh-fg);
     --mk-chip-bg: var(--mk-nsh-bg);
+}
+
+.mk-start-flow-chip--mieterstrom {
+    --mk-chip-fg: var(--mk-wallbox-fg);
+    --mk-chip-bg: var(--mk-wallbox-bg);
 }
 
 .mk-start-flow-chip--mixed {
