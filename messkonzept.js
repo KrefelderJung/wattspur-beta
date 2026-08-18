@@ -433,7 +433,8 @@ function mkGetPresetFlowChipClass(label) {
     if (normalized.includes('wärmepumpe')) kinds.push('heatpump');
     if (normalized.includes('klimaanlage')) kinds.push('climate');
     if (normalized.includes('nachtspeicher')) kinds.push('nsh');
-    if (normalized.includes('mieterstrom')) kinds.push('mieterstrom');
+    if (normalized.includes('mieterstromnutzer')) kinds.push('mieterstrom-user');
+    else if (normalized.includes('mieterstrom')) kinds.push('mieterstrom');
     if (kinds.length > 1) return 'mk-start-flow-chip--mixed';
     return kinds.length === 1 ? `mk-start-flow-chip--${kinds[0]}` : 'mk-start-flow-chip--neutral';
 }

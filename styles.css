@@ -2116,9 +2116,11 @@ html[data-tool="lastgang"] .landing-main {
     --mk-chip-bg: var(--mk-nsh-bg);
 }
 
-.mk-start-flow-chip--mieterstrom {
-    --mk-chip-fg: var(--mk-wallbox-fg);
-    --mk-chip-bg: var(--mk-wallbox-bg);
+.mk-start-flow-chip--mieterstrom-user {
+    --mk-chip-fg: var(--mk-consumer-bg);
+    --mk-chip-bg: transparent;
+    border-style: dashed;
+    box-shadow: none;
 }
 
 .mk-start-flow-chip--mixed {

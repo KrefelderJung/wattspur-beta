@@ -7,7 +7,7 @@
 
 Die Startseite bietet neben gemeinsamer Messung, Parallelmessung und
 Kaskadenmessung eine vierte Kategorie: **Mieterstromkonzept**. Der erste Fall
-ist die einfache D1-Variante einer Mieterstromgemeinschaft. Alle dargestellten
+ist die einfache D1-Variante **MKD1: Mieterstromgemeinschaft**. Alle dargestellten
 Anschlussnutzer werden in der Vorlage von der Erzeugungsanlage versorgt.
 
 Die Kategorie ist keine neue Messlogik und kein eigener Betriebsmodus. Sie lädt
@@ -37,13 +37,16 @@ Netzbetreiber und Lieferanten müssen die konkrete Umsetzung abstimmen.
 - eigenes Linien-Icon für eine Erzeugungsanlage mit mehreren Nutzern;
 - eine kompakte Info-Schaltfläche mit Zielgruppe, Modellannahme und
   Abstimmungshinweis;
-- keine internen Zählernummern in den Startkarten.
+- keine internen Zählernummern und keinen zusätzlichen Zählerchip in den
+  Startkarten;
+- der Chip „Mieterstromnutzer“ übernimmt die umgekehrte Darstellung des
+  transparenten Nutzerobjekts mit grauer Schrift und gestrichelter Kontur.
 
 ## Akzeptanzkriterien
 
 1. Die vier Kategorien sind auf Desktop, Tablet und Smartphone ohne
    horizontales Überlaufen erreichbar.
-2. Ein Klick auf „Mieterstromgemeinschaft“ lädt direkt die D1-Skizze.
+2. Ein Klick auf „MKD1: Mieterstromgemeinschaft“ lädt direkt die D1-Skizze.
 3. Nach dem Laden ist der Zustand im Modus „Gemeinsame Messung“ und nutzt nur
    vorhandene Standardobjekte.
 4. Die Erzeugungsanlage und die Nutzer sind sichtbar; jeder Nutzer hat genau

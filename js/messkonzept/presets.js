@@ -172,9 +172,9 @@
         Object.freeze({
             id: 'mieterstrom-d1',
             group: 'mieterstrom',
-            title: 'Mieterstromgemeinschaft',
+            title: 'MKD1: Mieterstromgemeinschaft',
             summary: 'Alle Anschlussnutzer werden von der Erzeugungsanlage versorgt.',
-            flow: ['PV', 'Mieterstromnutzer', 'Mieterstromzähler'],
+            flow: ['PV', 'Mieterstromnutzer'],
             kind: 'mieterstrom',
             energyCarrier: 'PV',
             userCount: 4
