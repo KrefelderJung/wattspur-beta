@@ -2182,7 +2182,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             }
         });
 
-        addTest('browser-e2e', 'Löschsicherheit für Anlagen und leere Messschienen', 'Prueft Ersatzzuordnung, leere anlagenbezogene Messschienen und den Schutz vor dem Löschen eines Zählers mit zugeordneten Anlagen', async function() {
+        addTest('browser-e2e', 'Löschsicherheit für Anlagen und Messschienen', 'Prüft Ersatzzuordnung, leere anlagenbezogene Messschienen und das direkte Löschen eines Zählers mit Rückführung seiner Anlagen', async function() {
             if (window.location.protocol === 'file:') skipTest('Ueber file:// uebersprungen: Browser-E2E-Test benoetigt HTTP/HTTPS.');
 
             const frame = document.createElement('iframe');
@@ -2261,28 +2261,13 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
                 const secondAssetId = [...frameDocument.querySelectorAll('[data-mk-asset-id]')].find(card => card.dataset.mkAssetId !== firstAssetId)?.dataset.mkAssetId;
                 assert(secondAssetId, 'Browser-E2E: zweite Anlage hat keine stabile ID');
 
-                // Ein belegter Zähler darf nicht gelöscht werden. Die Warnung
-                // ist fachlich wichtig und verhindert verwaiste Messbeziehungen.
+                // Ein belegter Zähler darf direkt gelöscht werden. Die
+                // zugeordneten Anlagen müssen danach wieder im übergeordneten
+                // Messbereich erscheinen.
                 frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`)?.click();
-                await waitFor(() => frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`), 'Löschschutz des belegten Zählers');
-                const warning = frameDocument.querySelector('#toast-container .toast-warning');
-                assert(warning?.textContent.includes('Bitte entfernen Sie zuerst'), 'Browser-E2E: Beim Löschen eines belegten Zählers fehlt der verständliche Hinweis');
-
-                // Der erste Anlagenabgang darf beim Entfernen nicht den Zähler
-                // in die Hauptschiene zurückstufen oder die zweite Anlage verlieren.
-                frameDocument.querySelector(`[data-mk-remove-asset="${firstAssetId}"]`)?.click();
-                await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === 1, 'erste Anlage entfernen');
-                assert(frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`), 'Browser-E2E: Messpunkt verschwand nach dem Entfernen der Zielanlage');
-                assert(frameDocument.querySelector(`[data-mk-asset-id="${secondAssetId}"]`), 'Browser-E2E: Ersatzanlage am Zusatzzaehler fehlt');
-
-                // Auch die letzte Anlage darf nur die leere, sichtbare Rail
-                // hinterlassen. Erst danach ist der Zähler löschbar.
-                frameDocument.querySelector(`[data-mk-remove-asset="${secondAssetId}"]`)?.click();
-                await waitFor(() => frameDocument.querySelectorAll('[data-mk-asset-id]').length === 0, 'letzte Anlage entfernen');
-                assert(frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`), 'Browser-E2E: leere anlagenbezogene Messschiene blieb nicht erhalten');
-                frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`)?.click();
-                await waitFor(() => !frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`), 'leeren Zähler entfernen');
-                assert(frameDocument.querySelectorAll('[data-mk-remove-meter]').length === 0, 'Browser-E2E: leerer Zusatzzaehler wurde nicht vollständig entfernt');
+                await waitFor(() => !frameDocument.querySelector(`[data-mk-remove-meter="${meterId}"]`), 'belegten Zähler direkt entfernen');
+                assert(frameDocument.querySelectorAll('[data-mk-asset-id]').length === 2, 'Browser-E2E: Anlagen gingen beim direkten Zählerlöschen verloren');
+                assert(!frameDocument.querySelector('#toast-container .toast-warning'), 'Browser-E2E: Beim direkten Zählerlöschen darf keine Löschsperre erscheinen');
             } finally {
                 frame.remove();
             }

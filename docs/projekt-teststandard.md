@@ -10,7 +10,7 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
 
 2. **Zustands- und Topologietests**
 
-   Prüfen, ob Zähler, Anlagen, Elternbeziehungen und leere Sammelschienen fachlich erhalten bleiben. Besonders wichtig sind Z1 → Z2 → Z3, ein Einzelzähler mit nur einer Anlage, das Hinzufügen einer zweiten Anlage und das Löschen der letzten Anlage. Ein belegter Zähler darf nicht gelöscht werden. Erst wenn alle zugeordneten Anlagen entfernt sind, darf der leere anlagenbezogene Messpunkt bewusst entfernt werden.
+   Prüfen, ob Zähler, Anlagen, Elternbeziehungen und leere Sammelschienen fachlich erhalten bleiben. Besonders wichtig sind Z1 → Z2 → Z3, ein Einzelzähler mit nur einer Anlage, das Hinzufügen einer zweiten Anlage und das Löschen der letzten Anlage. Ein Zusatzzaehler darf direkt gelöscht werden. Zugeordnete Anlagen müssen dabei in den übergeordneten Messbereich zurückfallen, ohne Daten oder Kaskadenbeziehungen zu verlieren.
 
    Für jeden Drop auf einen sichtbaren Zusatz-Zähler gilt zusätzlich: Der
    allgemeine Zähler-Anker und der Gruppen-Anker müssen zum gleichen Messpunkt
@@ -127,10 +127,9 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
    wieder entfernen. Ein zweiter Ablauf baut einen Zusatzzaehler auf, fuegt eine
    zweite Anlage an diesen Messpunkt an und prueft, dass beide Karten in der
    richtigen Unter-Sammelschiene bleiben. Der Löschablauf prüft zusätzlich, dass
-   ein belegter Zähler mit einer verständlichen Warnung geschützt wird, dass die
-   Ersatzanlage nach dem Entfernen des ersten Zielobjekts am Messpunkt bleibt
-   und dass die leere Unter-Sammelschiene bis zur bewussten Zählerlöschung
-   sichtbar bleibt. Dieser Test ergänzt Quelltext- und DOM-freie Prüfungen um
+   ein belegter Zähler direkt gelöscht werden kann und seine Anlagen in den
+   übergeordneten Messbereich zurückfallen. Dieser Test ergänzt Quelltext- und
+   DOM-freie Prüfungen um
    die tatsächliche Verkabelung und Bedienung der Oberfläche. Die acht
    Startvorlagen werden außerdem einzeln geöffnet. Dabei werden Messmodus,
    Objektanzahl, eindeutige Karten und die erwartete Kaskaden-Sammelschiene

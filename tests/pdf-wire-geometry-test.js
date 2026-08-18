@@ -82,6 +82,6 @@ assert(stylesSource.includes('.mk-print-canvas-stage'), 'Druck-CSS muss die eing
 assert(/\.mk-print-topology \.mk-drop-zone\s*\{[\s\S]*?padding:\s*0;/.test(stylesSource), 'Druck-CSS darf die gemessenen Drop-Zonen nicht mit eigenem Innenabstand verschieben');
 assert(!/\.mk-print-topology\s*>\s*div\s*\{/.test(stylesSource), 'Druck-Padding darf nicht direkt auf die SVG-Bühne gelegt werden');
 assert(/export\.js\?v=4/.test(indexSource), 'Exportmodul muss mit neuem Cache-Buster geladen werden');
-assert(/APP_VERSION\s*=\s*['"]2026\.08\.18-beta\.314['"]/.test(workerSource), 'Service Worker muss den neuen Exportstand cachen');
+assert(/APP_VERSION\s*=\s*['"]2026\.08\.18-beta\.315['"]/.test(workerSource), 'Service Worker muss den neuen Exportstand cachen');
 
 console.log('PDF-Leitungsgeometrie-Test: OK');

@@ -1,6 +1,7 @@
 'use strict';
 
-/* Regressionstest: Ein Zähler darf keine zugeordneten Anlagen verwaisen lassen. */
+/* Regressionstest: Ein Zähler darf direkt gelöscht werden. Zugeordnete
+ * Anlagen fallen dabei in den übergeordneten Messbereich zurück. */
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
@@ -37,21 +38,31 @@ const controller = factory.createDragDropController({
 });
 
 controller.handleCanvasClick(createRemoveEvent(meter.id));
-if (state.assets.length !== 2) throw new Error('Ein Zähler mit zugeordneter Anlage darf nicht gelöscht werden.');
-if (!notification.includes('Bitte entfernen Sie zuerst die zugeordnete Anlage')) throw new Error('Die Fehlermeldung zur Zählersperre fehlt.');
-if (renderCount !== 0) throw new Error('Ein abgewiesener Löschversuch darf keine Darstellung neu zeichnen.');
+if (state.assets.some(asset => asset.id === meter.id)) throw new Error('Ein Zähler muss auch mit zugeordneter Anlage löschbar sein.');
+if (asset.meterId) throw new Error('Die zugeordnete Anlage muss nach dem Löschen in den übergeordneten Messbereich zurückfallen.');
+if (notification) throw new Error('Beim direkten Löschen eines Zählers darf keine Löschsperre erscheinen.');
+if (renderCount !== 1) throw new Error('Ein direktes Löschen muss die Darstellung aktualisieren.');
 
 state.assets = [meter];
 notification = '';
 controller.handleCanvasClick(createRemoveEvent(meter.id));
 if (state.assets.length !== 0) throw new Error('Ein leerer Zähler muss löschbar bleiben.');
-if (renderCount !== 1) throw new Error('Ein zulässiges Löschen muss die Darstellung aktualisieren.');
+if (renderCount !== 2) throw new Error('Ein zulässiges Löschen muss die Darstellung aktualisieren.');
 
 const legacyMeter = { id: 'meter-legacy', type: 'meter', meterScope: 'asset', targetAssetId: 'asset-legacy' };
 const legacyAsset = { id: 'asset-legacy', type: 'generation', meterId: '' };
 state.assets = [legacyMeter, legacyAsset];
 notification = '';
 controller.handleCanvasClick(createRemoveEvent(legacyMeter.id));
-if (state.assets.length !== 2 || !notification.includes('zugeordnete Anlage')) throw new Error('Auch alte Zustände mit targetAssetId müssen vor dem Löschen geschützt werden.');
+if (state.assets.some(asset => asset.id === legacyMeter.id) || legacyAsset.targetAssetId) throw new Error('Auch alte Zustände mit targetAssetId müssen direkt bereinigt werden.');
 
-console.log('Meter-Delete-Guard-Test: OK (zugeordnete Anlagen geschützt, leerer Zähler löschbar)');
+const parentMeter = { id: 'meter-parent', type: 'meter', meterScope: 'asset', parentMeterId: '' };
+const childMeter = { id: 'meter-child', type: 'meter', meterScope: 'asset', parentMeterId: parentMeter.id, targetAssetId: 'asset-child' };
+const childAsset = { id: 'asset-child', type: 'generation', meterId: childMeter.id };
+state.assets = [parentMeter, childMeter, childAsset];
+notification = '';
+controller.handleCanvasClick(createRemoveEvent(parentMeter.id));
+if (state.assets.some(asset => asset.id === parentMeter.id) || childMeter.parentMeterId !== '') throw new Error('Beim Löschen eines Elternzählers muss die nachgeordnete Kaskade am übergeordneten Messbereich bleiben.');
+if (childAsset.meterId !== childMeter.id) throw new Error('Das Löschen eines Elternzählers darf die nachgeordnete Anlagenmessung nicht lösen.');
+
+console.log('Meter-Delete-Test: OK (belegte und leere Zähler direkt löschbar)');

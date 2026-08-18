@@ -415,20 +415,12 @@
             if (removeMeterButton) {
                 const removedId = removeMeterButton.dataset.mkRemoveMeter;
                 const removedMeter = call('getAdditionalMeters').find(asset => asset.id === removedId);
-                const assignedAssets = state.assets.filter(asset => asset.type !== 'meter'
-                    && (asset.meterId === removedId
-                        || asset.targetAssetId === removedId
-                        || removedMeter?.targetAssetId === asset.id));
-                const childMeters = state.assets.filter(asset => asset.type === 'meter' && asset.parentMeterId === removedId);
-                if (assignedAssets.length || childMeters.length) {
-                    const assetText = assignedAssets.length === 1 ? 'die zugeordnete Anlage' : 'die zugeordneten Anlagen';
-                    const meterText = childMeters.length ? ' oder nachgeordneten Zähler' : '';
-                    call('notify', `Bitte entfernen Sie zuerst ${assetText}${meterText}, bevor Sie den Zähler entfernen.`, 'warning');
-                    return;
-                }
                 const previousState = call('captureHistoryState');
                 state.assets = state.assets.filter(asset => asset.id !== removedId);
                 state.assets.forEach(asset => {
+                    // Zugeordnete Anlagen fallen beim direkten Löschen in den
+                    // übergeordneten Messbereich zurück. Nachgeordnete Zähler
+                    // bleiben erhalten und hängen am bisherigen Elternzähler.
                     if (asset.type === 'meter' && asset.parentMeterId === removedId) asset.parentMeterId = removedMeter?.parentMeterId || '';
                     if (asset.meterId === removedId || asset.targetAssetId === removedId) {
                         asset.meterId = '';
