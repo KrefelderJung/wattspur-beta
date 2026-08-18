@@ -54,7 +54,7 @@ Die Gruppenbeschreibung beginnt jeweils mit einer verständlichen Zielgruppe:
 
 ## Mieterstrom D1
 
-Die erste Mieterstromvorlage heißt „MKD1: Mieterstromgemeinschaft“. Sie lädt eine
+Die erste Mieterstromvorlage heißt „MK D1: Mieterstromgemeinschaft“. Sie lädt eine
 PV-Anlage, einen sichtbaren Erzeugungszähler sowie vier Mieterstromnutzer mit
 je einem `ZN…`-Zähler. Die Nutzerzähler sind im Modell als technische
 Modellannahme mit nicht aktiver Marktlokation markiert. Sie bleiben sichtbar,
