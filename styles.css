@@ -124,7 +124,7 @@ body {
     box-shadow: var(--shadow-lg);
     text-align: center;
     width: 100%;
-    border: 1px solid var(--border-color);
+    border: 1px solid color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
 }
 
 .landing-header {
