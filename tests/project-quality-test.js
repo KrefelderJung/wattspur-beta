@@ -136,7 +136,7 @@ localCoreFiles.forEach(relativePath => {
     assert(!networkApiPattern.test(source), `${relativePath}: Netzwerk-API gehört nicht in den lokalen Messkonzept-Kern`);
 });
 assert(serviceWorkerText.includes('event.request.mode === \'navigate\''), 'service-worker.js: Offline-/Navigationsstrategie fehlt');
-assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && /beta\.312/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
+assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && /beta\.313/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
 
 // Der Netzanschluss ist ein eigenes, bearbeitbares Objekt. Diese Prüfungen
 // verhindern, dass ein späteres Refactoring den HAK nur visuell anklickbar
@@ -189,7 +189,7 @@ assert(stylesText.includes('background: var(--mk-wallbox-bg)'), 'styles.css: Wal
 assert(stylesText.includes('background: var(--mk-hak-bg)'), 'styles.css: HAK-Farbe ist nicht an die semantische Variable gebunden');
 assert(stylesText.includes('--mk-wallbox-bg: #f3b2c2') && stylesText.includes('--mk-heatpump-bg: #86efac') && stylesText.includes('--mk-wallbox-fg: #831843') && stylesText.includes('--mk-heatpump-fg: #166534'), 'styles.css: Wallbox und Wärmepumpe müssen klar unterscheidbare Bordeaux- und Grüntöne verwenden');
 assert(stylesText.includes('box-sizing: border-box') && stylesText.includes('inset 0 0 0 1px var(--mk-object-border'), 'styles.css: Objekt-Ränder müssen als geometrieneutraler Inset-Rand umgesetzt sein');
-assert(indexText.includes('Mieterstromobjekte') && indexText.includes('data-mk-mieterstrom-object="user"') && indexText.includes('data-mk-mieterstrom-object="external-meter"') && modelText.includes('marketLocationStatus') && dragDropText.includes('mieterstromObject') && !messkonzeptText.includes('MK_MIETERSTROM'), 'Mieterstrom: Nutzer und ausgeschlossener Zähler müssen als einfache Palette-Objekte technisch markiert sein');
+assert(indexText.includes('Mieterstromobjekte') && indexText.includes('data-mk-mieterstrom-object="user"') && indexText.includes('data-mk-mieterstrom-object="external-meter"') && !indexText.includes('mk-palette-section-note') && !indexText.includes('<small>Optional</small>') && modelText.includes('marketLocationStatus') && dragDropText.includes('mieterstromObject') && !messkonzeptText.includes('MK_MIETERSTROM'), 'Mieterstrom: einfache Palette-Objekte ohne Zusatzhinweis oder Optional-Badge');
 
 // Syntax-Gate für alle ausgelagerten Messkonzept-Module. Ein solcher Fehler
 // würde sonst erst beim Öffnen eines seltenen Modus sichtbar.
