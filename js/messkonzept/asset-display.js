@@ -20,6 +20,10 @@
         const getGenerationAssetNumber = options.getGenerationAssetNumber || (() => null);
         const getConsumerAssetNumber = options.getConsumerAssetNumber || (() => null);
         const getMeterNumber = options.getMeterNumber || (() => null);
+        const getMeterLabel = options.getMeterLabel || (meter => {
+            const number = getMeterNumber(meter);
+            return number ? `Z${number}` : '';
+        });
         const getMeterDetailIndex = options.getMeterDetailIndex || (() => null);
         const canBuildCascadeAfterMeter = options.canBuildCascadeAfterMeter || (() => false);
         const escapeHtml = options.escapeHtml || (value => String(value ?? ''));
@@ -110,15 +114,15 @@
         }
 
         function renderInlineMeter(meter, asset) {
-            const number = getMeterNumber(meter);
-            if (!number) return '';
+            const label = getMeterLabel(meter);
+            if (!label) return '';
             const detailIndex = getMeterDetailIndex(meter);
             const meterClass = meter?.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : '';
             const dropHint = canBuildCascadeAfterMeter(meter)
                 ? 'Weitere Anlagen oder Zähler hierher ziehen'
                 : 'Weitere Anlagen hierher ziehen · keine weitere Kaskadenstufe';
-            const label = `Z${number}: Zusatzzaehler vor ${asset?.name || 'Anlage'}; ${dropHint}`;
-            return `<span class="mk-inline-meter-wrap" data-mk-meter-target="${escapeHtml(meter.id)}" data-mk-meter-group-target="${escapeHtml(meter.id)}" title="Z${number} vor ${escapeHtml(asset?.name || 'Anlage')} · ${dropHint}"><span class="mk-meter-drop-hitbox" aria-hidden="true"></span><span class="mk-generation-meter mk-inline-meter${meterClass}" data-mk-select-meter="${detailIndex}" role="button" tabindex="0" aria-label="${escapeHtml(label)}"><b>Z${number}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${escapeHtml(meter.id)}" title="Z${number} entfernen" aria-label="Zähler Z${number} entfernen">×</button></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`;
+            const accessibleLabel = `${label}: Zusatzzaehler vor ${asset?.name || 'Anlage'}; ${dropHint}`;
+            return `<span class="mk-inline-meter-wrap" data-mk-meter-target="${escapeHtml(meter.id)}" data-mk-meter-group-target="${escapeHtml(meter.id)}" title="${escapeHtml(label)} vor ${escapeHtml(asset?.name || 'Anlage')} · ${dropHint}"><span class="mk-meter-drop-hitbox" aria-hidden="true"></span><span class="mk-generation-meter mk-inline-meter${meterClass}" data-mk-select-meter="${detailIndex}" role="button" tabindex="0" aria-label="${escapeHtml(accessibleLabel)}"><b>${escapeHtml(label)}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${escapeHtml(meter.id)}" title="${escapeHtml(label)} entfernen" aria-label="Zähler ${escapeHtml(label)} entfernen">×</button></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`;
         }
 
         return Object.freeze({

@@ -61,6 +61,7 @@ const MK_RENDER = window.WattspurMesskonzeptRender.createRenderer({
     getAssetMeters: mkGetAssetMeters,
     getMeterAssets: mkGetMeterAssets,
     getMeterNumber: mkGetMeterNumber,
+    getMeterLabel: mkGetMeterLabel,
     getMeterDetailIndex: mkGetMeterDetailIndex,
     getGenerationMeterNumber: mkGetGenerationMeterNumber,
     renderAssetIcon: mkRenderAssetIcon,
@@ -162,6 +163,7 @@ const MK_ASSET_DISPLAY = window.WattspurMesskonzeptAssetDisplay.createAssetDispl
     getGenerationAssetNumber: asset => MK_IDENTIFIERS.getGenerationAssetNumber(asset),
     getConsumerAssetNumber: asset => MK_IDENTIFIERS.getConsumerAssetNumber(asset),
     getMeterNumber: meter => MK_IDENTIFIERS.getMeterNumber(meter),
+    getMeterLabel: meter => MK_IDENTIFIERS.getMeterLabel(meter),
     getMeterDetailIndex: meter => MK_IDENTIFIERS.getMeterDetailIndex(meter),
     canBuildCascadeAfterMeter: meter => MK_METER_POLICY.canBuildCascadeAfterMeter(meter),
     escapeHtml: value => mkEscapeHtml(value)
@@ -183,6 +185,7 @@ const MK_CANVAS_RENDERER = window.WattspurMesskonzeptCanvasRenderer.createCanvas
     layoutGeometry: MK_LAYOUT_GEOMETRY,
     escapeHtml: mkEscapeHtml,
     getMeterDetails: index => mkGetMeterDetails(index),
+    getMeterLabel: meter => mkGetMeterLabel(meter),
     getMeterDetailIndex: meter => mkGetMeterDetailIndex(meter),
     getAdditionalMeters: () => mkGetAdditionalMeters(),
     getHakVoltageLevel: () => MK_MODEL.getHakVoltageLevel(mkConfiguratorState),
@@ -190,7 +193,7 @@ const MK_CANVAS_RENDERER = window.WattspurMesskonzeptCanvasRenderer.createCanvas
     renderSelectOptions: (options, selected, placeholder) => mkRenderSelectOptions(options, selected, placeholder),
     renderSteuveNotice: asset => mkRenderSteuveNotice(asset),
     renderSteuveModuleFields: asset => mkRenderSteuveModuleFields(asset),
-    getAssetMeterNumber: asset => mkGetAssetMeterNumber(asset),
+    getAssetMeterLabel: asset => mkGetAssetMeterLabel(asset),
     getGenerationMeterNumber: asset => mkGetGenerationMeterNumber(asset),
     getGenerationDisplay: asset => mkGetGenerationDisplay(asset),
     getStorageOperation: asset => MK_MODEL.getStorageOperation(asset),
@@ -374,6 +377,7 @@ const MK_EXPORT = window.WattspurMesskonzeptExport.createExporter({
     renderMeterDetailsSummary: (index, includeEmpty) => mkRenderMeterDetailsSummary(index, includeEmpty),
     renderAssetSummary: (asset, includeEmpty) => mkRenderAssetSummary(asset, includeEmpty),
     getMeterNumber: meter => mkGetMeterNumber(meter),
+    getMeterLabel: meter => mkGetMeterLabel(meter),
     getAssetMeta: type => MK_ASSET_META[type],
     notify: (message, type) => mkNotify(message, type)
 });
@@ -565,12 +569,16 @@ function mkGetMeterNumber(meter) {
     return MK_IDENTIFIERS.getMeterNumber(meter);
 }
 
+function mkGetMeterLabel(meter) {
+    return MK_IDENTIFIERS.getMeterLabel(meter);
+}
+
 function mkGetMeterDetailIndex(meter) {
     return MK_IDENTIFIERS.getMeterDetailIndex(meter);
 }
 
-function mkGetAssetMeterNumber(asset) {
-    return MK_IDENTIFIERS.getAssetMeterNumber(asset);
+function mkGetAssetMeterLabel(asset) {
+    return MK_IDENTIFIERS.getAssetMeterLabel(asset);
 }
 
 function mkGetZoneLabel(index) {

@@ -175,7 +175,7 @@ Verbindungsmodul weder `mkConfiguratorState` noch `mkElements` und kann nicht
 mehr versehentlich fachliche Zustände verändern. Die bisherige Geometrie bleibt
 bewusst unverändert; lediglich die Zuständigkeit ist verschoben.
 
-Der Cache wurde auf `2026.08.18-beta.317` angehoben und enthält das neue
+Der Cache wurde auf `2026.08.18-beta.318` angehoben und enthält das neue
 Verbindungsmodul sowie die überarbeitete Trafo-Darstellung. Der HTTP-Testlauf umfasst jetzt 110 Tests und ist vollständig
 grün. Zusätzlich prüft ein Architekturtest, dass die Leitungslogik nicht in
 `messkonzept.js` zurückwandert, das Modul offline gecacht wird und keine globalen
@@ -335,9 +335,11 @@ später wieder direkt mit fachlicher Messlogik vermischt wird.
 Die fortlaufende Vergabe von Zusatz-Zählern und Erzeugungskennungen liegt jetzt
 in `js/messkonzept/identifiers.js`. Das Modul erhält Zustand und Topologie über
 Adapter und kennt weder DOM noch Kartenmarkup. Dadurch greifen Editor, einfache
-Ansicht, Detailansicht und PDF auf dieselbe Nummernquelle zurück. Ein Browser-
-Regressionstest prüft Parallel-Grundzähler, Zusatz-Zähler und PV-Kennung in
-einem gemeinsamen Szenario.
+Ansicht, Detailansicht und PDF auf dieselbe Nummernquelle zurück. Mieterstrom-
+zähler bilden dabei bewusst eine eigene sichtbare Folge `ZN1`, `ZN2`, … und
+erhöhen nicht die reguläre Netz-Zählerfolge `Z1`, `Z2`, …. Ein Browser-
+Regressionstest prüft Parallel-Grundzähler, beide Zusatz-Zählerfolgen und die
+PV-Kennung in einem gemeinsamen Szenario.
 
 ## Aktualisierter Architekturstatus – Prüfstatus-Verkabelung (17.08.2026)
 
@@ -421,7 +423,7 @@ Editor nicht mehr versehentlich die Diagramm- oder Kapazitätslogik duplizieren.
 Die Auslagerung ist bewusst schrittweise: Der Editor nutzt vorerst die
 bestehenden State- und Dashboard-Adapter, damit sich das Nutzerverhalten nicht
 ändert. Ein isolierter Node-Test prüft die API und eine echte Zelländerung ohne
-Browser-DOM. Der Offline-Cache wurde auf `2026.08.18-beta.317` angehoben und
+Browser-DOM. Der Offline-Cache wurde auf `2026.08.18-beta.318` angehoben und
 enthält die neue Datei. Als nächster sinnvoller Schritt bleibt die spätere
 Injektion dieser Adapter; dafür besteht aktuell kein Änderungsdruck.
 

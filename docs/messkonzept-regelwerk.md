@@ -35,6 +35,15 @@ Bei der letzten Zeile bleibt die technische Unterscheidung im Detailhinweis
 „Balkonkraftwerk / Steckersolargerät“ erhalten. So bleibt die Oberfläche kurz,
 ohne die fachlich relevante Einordnung zu verlieren.
 
+### Eigene Nummernfolge für Mieterstromzähler
+
+Mieterstromzähler werden sichtbar mit `ZN1`, `ZN2`, `ZN3` usw. bezeichnet.
+Diese Folge beginnt unabhängig von den aktiven Netz- und Zusatz-Zählern. Ein
+Mieterstromzähler erhöht deshalb nicht die nächste reguläre Kennung `Z…`.
+Die internen Objekt-IDs und Detaildaten bleiben davon getrennt, damit bereits
+gespeicherte Skizzen kompatibel bleiben. Die Kennung wird zentral in
+`js/messkonzept/identifiers.js` erzeugt und von Skizze, Editor und PDF genutzt.
+
 ## Aktive Regeln
 
 | ID | Auslöser | Stufe | Aktueller Hinweis / Zweck |

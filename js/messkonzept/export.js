@@ -17,6 +17,10 @@
         const renderMeterDetailsSummary = options.renderMeterDetailsSummary || (() => '');
         const renderAssetSummary = options.renderAssetSummary || (() => '');
         const getMeterNumber = options.getMeterNumber || (() => '—');
+        const getMeterLabel = options.getMeterLabel || (meter => {
+            const number = getMeterNumber(meter);
+            return number ? `Z${number}` : '—';
+        });
         const getAssetMeta = options.getAssetMeta || (() => ({}));
         const notify = options.notify || (() => {});
         const getDocument = options.getDocument || (() => global.document);
@@ -64,7 +68,7 @@
             const assets = state.assets?.length
                 ? state.assets.map(asset => {
                     const heading = asset.type === 'meter'
-                        ? `Z${getMeterNumber(asset)} · Zähler`
+                        ? `${getMeterLabel(asset)} · Zähler`
                         : `${escapeHtml(asset.name)} · ${escapeHtml(getAssetMeta(asset.type)?.label || asset.type || 'Baustein')}`;
                     return `<article class="mk-print-detail-block"><h4>${heading}</h4>${renderAssetSummary(asset, true)}</article>`;
                 }).join('')

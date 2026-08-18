@@ -19,6 +19,10 @@
         const getAssetMeters = deps.getAssetMeters || (() => []);
         const getMeterAssets = deps.getMeterAssets || (() => []);
         const getMeterNumber = deps.getMeterNumber || (() => null);
+        const getMeterLabel = deps.getMeterLabel || (meter => {
+            const number = getMeterNumber(meter);
+            return number ? `Z${number}` : '';
+        });
         const getMeterDetailIndex = deps.getMeterDetailIndex || (() => 0);
         const getGenerationMeterNumber = deps.getGenerationMeterNumber || (() => null);
         const renderAssetIcon = deps.renderAssetIcon || (() => '');
@@ -43,7 +47,7 @@
             const mieterstromMeterClass = asset.mieterstromObject === 'external-meter' ? 'mk-mieterstrom-participating-meter' : '';
             const attachedMeter = getMeterForAsset(asset);
             const ownedMeter = getAssetMeters(asset.id)[0];
-            const meterNumber = attachedMeter ? getMeterNumber(attachedMeter) : null;
+            const meterLabel = attachedMeter ? getMeterLabel(attachedMeter) : '';
             const meterGroupSize = attachedMeter ? getMeterAssets(attachedMeter.id).length : 0;
             const generationMeterNumber = asset.type === 'generation' && asset.generationMeter && !attachedMeter
                 ? getGenerationMeterNumber(asset)
@@ -57,10 +61,10 @@
                 ? `<span class="mk-storage-info" data-tooltip="${escapeHtml(balconyInfoText)}" title="${escapeHtml(balconyInfoText)}" role="img" tabindex="0" aria-label="Hinweis zum Balkonkraftwerk">i</span>`
                 : '';
             const meterDropTargetMarkup = attachedMeter
-                ? `data-mk-meter-group-target="${escapeHtml(attachedMeter.id)}" title="Weitere Anlagen an Z${meterNumber} anschließen"`
+                ? `data-mk-meter-group-target="${escapeHtml(attachedMeter.id)}" title="Weitere Anlagen an ${escapeHtml(meterLabel)} anschließen"`
                 : '';
             const sharedMeterMarkup = attachedMeter && !ownedMeter
-                ? `<span class="mk-meter-share-branch" data-mk-meter-group-target="${escapeHtml(attachedMeter.id)}" title="Gemeinsam mit Z${meterNumber} gemessen" role="img" aria-label="Gemeinsam mit Z${meterNumber} gemessen; weitere Anlagen hierher ziehen"><span aria-hidden="true"></span></span>`
+                ? `<span class="mk-meter-share-branch" data-mk-meter-group-target="${escapeHtml(attachedMeter.id)}" title="Gemeinsam mit ${escapeHtml(meterLabel)} gemessen" role="img" aria-label="Gemeinsam mit ${escapeHtml(meterLabel)} gemessen; weitere Anlagen hierher ziehen"><span aria-hidden="true"></span></span>`
                 : '';
             const suppressOwnedMeter = Boolean(options.suppressOwnedMeter && ownedMeter && attachedMeter?.id === options.suppressOwnedMeter);
             const generationMeterMarkup = ownedMeter && !suppressOwnedMeter
@@ -123,8 +127,9 @@
             // Die Leitung unter einem Rail-Zähler wird ausschließlich vom
             // SVG-Router gezeichnet. Ein zusätzlicher HTML-Strich würde bei
             // Unterkaskaden dieselbe Strecke doppelt überlagern.
+            const railMeterLabel = railMeter ? getMeterLabel(railMeter) : '';
             const railMeterMarkup = railMeter
-                ? `<div class="mk-rail-meter-node" data-mk-meter-rail-node="${escapeHtml(railMeter.id)}" data-mk-meter-role="${isAssetGroupRail ? 'asset-group' : 'cascade'}" data-mk-meter-target="${escapeHtml(railMeter.id)}" data-mk-meter-group-target="${escapeHtml(railMeter.id)}" title="Z${getMeterNumber(railMeter)} · ${railRoleLabel} · ${railDropHint}"><span class="mk-generation-meter mk-rail-meter${railMeter.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : ''}" data-mk-select-meter="${getMeterDetailIndex(railMeter)}" role="button" tabindex="0" aria-label="Z${getMeterNumber(railMeter)} auswählen"><b>Z${getMeterNumber(railMeter)}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${escapeHtml(railMeter.id)}" title="Z${getMeterNumber(railMeter)} entfernen" aria-label="Zähler Z${getMeterNumber(railMeter)} entfernen">×</button></div>`
+                ? `<div class="mk-rail-meter-node" data-mk-meter-rail-node="${escapeHtml(railMeter.id)}" data-mk-meter-role="${isAssetGroupRail ? 'asset-group' : 'cascade'}" data-mk-meter-target="${escapeHtml(railMeter.id)}" data-mk-meter-group-target="${escapeHtml(railMeter.id)}" title="${escapeHtml(railMeterLabel)} · ${railRoleLabel} · ${railDropHint}"><span class="mk-generation-meter mk-rail-meter${railMeter.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : ''}" data-mk-select-meter="${getMeterDetailIndex(railMeter)}" role="button" tabindex="0" aria-label="${escapeHtml(railMeterLabel)} auswählen"><b>${escapeHtml(railMeterLabel)}</b></span><button type="button" class="mk-remove-meter" data-mk-remove-meter="${escapeHtml(railMeter.id)}" title="${escapeHtml(railMeterLabel)} entfernen" aria-label="Zähler ${escapeHtml(railMeterLabel)} entfernen">×</button></div>`
                 : '';
             const railJunctionMarkup = railMeter && !isSingleAssetRail
                 ? `<span class="mk-rail-junction-anchor" data-mk-node-kind="SK" data-mk-rail-junction="${escapeHtml(railMeter.id)}" aria-hidden="true"><span class="mk-rail-junction"></span></span>`

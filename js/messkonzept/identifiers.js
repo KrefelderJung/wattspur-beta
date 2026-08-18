@@ -18,16 +18,39 @@
             return state?.mode === 'parallel' ? Number(state.cascadeLevels) || 1 : 1;
         }
 
+        function isMieterstromMeter(meter) {
+            return meter?.mieterstromObject === 'external-meter';
+        }
+
+        function getAdditionalMeterIndex(meter, predicate = () => true) {
+            if (!meter) return -1;
+            return getAdditionalMeters().filter(predicate).findIndex(item => item.id === meter.id);
+        }
+
         function getMeterNumber(meter) {
-            if (!meter) return null;
-            const additionalMeters = getAdditionalMeters();
-            const index = additionalMeters.findIndex(item => item.id === meter.id);
+            if (!meter || isMieterstromMeter(meter)) return null;
+            const index = getAdditionalMeterIndex(meter, item => !isMieterstromMeter(item));
             return index < 0 ? null : getTopologyMeterCount(getState()) + index + 1;
         }
 
-        function getMeterDetailIndex(meter) {
+        function getMieterstromMeterNumber(meter) {
+            if (!meter || !isMieterstromMeter(meter)) return null;
+            const index = getAdditionalMeterIndex(meter, isMieterstromMeter);
+            return index < 0 ? null : index + 1;
+        }
+
+        function getMeterLabel(meter) {
+            if (isMieterstromMeter(meter)) {
+                const number = getMieterstromMeterNumber(meter);
+                return number ? `ZN${number}` : '';
+            }
             const number = getMeterNumber(meter);
-            return number ? number - 1 : null;
+            return number ? `Z${number}` : '';
+        }
+
+        function getMeterDetailIndex(meter) {
+            const index = getAdditionalMeters().findIndex(item => item.id === meter?.id);
+            return index < 0 ? null : getTopologyMeterCount(getState()) + index;
         }
 
         function getAssetMeterNumber(asset) {
@@ -35,9 +58,14 @@
             return meter ? getMeterNumber(meter) : null;
         }
 
+        function getAssetMeterLabel(asset) {
+            const meter = getMeterForAsset(asset);
+            return meter ? getMeterLabel(meter) : '';
+        }
+
         function getConfiguredMeterCount() {
             const state = getState();
-            const additionalMeterCount = (state?.assets || []).filter(asset => asset.type === 'meter').length;
+            const additionalMeterCount = (state?.assets || []).filter(asset => asset.type === 'meter' && !isMieterstromMeter(asset)).length;
             return getTopologyMeterCount(state) + additionalMeterCount;
         }
 
@@ -77,9 +105,13 @@
         }
 
         return Object.freeze({
+            isMieterstromMeter,
             getMeterNumber,
+            getMieterstromMeterNumber,
+            getMeterLabel,
             getMeterDetailIndex,
             getAssetMeterNumber,
+            getAssetMeterLabel,
             getConfiguredMeterCount,
             getGenerationMeterNumber,
             getGenerationAssetNumber,

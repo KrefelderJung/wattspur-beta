@@ -138,7 +138,7 @@
 
         function renderAssetSummary(asset, includeEmpty = false) {
             const currentState = getState();
-            const getAssetMeterNumber = item => call('getAssetMeterNumber', null, item);
+            const getAssetMeterLabel = item => call('getAssetMeterLabel', '', item);
             const getGenerationMeterNumber = item => call('getGenerationMeterNumber', null, item);
             const entries = [
                 { label: 'Bezeichnung', value: asset.name },
@@ -153,7 +153,7 @@
                 asset.type === 'generation' ? { label: 'Wechselrichterleistung', value: asset.inverterPower } : null,
                 asset.type === 'generation' ? { label: 'Inbetriebnahme', value: asset.commissioningDate } : null,
                 asset.type === 'generation' ? { label: 'Erzeugungszähler', value: asset.generationMeter ? `Ja · Z${getGenerationMeterNumber(asset)}` : (includeEmpty ? 'Nein' : '') } : null,
-                ['generation', 'consumer', 'steuve', 'storage', 'nsh'].includes(asset.type) ? { label: 'Zähler davor', value: getAssetMeterNumber(asset) ? `Ja · Z${getAssetMeterNumber(asset)}` : (includeEmpty ? 'Nein' : '') } : null,
+                ['generation', 'consumer', 'steuve', 'storage', 'nsh'].includes(asset.type) ? { label: 'Zähler davor', value: getAssetMeterLabel(asset) ? `Ja · ${getAssetMeterLabel(asset)}` : (includeEmpty ? 'Nein' : '') } : null,
                 asset.type === 'steuve' ? { label: 'Anlage', value: call('getAssetTypeLabel', 'Fachliche Einordnung offen', asset) } : null,
                 asset.type === 'steuve' ? { label: asset.steuveType === 'Wärmepumpe' ? 'Elektrische Gesamtleistung inkl. Heizstab' : 'Leistung', value: asset.power } : null,
                 asset.type === 'steuve' ? { label: 'Einordnung', value: call('getSteuveRegime', '', asset) } : null,
@@ -174,6 +174,7 @@
         function renderMeterEditorFields(index) {
             const details = call('getMeterDetails', {}, index) || {};
             const meter = getAdditionalMeters().find(item => call('getMeterDetailIndex', null, item) === index);
+            const meterLabel = meter ? (call('getMeterLabel', '', meter) || `Z${index + 1}`) : `Z${index + 1}`;
             const mieterstromNote = meter?.mieterstromObject === 'external-meter'
                 ? '<p class="mk-mieter-meter-note" role="note"><b>Teilnehmender Mieterstromzähler</b> Dieser Zähler wird als technischer Modellbaustein ohne reguläre Netzbetreiberabrechnung dargestellt.</p>'
                 : '';
@@ -182,7 +183,7 @@
     `).join('');
             return `
         <div class="mk-object-editor-head">
-                <span class="mk-asset-icon meter${meter?.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : ''}">Z${index + 1}</span>
+                <span class="mk-asset-icon meter${meter?.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : ''}">${escapeHtml(meterLabel)}</span>
         </div>
         <div class="mk-object-editor-form"><div class="mk-meter-form">${fields}</div>${mieterstromNote}</div>
     `;
@@ -238,10 +239,16 @@
             const content = elements.objectModalContent;
             if (!modal || !content) return;
             if (elements.objectModalTitle) {
+                const selectedMeter = selection?.kind === 'meter'
+                    ? getAdditionalMeters().find(item => call('getMeterDetailIndex', null, item) === selection.index)
+                    : null;
+                const selectedMeterLabel = selectedMeter
+                    ? (call('getMeterLabel', '', selectedMeter) || `Z${selection.index + 1}`)
+                    : `Z${selection?.index + 1}`;
                 const label = selection?.kind === 'hak'
                     ? (call('getHakVoltageLevel', 'low') === 'medium' ? 'Trafo' : 'HAK')
                     : selection?.kind === 'meter'
-                        ? `Z${selection.index + 1} · Zähler`
+                        ? `${selectedMeterLabel} · Zähler`
                         : currentState.assets.find(item => item.id === selection?.id)?.name || 'Objekt';
                 elements.objectModalTitle.textContent = `${label} · Angaben`;
             }
