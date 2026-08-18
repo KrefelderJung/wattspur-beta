@@ -61,6 +61,7 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
    node tests/link-check-test.js
    node tests/seo-test.js
    node tests/pdf-export-variants-test.js
+   node tests/mieterstrom-objects-test.js
    ```
 
    Der SteuVE-Test deckt dabei drei fachliche Fälle ab: eine einzelne
@@ -111,6 +112,11 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
    Niederspannung startet, die Auswahl Mittelspannung historienfähig speichert,
    beim Zurücksetzen wieder zum HAK zurückkehrt und unbekannte Werte sicher
    abfängt.
+
+   Der Mieterstrom-D1-Test prüft den neuen Prototypen für Nutzergruppen:
+   Gruppenanzahl, Versorgungsrolle, Zählerrolle und die daraus abgeleitete
+   Prüfstatus-Warnung. Er stellt außerdem sicher, dass die Eingabemaske eine
+   Gruppe hinzufügen und wieder entfernen kann.
 
 6. **Browser-Ablauftest**
 

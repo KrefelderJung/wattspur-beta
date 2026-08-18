@@ -78,7 +78,8 @@
                 source: 'palette',
                 type: button.dataset.mkType,
                 steuveType: button.dataset.mkSteuveType || '',
-                energyCarrier: button.dataset.mkEnergyCarrier || ''
+                energyCarrier: button.dataset.mkEnergyCarrier || '',
+                mieterstromObject: button.dataset.mkMieterstromObject || ''
             }));
         }
 
@@ -210,6 +211,9 @@
             const draggedType = transfer.source === 'palette'
                 ? transfer.type
                 : state.assets.find(item => item.id === transfer.id)?.type;
+            const paletteOptions = transfer.source === 'palette' && transfer.mieterstromObject
+                ? { mieterstromObject: transfer.mieterstromObject }
+                : {};
 
             // Ein Rail-Zähler besitzt zwei semantische Drop-Anker. Bei älteren
             // oder sehr kleinen DOM-Treffern kann beim Drop nur der allgemeine
@@ -249,7 +253,8 @@
                         const insertedMeter = call('addAsset', 'meter', zone, '', '', {
                             parentBaseMeterIndex: normalizedBaseIndex,
                             parentMeterId: existingBaseChild?.parentMeterId || '',
-                            keepEmptyRail: true
+                            keepEmptyRail: true,
+                            ...paletteOptions
                         });
                         if (insertedMeter && existingBaseChild) {
                             existingBaseChild.parentMeterId = insertedMeter.id;
@@ -271,7 +276,8 @@
                                     ? Number(directMeterTarget.parentBaseMeterIndex)
                                     : 0,
                                 parentMeterId: directMeterTarget.id,
-                                keepEmptyRail: true
+                                keepEmptyRail: true,
+                                ...paletteOptions
                             });
                             if (insertedMeter) {
                                 if (existingChild) {
@@ -293,7 +299,8 @@
                         const insertedMeter = call('addAsset', 'meter', directMeterTarget.zone, '', '', {
                             targetAssetId: chainTarget.id,
                             parentMeterId: directMeterTarget.id,
-                            keepEmptyRail: true
+                            keepEmptyRail: true,
+                            ...paletteOptions
                         });
                         if (insertedMeter) {
                             call('moveAssetAfter', insertedMeter.id, directMeterTarget.id);
@@ -308,7 +315,10 @@
                             call('notify', 'Fuer diese Anlage ist bereits ein zusaetzlicher Zaehler vorhanden.', 'warning');
                             return;
                         }
-                        call('addAsset', 'meter', zone, '', '', call('getMeterDropOptions', attachTarget));
+                        call('addAsset', 'meter', zone, '', '', {
+                            ...call('getMeterDropOptions', attachTarget),
+                            ...paletteOptions
+                        });
                         call('recordHistory', previousState);
                         return;
                     }
@@ -316,18 +326,18 @@
                     return;
                 }
                 if (baseZone && !targetAssetId && !meterGroupTargetId) {
-                    call('addAsset', transfer.type, baseZone, transfer.steuveType || '', transfer.energyCarrier || '');
+                    call('addAsset', transfer.type, baseZone, transfer.steuveType || '', transfer.energyCarrier || '', paletteOptions);
                     call('recordHistory', previousState);
                     return;
                 }
                 if (meterGroupTargetId) {
                     const meter = targetMeter || state.assets.find(item => item.id === meterGroupTargetId && item.type === 'meter');
                     if (!meter) return;
-                    call('addAsset', transfer.type, meter.zone, transfer.steuveType || '', transfer.energyCarrier || '', { meterId: meter.id });
+                    call('addAsset', transfer.type, meter.zone, transfer.steuveType || '', transfer.energyCarrier || '', { meterId: meter.id, ...paletteOptions });
                     call('recordHistory', previousState);
                     return;
                 }
-                call('addAsset', transfer.type, zone, transfer.steuveType || '', transfer.energyCarrier || '');
+                call('addAsset', transfer.type, zone, transfer.steuveType || '', transfer.energyCarrier || '', paletteOptions);
                 call('recordHistory', previousState);
             }
             if (transfer.source !== 'asset') return;

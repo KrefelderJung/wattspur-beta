@@ -11,7 +11,7 @@
 (function exposeMesskonzeptRules(global) {
     'use strict';
 
-    const RULESET_VERSION = '2026-08-17-beta.7';
+    const RULESET_VERSION = '2026-08-18-beta.8';
     const STEUVE_THRESHOLD_KW = 4.2;
     // Für Steckersolargeräte gilt für die vereinfachte Behandlung eine
     // Wechselrichtergrenze von 800 VA. Die Einheit ist VA, nicht kVA.

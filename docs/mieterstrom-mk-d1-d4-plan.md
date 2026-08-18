@@ -1,6 +1,9 @@
 # Planung: Mieterstrom und Selbstversorgergemeinschaften MK D1 bis D4
 
-**Status:** Beratung und Architekturentwurf, noch keine Umsetzung  
+**Status:** Historischer Beratungsentwurf. Im aktuellen MVP gibt es bewusst
+keinen eigenen Mieterstrommodus. Stattdessen stehen zwei optionale
+Mieterstromobjekte in der bestehenden Palette bereit: „Nutzer“ und „Zähler
+außerhalb Mieterstrom“. Die technische Messlogik bleibt unverändert.
 **Quellenstand:** VBEW-Auswahlblatt, Stand 24.09.2024; die konkrete Zulässigkeit
 ist immer mit Netzbetreiber, Messstellenbetreiber und Fachbetrieb abzustimmen.
 
@@ -15,9 +18,10 @@ beschreiben nicht nur Leitungen, sondern zusätzlich:
 - welche Zähler für den Netzbetreiber relevant sind,
 - ob die Abrechnung physisch oder rechnerisch erfolgt.
 
-Die vier Konzepte sind deshalb keine vier weiteren Zeichenmodi. Die vorhandene
-Geometrie sollte weiterverwendet und um eine fachliche Mieterstrom-Ebene ergänzt
-werden.
+Die vier Konzepte sind deshalb keine vier weiteren Zeichenmodi. Für den MVP
+wird die fachliche Einordnung zunächst über Projektname, Objektangaben und die
+beiden neutralen Mieterstromobjekte dokumentiert. Eine spätere fachliche Ebene
+kann darauf aufbauen, ohne die Leitungsgeometrie zu duplizieren.
 
 ## D1 bis D4 als Datenmodell
 

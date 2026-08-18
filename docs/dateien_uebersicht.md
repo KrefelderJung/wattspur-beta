@@ -14,7 +14,7 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`styles.css`** | `/` | Modernes CSS3-Designsystem (Darkmode, Glasmorphismus, Layout-Grid, Ampel-Badges, Buttons, Tabellen). |
 | **`manifest.json`** | `/` | Web App Manifest (PWA) für die Installation als eigenständige App auf Desktop und Smartphone. |
 | **`robots.txt` / `sitemap.xml`** | `/` | Legen Indexierungsregeln und die öffentlichen Kernseiten für Suchmaschinen fest. |
-| **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.08.18-beta.308`). Speichert alle Modulpfade lokal im Browser für den Offlinebetrieb. |
+| **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.08.18-beta.312`). Speichert alle Modulpfade lokal im Browser für den Offlinebetrieb. |
 | **`tests.html`** | `/` | Automatische Test-Engine im Browser. Führt aktuell 155 Unit-, Integrations- und Regressionstests aus. |
 | **`tests/seo-test.js`** | `tests/` | Prüft stabile URLs, Meta-Daten, Canonicals, robots.txt und Sitemap. |
 | **`js/app.js`** | `js/` | Schlanker Anwendungsstarter (`initializeApp()`). Verbindet Controller und startet die App beim Laden. |
@@ -159,6 +159,7 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`js/messkonzept/decision-calculator.js`** | Reine Orientierungsrechnung für Umbaukosten, Messentgelt, Tarifdifferenz, Modul 1, Modul 2 und Wärmepumpenprivileg mit Sensitivitätsspanne und Verlaufsgrafik. |
 | **`docs/messkonzept-startvorlagen.md`** | Spezifikation, Akzeptanzkriterien und technische Trennung der Startauswahl. |
 | **`tests/project-quality-test.js`** | Browserfreier projektweiter Qualitäts-Gate-Test für Pflichtdateien, Syntax, lokale Verarbeitung und Release-Schutz. |
+| **`tests/mieterstrom-objects-test.js`** | Prüft die beiden optionalen Mieterstromobjekte und ihre neutralen technischen Statusfelder. |
 | **`tests/link-check-test.js`** | Prüft lokale `href`-/`src`-Verweise; externe Links können mit `--external` als separates Release-Gate geprüft werden. |
 | **`tests/storage-operation-test.js`** | Prüft die Speicher-Betriebsweisen für Netzeinspeisung, Netzbezug zum Laden und reinen PV-Überschussbetrieb. |
 | **`tests/stecker-pv-limit-test.js`** | Prüft die 800-VA-Wechselrichtergrenze von Stecker-PV, Einheitenumrechnung und Summierung am selben Messpunkt. |

@@ -1,6 +1,6 @@
 # Wattspur – Regelwerk für Messkonzept-Hinweise
 
-**Regelwerksstand:** `2026-08-17-beta.7`
+**Regelwerksstand:** `2026-08-18-beta.8`
 **Geltungsbereich:** öffentliche Beta, lokale Orientierungsskizze  
 **Verbindlichkeit:** keine technische, rechtliche oder abrechnungsseitige Freigabe
 

@@ -182,6 +182,8 @@ const MK_CANVAS_RENDERER = window.WattspurMesskonzeptCanvasRenderer.createCanvas
     layoutGeometry: MK_LAYOUT_GEOMETRY,
     escapeHtml: mkEscapeHtml,
     getMeterDetails: index => mkGetMeterDetails(index),
+    getMeterDetailIndex: meter => mkGetMeterDetailIndex(meter),
+    getAdditionalMeters: () => mkGetAdditionalMeters(),
     getHakVoltageLevel: () => MK_MODEL.getHakVoltageLevel(mkConfiguratorState),
     getBaseMeterZone: index => mkGetBaseMeterZone(index),
     renderSelectOptions: (options, selected, placeholder) => mkRenderSelectOptions(options, selected, placeholder),

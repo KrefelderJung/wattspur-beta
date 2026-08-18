@@ -24,6 +24,8 @@
         const escapeHtml = options.escapeHtml || (value => String(value ?? ''));
 
         function getAssetTypeLabel(asset) {
+            if (asset?.mieterstromObject === 'user') return 'Nutzer';
+            if (asset?.mieterstromObject === 'external-meter') return 'Zähler außerhalb Mieterstrom';
             if (asset?.type === 'generation') {
                 return getAssetTypeOptions().generation?.find(option => option.value === asset.energyCarrier)?.label || '';
             }
@@ -86,6 +88,7 @@
 
         function renderAssetIcon(asset) {
             const meta = getAssetMeta()[asset.type] || { short: '' };
+            if (asset?.mieterstromObject === 'user') return 'N';
             if (asset.type === 'generation') {
                 const number = getGenerationAssetNumber(asset);
                 const prefix = getGenerationDisplayForAsset(asset).prefix;

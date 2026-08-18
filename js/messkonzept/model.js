@@ -215,7 +215,7 @@
         return currentState.meterDetails[key];
     }
 
-    function createAsset(currentState, type, zone, steuveType = '', energyCarrier = '') {
+    function createAsset(currentState, type, zone, steuveType = '', energyCarrier = '', assetOptions = {}) {
         const meta = assetMeta[type] || assetMeta.consumer;
         const selectedEnergyCarrier = type === 'generation' ? energyCarrier || 'PV' : '';
         const selectedSteuveType = type === 'steuve' ? normalizeSteuveType(steuveType) : '';
@@ -240,7 +240,7 @@
         const defaultNames = {
             meter: `Zusatzzaehler ${sameType}`,
             generation: `${getGenerationDisplay(selectedEnergyCarrier).prefix}${generationNumber}`,
-            consumer: `Sonstiger Verbraucher ${sameType}`,
+            consumer: assetOptions.mieterstromObject === 'user' ? `Nutzer ${sameType}` : `Sonstiger Verbraucher ${sameType}`,
             steuve: `${selectedSteuveLabel} ${sameType}`,
             storage: `Speicher ${sameType}`,
             nsh: `Nachtspeicherheizung ${sameType}`
@@ -277,6 +277,11 @@
             railAnchorOrder: null,
             parentMeterId: '',
             meterId: '',
+            // Mieterstromrollen sind bewusst nur technische Kennzeichnungen.
+            // Sie ändern keine rechtliche oder abrechnungstechnische Bewertung.
+            mieterstromObject: assetOptions.mieterstromObject || '',
+            mieterstromParticipation: assetOptions.mieterstromObject === 'external-meter' ? 'excluded' : '',
+            marketLocationStatus: assetOptions.mieterstromObject === 'external-meter' ? 'inactive' : '',
             keepEmptyRail: false
         };
     }
@@ -293,7 +298,7 @@
         const assignedMeter = type !== 'meter' && options.meterId
             ? currentState.assets.find(item => item.id === options.meterId && item.type === 'meter')
             : null;
-        const asset = createAsset(currentState, type, assignedMeter?.zone || zone, steuveType, energyCarrier);
+        const asset = createAsset(currentState, type, assignedMeter?.zone || zone, steuveType, energyCarrier, options);
         if (assignedMeter) {
             asset.meterId = assignedMeter.id;
             assignedMeter.keepEmptyRail = false;
@@ -302,6 +307,11 @@
             asset.meterScope = isBaseMeterChild ? 'base' : 'asset';
             asset.targetAssetId = options.targetAssetId || '';
             asset.name = 'Zähler vor Anlage';
+            if (options.mieterstromObject === 'external-meter') {
+                asset.mieterstromObject = 'external-meter';
+                asset.mieterstromParticipation = 'excluded';
+                asset.marketLocationStatus = 'inactive';
+            }
             asset.parentBaseMeterIndex = isBaseMeterChild ? Number(options.parentBaseMeterIndex) : null;
             asset.parentMeterId = options.parentMeterId || '';
             asset.keepEmptyRail = Boolean(options.keepEmptyRail || isBaseMeterChild);
