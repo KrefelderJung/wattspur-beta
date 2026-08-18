@@ -3837,6 +3837,7 @@ body.mk-modal-open {
 .mk-zone-assets .mk-asset-card.mk-mieterstrom-user {
     color: var(--mk-consumer-bg);
     border: 1px dashed var(--mk-consumer-bg);
+    border-radius: var(--radius-md);
     background: transparent;
     box-shadow: none;
 }

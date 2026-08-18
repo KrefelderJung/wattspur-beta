@@ -54,7 +54,7 @@ assert(robots.includes('Allow: /') && robots.includes('Disallow: /tests.html') &
 ['https://wattspur.de/', 'https://wattspur.de/lastgang-analyse.html', 'https://wattspur.de/messkonzept-konfigurator.html', 'https://wattspur.de/kontakt.html', 'https://wattspur.de/impressum.html', 'https://wattspur.de/datenschutz.html'].forEach(url => {
     assert(sitemap.includes(`<loc>${url}</loc>`), `sitemap.xml: ${url} fehlt`);
 });
-assert(serviceWorker.includes("'lastgang-analyse.html'") && serviceWorker.includes("'messkonzept-konfigurator.html'") && /beta\.312/.test(serviceWorker), 'Offline-Cache: stabile SEO-Einstiegsseiten oder Versionsstand fehlen');
+assert(serviceWorker.includes("'lastgang-analyse.html'") && serviceWorker.includes("'messkonzept-konfigurator.html'") && /beta\.323/.test(serviceWorker), 'Offline-Cache: stabile SEO-Einstiegsseiten oder Versionsstand fehlen');
 
 if (failures.length) {
     console.error(`SEO-Test: FEHLER (${failures.length})`);

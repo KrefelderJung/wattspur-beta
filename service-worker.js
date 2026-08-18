@@ -1,4 +1,4 @@
-const APP_VERSION = '2026.08.18-beta.322';
+const APP_VERSION = '2026.08.18-beta.323';
 const CACHE_NAME = `lastgang-analyse-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
