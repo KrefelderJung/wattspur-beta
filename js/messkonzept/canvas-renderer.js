@@ -147,7 +147,7 @@
                 asset.type === 'meter' ? { label: 'Zähler vor', value: asset.meterScope === 'base' ? 'Basiszähler der Messstufe' : asset.meterScope === 'asset' ? (currentState.assets.find(item => item.id === asset.targetAssetId)?.name || 'Einzelanlage') : 'Anlagengruppe' } : null,
                 asset.mieterstromObject === 'external-meter' ? { label: 'Mieterstromrolle', value: 'Teilnehmender Zähler' } : null,
                 asset.mieterstromObject === 'external-meter' ? { label: 'Abrechnung', value: 'Nicht über Netzbetreiber (Modellannahme)' } : null,
-                asset.mieterstromObject === 'user' ? { label: 'Mieterstromrolle', value: 'Nutzer / gesamter Haushalt' } : null,
+                asset.mieterstromObject === 'user' ? { label: 'Mieterstromrolle', value: 'Mieterstromnutzer / gesamter Haushalt' } : null,
                 asset.type === 'generation' ? { label: 'Anlagenart', value: call('getAssetTypeLabel', asset.energyCarrier, asset) } : null,
                 asset.type === 'generation' ? { label: 'Nennleistung', value: asset.power } : null,
                 asset.type === 'generation' ? { label: 'Wechselrichterleistung', value: asset.inverterPower } : null,

@@ -25,7 +25,7 @@
         const escapeHtml = options.escapeHtml || (value => String(value ?? ''));
 
         function getAssetTypeLabel(asset) {
-            if (asset?.mieterstromObject === 'user') return 'Nutzer';
+            if (asset?.mieterstromObject === 'user') return 'Mieterstromnutzer';
             if (asset?.mieterstromObject === 'external-meter') return 'Mieterstromzähler';
             if (asset?.type === 'generation') {
                 return getAssetTypeOptions().generation?.find(option => option.value === asset.energyCarrier)?.label || '';

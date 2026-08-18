@@ -23,13 +23,13 @@ if (Object.prototype.hasOwnProperty.call(state, 'mieterstrom')) {
 }
 
 const user = model.addAsset(state, 'consumer', 'single-main', '', '', { mieterstromObject: 'user' });
-if (user?.name !== 'Nutzer 1' || user.mieterstromObject !== 'user') {
+if (user?.name !== 'Mieterstromnutzer 1' || user.mieterstromObject !== 'user') {
     throw new Error('Der Mieterstrom-Nutzer muss als Haushalt markiert und benannt werden.');
 }
 const user2 = model.addAsset(state, 'consumer', 'single-main', '', '', { mieterstromObject: 'user' });
 const consumer = model.addAsset(state, 'consumer', 'single-main');
 const consumer2 = model.addAsset(state, 'consumer', 'single-main');
-if (user2?.name !== 'Nutzer 2' || consumer?.name !== 'Sonstiger Verbraucher 1' || consumer2?.name !== 'Sonstiger Verbraucher 2') {
+if (user2?.name !== 'Mieterstromnutzer 2' || consumer?.name !== 'Sonstiger Verbraucher 1' || consumer2?.name !== 'Sonstiger Verbraucher 2') {
     throw new Error('Nutzer und Verbraucher müssen getrennt laufend nummeriert werden.');
 }
 const identifiers = context.window.WattspurMesskonzeptIdentifiers.createIdentifierController({ getState: () => state });

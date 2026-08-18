@@ -6856,11 +6856,10 @@ body.mk-modal-open {
     align-items: baseline;
     justify-content: space-between;
     gap: 0.5rem;
-    margin: 0 0 0.45rem;
+    margin: 0 0 0.85rem;
     color: var(--text-main);
-    font-size: 0.73rem;
+    font-size: 0.9rem;
     font-weight: 800;
-    letter-spacing: 0.02em;
 }
 
 .mk-palette-items--mieterstrom .mk-palette-item {
@@ -6873,8 +6872,9 @@ body.mk-modal-open {
 }
 
 .mk-palette-icon.mk-mieterstrom-user {
-    color: var(--mk-heatpump-fg);
-    background: color-mix(in srgb, var(--mk-heatpump-bg) 55%, var(--surface-color));
+    color: var(--mk-consumer-fg);
+    background: var(--mk-consumer-bg);
+    box-shadow: inset 0 0 0 1px var(--mk-consumer-border);
 }
 
 .mk-palette-icon.mk-mieterstrom-participating-meter,

@@ -242,7 +242,7 @@
         const defaultNames = {
             meter: `Zusatzzaehler ${sameType}`,
             generation: `${getGenerationDisplay(selectedEnergyCarrier).prefix}${generationNumber}`,
-            consumer: assetOptions.mieterstromObject === 'user' ? `Nutzer ${sameType}` : `Sonstiger Verbraucher ${sameType}`,
+            consumer: assetOptions.mieterstromObject === 'user' ? `Mieterstromnutzer ${sameType}` : `Sonstiger Verbraucher ${sameType}`,
             steuve: `${selectedSteuveLabel} ${sameType}`,
             storage: `Speicher ${sameType}`,
             nsh: `Nachtspeicherheizung ${sameType}`
