@@ -3820,14 +3820,14 @@ body.mk-modal-open {
    Nutzer sichtbar. Die Karte ist transparent, ihre graue Kennung bleibt
    lesbar und der gestrichelte Rand trennt sie vom normalen Verbraucher. */
 .mk-zone-assets .mk-asset-card.mk-mieterstrom-user {
-    color: var(--mk-consumer-fg);
-    border: 1px dashed var(--mk-consumer-border);
+    color: var(--mk-consumer-bg);
+    border: 1px dashed var(--mk-consumer-bg);
     background: transparent;
     box-shadow: none;
 }
 
 .mk-zone-assets .mk-asset-card.mk-mieterstrom-user .mk-asset-icon.consumer {
-    color: var(--mk-consumer-fg);
+    color: var(--mk-consumer-bg);
     background: transparent;
     box-shadow: none;
 }
@@ -6888,9 +6888,10 @@ body.mk-modal-open {
 }
 
 .mk-palette-icon.mk-mieterstrom-user {
-    color: var(--mk-consumer-fg);
-    background: var(--mk-consumer-bg);
-    box-shadow: inset 0 0 0 1px var(--mk-consumer-border);
+    color: var(--mk-consumer-bg);
+    background: transparent;
+    border: 1px dashed var(--mk-consumer-bg);
+    box-shadow: none;
 }
 
 .mk-palette-icon.mk-mieterstrom-participating-meter,
