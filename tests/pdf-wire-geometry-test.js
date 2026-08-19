@@ -27,7 +27,7 @@ class FakeStyle {
 class FakeLayer {
     constructor() {
         this.style = new FakeStyle();
-        this.attributes = { viewBox: '0 0 702 300', width: '702', height: '300' };
+        this.attributes = { viewBox: '0 0 1400 600', width: '1400', height: '600' };
     }
     getAttribute(name) { return this.attributes[name] || null; }
     setAttribute(name, value) { this.attributes[name] = value; }
@@ -35,10 +35,10 @@ class FakeLayer {
 
 class FakeStage {
     constructor() {
-        this.scrollWidth = 702;
-        this.offsetWidth = 702;
-        this.scrollHeight = 300;
-        this.offsetHeight = 300;
+        this.scrollWidth = 1400;
+        this.offsetWidth = 1400;
+        this.scrollHeight = 600;
+        this.offsetHeight = 600;
         this.style = new FakeStyle();
         this.classList = { values: [], add: value => this.classList.values.push(value) };
         this.layer = new FakeLayer();
@@ -67,12 +67,15 @@ const exporter = exportApi.createExporter({
     validate: () => []
 });
 const topology = exporter.getTopologyMarkup();
-assert(topology.includes('mk-print-canvas-frame'), 'Die PDF-Skizze braucht einen äußeren Rahmen außerhalb der Bühnengeometrie');
+assert(topology.includes('mk-print-canvas-frame') && topology.includes('mk-print-canvas-fit'), 'Die PDF-Skizze braucht einen äußeren Rahmen und eine anpassbare Passform');
+assert(topology.includes('style="width:650px;height:279px"'), 'Eine zu breite Skizze muss im PDF auf die verfügbare Druckbreite verkleinert werden');
 assert(stage.style.values.width === undefined, 'Die Editor-Bühne darf beim Export nicht mutiert werden');
 
 const sourceAssertions = [
     ['cloneNode(true)', 'Export muss eine isolierte Bühnenkopie verwenden'],
     ["clone.style.setProperty('zoom', '1')", 'Export muss den Editor-Zoom auf 1 einfrieren'],
+    ["clone.style.setProperty('transform', `scale(${scale})`)", 'Export muss eine zu breite Skizze proportional verkleinern'],
+    ['maxPrintWidth = 650', 'Export muss eine definierte Druckbreite für die Anpassung verwenden'],
     ["clone.style.setProperty('min-width'", 'Export muss die Bühnenbreite einfrieren'],
     ['getTopologyMarkup()', 'Druckansicht muss die geprüfte Skizzen-Snapshot-Funktion verwenden']
 ];
@@ -81,7 +84,7 @@ assert(stylesSource.includes('.mk-print-canvas-frame'), 'Druck-CSS muss den äu�
 assert(stylesSource.includes('.mk-print-canvas-stage'), 'Druck-CSS muss die eingefrorene Bühne stylen');
 assert(/\.mk-print-topology \.mk-drop-zone\s*\{[\s\S]*?padding:\s*0;/.test(stylesSource), 'Druck-CSS darf die gemessenen Drop-Zonen nicht mit eigenem Innenabstand verschieben');
 assert(!/\.mk-print-topology\s*>\s*div\s*\{/.test(stylesSource), 'Druck-Padding darf nicht direkt auf die SVG-Bühne gelegt werden');
-assert(/export\.js\?v=4/.test(indexSource), 'Exportmodul muss mit neuem Cache-Buster geladen werden');
-assert(/APP_VERSION\s*=\s*['"]2026\.08.18-beta\.323['"]/.test(workerSource), 'Service Worker muss den neuen Exportstand cachen');
+assert(/export\.js\?v=5/.test(indexSource), 'Exportmodul muss mit neuem Cache-Buster geladen werden');
+assert(/APP_VERSION\s*=\s*['"]2026\.08.19-beta\.336['"]/.test(workerSource), 'Service Worker muss den neuen Exportstand cachen');
 
 console.log('PDF-Leitungsgeometrie-Test: OK');

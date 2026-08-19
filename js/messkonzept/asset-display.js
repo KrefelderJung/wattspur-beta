@@ -11,6 +11,9 @@
         const getAssetMeta = options.getAssetMeta || (() => ({}));
         const getAssetTypeOptions = options.getAssetTypeOptions || (() => ({}));
         const getGenerationDisplay = options.getGenerationDisplay || (() => ({ prefix: 'EA' }));
+        const getGenerationNumberKey = options.getGenerationNumberKey || (energyCarrier => {
+            return energyCarrier === 'Balkonkraftwerk' ? 'PV' : energyCarrier || 'PV';
+        });
         const getPowerNumber = options.getPowerNumber || (() => null);
         const getSteuveEffectivePower = options.getSteuveEffectivePower || ((asset) => {
             return getPowerNumber(asset?.power);
@@ -26,7 +29,37 @@
         });
         const getMeterDetailIndex = options.getMeterDetailIndex || (() => null);
         const canBuildCascadeAfterMeter = options.canBuildCascadeAfterMeter || (() => false);
+        const getAllAssets = options.getAllAssets || (() => []);
         const escapeHtml = options.escapeHtml || (value => String(value ?? ''));
+
+        const badgeAssetTypes = new Set(['storage', 'steuve', 'generation', 'nsh']);
+
+        function getIconObjectSequenceKey(asset) {
+            if (!asset || !badgeAssetTypes.has(asset.type)) return '';
+            return asset.type === 'steuve'
+                ? `steuve:${asset.steuveType || 'offen'}`
+                : asset.type === 'generation' ? `generation:${getGenerationNumberKey(asset.energyCarrier)}` : asset.type;
+        }
+
+        function getIconObjectNumber(asset) {
+            const sequenceKey = getIconObjectSequenceKey(asset);
+            if (!sequenceKey) return null;
+            const matchingAssets = getAllAssets().filter(item => getIconObjectSequenceKey(item) === sequenceKey);
+            const index = matchingAssets.findIndex(item => item.id === asset.id);
+            return index < 0 ? null : index + 1;
+        }
+
+        function getIconObjectToneClass(asset) {
+            if (asset?.type === 'generation') return 'generation';
+            if (asset?.type === 'nsh') return 'nsh';
+            if (asset?.type === 'storage') return 'storage';
+            if (asset?.type !== 'steuve') return '';
+            return {
+                Wallbox: 'wallbox',
+                Wärmepumpe: 'heatpump',
+                Klimaanlage: 'climate'
+            }[asset.steuveType] || 'steuve';
+        }
 
         function getAssetTypeLabel(asset) {
             if (asset?.mieterstromObject === 'user') return 'Mieterstromnutzer';
@@ -58,37 +91,22 @@
 
         function getSteuveRegime(asset) {
             const power = getSteuveEffectivePower(asset);
-            if (power === null) return asset?.steuveType === 'Wärmepumpe' ? 'Elektrische Gesamtleistung inkl. Heizstab noch offen' : 'Leistung noch offen';
+            if (power === null) return asset?.steuveType === 'Wärmepumpe' ? 'Gesamtleistung inkl. Heizstab noch offen' : 'Leistung noch offen';
             const unitLabel = asset?.steuveType === 'Wärmepumpe' ? ' kW inkl. Heizstab' : ' kW';
-            return power > 4.2 ? `${power.toLocaleString('de-DE', { maximumFractionDigits: 2 })}${unitLabel} · § 14a EnWG prüfen` : `${power.toLocaleString('de-DE', { maximumFractionDigits: 2 })} kW · § 14a-EnWG-Prüfung nicht automatisch`;
-        }
-
-        function renderSteuveNotice(asset) {
-            const isHeatPump = asset?.steuveType === 'Wärmepumpe';
-            const power = getSteuveEffectivePower(asset);
-            if (power === null) {
-                return `<p class="mk-steuve-editor-hint" role="note">${isHeatPump ? 'Die elektrische Gesamtleistung einschließlich Heizstab eintragen.' : 'Leistung eintragen.'} Ab mehr als 4,2 kW die Einordnung nach § 14a EnWG und die Anmeldung beim Netzbetreiber prüfen.</p>`;
-            }
-            if (power > 4.2) {
-                const detail = isHeatPump ? ' Die eingetragene Leistung enthält die Wärmepumpe einschließlich Heizstab.' : '';
-                return `<p class="mk-steuve-editor-notice" role="note"><b>Hinweis zu § 14a EnWG:</b> Bei mehr als 4,2 kW ist die Einordnung als steuerbare Verbrauchseinrichtung typischerweise zu prüfen.${detail} Bitte beim Netzbetreiber anmelden und das passende Modul für dieses Messkonzept abstimmen.</p>`;
-            }
-            return `<p class="mk-steuve-editor-hint" role="note">${isHeatPump ? 'Die elektrische Gesamtleistung einschließlich Heizstab liegt' : 'Die eingetragene Leistung liegt'} bei höchstens 4,2 kW. Daraus folgt nicht automatisch eine § 14a-relevante Einordnung. Die fachliche Prüfung bleibt erforderlich.</p>`;
+            return `${power.toLocaleString('de-DE', { maximumFractionDigits: 2 })}${unitLabel}`;
         }
 
         function renderSteuveModuleFields(asset) {
             if (getSteuveEffectivePower(asset) <= 4.2) return '';
             return `
         <label>§14a-Modul<select data-mk-field="steuveModule">${renderSelectOptions(steuveModuleOptions, asset.steuveModule, 'Noch offen')}</select></label>
-        <p class="mk-steuve-module-hint">Die Auswahl ist eine Vorprüfung und ersetzt keine Abstimmung mit dem Netzbetreiber.</p>
     `;
         }
 
         function getNshRegime(asset) {
             const year = Number(String(asset?.commissioningDate || '').slice(0, 4));
-            if (!Number.isFinite(year) || year < 1900) return 'Einordnung offen · Abstimmung erforderlich';
-            if (year < 2024) return 'Bestand vor 2024 · historische SteuVE-/Tarifbehandlung möglich';
-            return 'Ab 2024 · nicht automatisch als SteuVE einordnen';
+            if (!Number.isFinite(year) || year < 1900) return 'Inbetriebnahme noch offen';
+            return `Inbetriebnahme ${year}`;
         }
 
         function renderAssetIcon(asset) {
@@ -130,9 +148,10 @@
             getGenerationDisplay: getGenerationDisplayForAsset,
             getSteuveIconClass,
             getSteuveRegime,
-            renderSteuveNotice,
             renderSteuveModuleFields,
             getNshRegime,
+            getIconObjectNumber,
+            getIconObjectToneClass,
             renderAssetIcon,
             renderInlineMeter
         });

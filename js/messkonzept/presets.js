@@ -77,18 +77,24 @@
             ])
         }),
         mieterstrom: Object.freeze({
-            intro: 'Geeignet für eine Mieterstromgemeinschaft, in der alle Anschlussnutzer von der Erzeugungsanlage versorgt werden sollen.',
+            intro: 'Mieterstrom beschreibt die Versorgung von Bewohnern mit Strom aus einer Erzeugungsanlage im Gebäude oder im Quartier. Der Strom wird dabei ohne Nutzung des öffentlichen Netzes an teilnehmende Nutzer geliefert.',
             advantages: Object.freeze([
-                'Die Erzeugungsanlage und alle teilnehmenden Anschlussnutzer sind in einer gemeinsamen Skizze sichtbar.',
-                'Mieterstromzähler bleiben je Nutzer zugeordnet und können später wieder als reguläre Netzanschlüsse berücksichtigt werden.',
-                'Die Vorlage eignet sich als verständlicher Ausgangspunkt für PV- oder BHKW-Mieterstromgemeinschaften.'
+                'Für den vor Ort gelieferten Strom können Netzentgelte, netzseitige Umlagen, Stromsteuer und Konzessionsabgabe entfallen.',
+                'Belieferung und Abrechnung können über einen Mieterstromlieferanten gebündelt werden.',
+                'Für geeignete Solaranlagen kann der Betreiber neben der Einspeisevergütung einen Mieterstromzuschlag erhalten.'
             ]),
             cautions: Object.freeze([
-                'Die nicht aktive Marktlokation der teilnehmenden Mieterstromzähler ist hier nur eine technische Modellannahme.',
-                'Belieferung, Abrechnung und die konkrete Rolle der Zähler müssen mit Betreiber, Messstellenbetreiber, Netzbetreiber und Lieferant abgestimmt werden.',
-                'Wenn ein Nutzer später wieder einen freien Lieferanten wählen soll, muss die Mess- und Abrechnungsstruktur angepasst werden.'
+                'Die Teilnahme ist freiwillig. Vertrag, Belieferung und Abrechnung müssen vorab verständlich geregelt werden.',
+                'Messstellenbetrieb, Messkosten und mögliche Anpassungen am Zählerplatz müssen mit den Beteiligten abgestimmt werden.',
+                'Die konkrete Markt- und Messlokationsführung ist mit Messstellenbetreiber und Netzbetreiber abzustimmen.',
+                'Soll ein Nutzer später wieder regulär von einem freien Lieferanten beliefert werden, müssen Zuordnung und Abrechnung angepasst werden.',
+                'Die Mieterstromabrechnung erfolgt getrennt und nicht einfach über die Nebenkostenabrechnung.'
             ]),
-            links: Object.freeze([])
+            links: Object.freeze([
+                Object.freeze({ label: 'BNetzA: Mieterstrom', href: 'https://www.bundesnetzagentur.de/DE/Vportal/Energie/Vertragsarten/Mieterstrom/start.html' }),
+                Object.freeze({ label: '§ 21 EEG: Mieterstromzuschlag', href: 'https://www.gesetze-im-internet.de/eeg_2014/__21.html' }),
+                Object.freeze({ label: 'BNetzA: Messstellenkosten', href: 'https://www.bundesnetzagentur.de/DE/Vportal/Energie/Metering/_faq/Kosten_table.html?r=1' })
+            ])
         })
     });
 

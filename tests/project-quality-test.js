@@ -74,20 +74,42 @@ const requiredFiles = [
     'tests/data-editor-module-test.js',
     'tests/hak-voltage-test.js',
     'tests/steuve-total-power-test.js',
+    'tests/direct-marketing-test.js',
+    'tests/smart-meter-control-test.js',
+    'tests/stecker-pv-mastr-test.js',
+    'tests/steuve-tariff-separation-test.js',
+    'tests/kwk-bafa-hinweis-test.js',
+    'tests/nsh-steuve-gemeinsame-messung-test.js',
+    'tests/commissioning-date-hint-test.js',
     'tests/stecker-pv-limit-test.js',
     'tests/technical-fields-test.js',
     'tests/mieterstrom-objects-test.js',
     'tests/seo-test.js',
     'tests/meter-rail-spacing-test.js',
     'tests/wallbox-icon-test.js',
+    'tests/icon-object-number-badges-test.js',
+    'tests/palette-border-standard-test.js',
     'tests/link-check-test.js',
     'tests/pdf-export-variants-test.js',
+    'tests/pdf-status-layout-test.js',
+    'tests/pdf-object-tables-test.js',
+    'tests/project-meta-toggle-test.js',
+    'tests/pruefstatus-collapsible-test.js',
     'docs/architecture-smoke-test.md',
     'docs/messkonzept-regelwerk.md',
     'docs/messkonzept-startvorlagen.md',
     'docs/projekt-teststandard.md',
     'docs/technische-anlagenfelder.md',
-    'docs/seo-anforderungen.md'
+    'docs/inbetriebnahmedatum-hinweis-anforderungen.md',
+    'docs/smart-meter-steuerung-hinweis-anforderungen.md',
+    'docs/steuve-tarif-hinweis-anforderungen.md',
+    'docs/kwk-bafa-hinweis-anforderungen.md',
+    'docs/nsh-steuve-gemeinsame-messung-anforderungen.md',
+    'docs/seo-anforderungen.md',
+    'docs/icon-object-number-badges-anforderungen.md',
+    'docs/pdf-status-layout-anforderungen.md',
+    'docs/palette-border-anforderungen.md',
+    'docs/pruefstatus-und-objektnummern-anforderungen.md'
 ];
 requiredFiles.forEach(relativePath => assert(fs.existsSync(absolute(relativePath)), `${relativePath}: erwartete Qualitätsdatei fehlt`));
 
@@ -110,6 +132,7 @@ const rulesText = read('js/messkonzept/rules.js');
 const dragDropText = read('js/messkonzept/drag-drop.js');
 const interactionText = read('js/messkonzept/interaction.js');
 const exportText = read('js/messkonzept/export.js');
+const validationStatusText = read('js/messkonzept/validation-status.js');
 
 // Veröffentlichung darf keine externen Script-/Stylesheet-Abhängigkeiten
 // erzwingen. Fachliche Referenzlinks (z. B. VBEW) sind davon ausgenommen.
@@ -139,7 +162,7 @@ localCoreFiles.forEach(relativePath => {
     assert(!networkApiPattern.test(source), `${relativePath}: Netzwerk-API gehört nicht in den lokalen Messkonzept-Kern`);
 });
 assert(serviceWorkerText.includes('event.request.mode === \'navigate\''), 'service-worker.js: Offline-/Navigationsstrategie fehlt');
-assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && /beta\.323/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
+assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && /beta\.336/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
 
 // Der Netzanschluss ist ein eigenes, bearbeitbares Objekt. Diese Prüfungen
 // verhindern, dass ein späteres Refactoring den HAK nur visuell anklickbar
@@ -149,11 +172,37 @@ assert(canvasRendererText.includes('data-mk-select-hak') && canvasRendererText.i
 assert(editorText.includes('mkHakField') && editorText.includes('updateHakField'), 'editor.js: Spannungsebenenfeld muss über den Objekteditor aktualisiert werden');
 assert(dragDropText.includes('[data-mk-select-hak]') && interactionText.includes('[data-mk-select-hak]'), 'Interaktion: HAK muss per Maus und Tastatur auswählbar sein');
 assert(exportText.includes('state.hak?.voltageLevel') && exportText.includes('Spannungsebene'), 'export.js: gewählte HAK-Spannungsebene muss im Gesamtexport erscheinen');
+assert(exportText.includes('renderExportNotice') && exportText.includes('Prüfstatus und Hinweise') && exportText.includes('mk-print-topology'), 'export.js: PDF-Textseite und Messskizze müssen strukturiert getrennt bleiben');
+assert(read('tests/pdf-status-layout-test.js').includes('PDF-Status-Layout-Test: OK'), 'Regressionstest für die PDF-Textseite fehlt');
+assert(read('tests/pdf-object-tables-test.js').includes('PDF-Objekttabellen-Test: OK'), 'Regressionstest für die PDF-Objekttabellen fehlt');
+assert(read('tests/project-meta-toggle-test.js').includes('Projektangaben-Aufklapp-Test: OK'), 'Regressionstest für den sichtbaren Projektangaben-Aufklappbereich fehlt');
+assert(read('tests/pruefstatus-collapsible-test.js').includes('Prüfstatus-Aufklapp-Test: OK'), 'Regressionstest für den aufklappbaren Prüfstatus fehlt');
+assert(validationStatusText.includes('mk-validation-item') && validationStatusText.includes('<details') && validationStatusText.includes('statusCounters') && validationStatusText.includes('mk-validation-asset-tag'), 'validation-status.js: kompakte, nummerierte Prüfstatus-Tags müssen als aufklappbare Details gerendert werden');
+assert(stylesText.includes('.mk-validation-item > summary::before') && stylesText.includes('overflow-wrap: anywhere'), 'styles.css: Prüfstatus braucht sichtbare Aufklappmarker und sicheren Textumbruch');
+assert(stylesText.includes('border-radius: 999px') && stylesText.includes('.mk-validation-item.info .mk-validation-tag') && stylesText.includes('.mk-validation-asset-tag--heatpump'), 'styles.css: Info-/Hinweis-Tags und Objekt-Tags müssen semantisch und rund dargestellt werden');
+assert(!indexText.includes('id="mk-status-badge"') && !stylesText.includes('.mk-validation-severity-dot'), 'Prüfstatus: globaler Tag und zusätzliche Bulletpoints sollen entfallen');
+assert(indexText.includes('id="mk-summary-title">Infos und Hinweise</span>'), 'Prüfstatus-Panel muss für Endanwender verständlich als Infos und Hinweise beschriftet sein');
+assert(assetDisplayText.includes("'generation', 'nsh'") && stylesText.includes('.mk-icon-object-sequence.generation') && stylesText.includes('.mk-icon-object-sequence.nsh'), 'Objektnummern: Erzeugungsanlagen und Nachtspeicherheizungen brauchen farbige Kennziffern-Badges');
 
 // §14a: Bei Wärmepumpen wird ein einziges Leistungsfeld inklusive Heizstab
 // gegen 4,2 kW geprüft. Ein separates Heizstabfeld darf nicht zurückkehren.
 assert(rulesText.includes('getSteuveEffectivePower') && rulesText.includes('getSteuveMeasurementGroups') && rulesText.includes('STEUVE_LEGACY_REGIME') && rulesText.includes('einschließlich Heizstab') && !rulesText.includes('heatingRodPower'), 'rules.js: SteuVE müssen zählerbezogen summiert und zeitlich eingeordnet werden');
 assert(rulesText.includes('STECKER_PV_MAX_INVERTER_VA') && rulesText.includes('getSteckerPvMeasurementGroups') && rulesText.includes('800 VA'), 'rules.js: Stecker-PV muss die Wechselrichtergrenze und die Messbereichssummierung prüfen');
+assert(rulesText.includes('DIRECT_MARKETING_THRESHOLD_KW') && rulesText.includes('MK-ASSET-006') && rulesText.includes('getGenerationDirectMarketingAssessment'), 'rules.js: Direktvermarktungsschwelle und DOM-freie Bewertung fehlen');
+assert(rulesText.includes('SMART_METER_CONTROL_THRESHOLD_KW') && rulesText.includes('MK-ASSET-008') && rulesText.includes('getSmartMeterControlAssessment'), 'rules.js: iMSys-/Steuerungsschwelle und DOM-freie Bewertung fehlen');
+assert(rulesText.includes('STECKER_PV_MASTR') && rulesText.includes('MK-ASSET-009') && rulesText.includes('Marktstammdatenregister'), 'rules.js: Stecker-PV-MaStR-Hinweis fehlt');
+assert(rulesText.includes('STEUVE_TARIFF_SEPARATION') && rulesText.includes('MK-STEUVE-001') && rulesText.includes('Energieversorger'), 'rules.js: Trennung von §14a-Anmeldung und Energietarif fehlt');
+assert(rulesText.includes('KWK_BAFA') && rulesText.includes('MK-KWK-001') && rulesText.includes('KWK_MEASUREMENT') && rulesText.includes('MK-KWK-002') && rulesText.includes('bafa.de'), 'rules.js: KWK-/BAFA- und Messhinweise fehlen');
+assert(rulesText.includes('NSH_STEUVE_MIXED') && rulesText.includes('MK-NSH-001') && rulesText.includes('Bestandsregelungen'), 'rules.js: Mischhinweis für Nachtspeicherheizung und neue SteuVE fehlt');
+assert(!canvasRendererText.includes('data-mk-generation-notice') && !canvasRendererText.includes('renderGenerationNotice') && !editorText.includes('renderGenerationNotice') && rulesText.includes('DIRECT_MARKETING'), 'Messkonzept-Editor: Fachhinweise müssen zentral im Prüfstatus statt doppelt im Objekt erscheinen');
+assert(rulesText.includes("makeCheck('COMMISSIONING_DATE_MISSING', 'info'") && canvasRendererText.includes('data-mk-field="commissioningDate"'), 'Prüfstatus: fehlende optionale Inbetriebnahmedaten müssen zentral und nicht blockierend geprüft werden');
+assert(read('tests/direct-marketing-test.js').includes('direct-marketing-test: OK'), 'Direktvermarktungs-Regressionstest fehlt');
+assert(read('tests/smart-meter-control-test.js').includes('smart-meter-control-test: OK'), 'Regressionstest für iMSys-/Steuerungshinweis fehlt');
+assert(read('tests/stecker-pv-mastr-test.js').includes('stecker-pv-mastr-test: OK'), 'Regressionstest für den Stecker-PV-MaStR-Hinweis fehlt');
+assert(read('tests/steuve-tariff-separation-test.js').includes('steuve-tariff-separation-test: OK'), 'Regressionstest für die Trennung von §14a-Anmeldung und Energietarif fehlt');
+assert(read('tests/kwk-bafa-hinweis-test.js').includes('kwk-bafa-hinweis-test: OK'), 'Regressionstest für KWK-/BAFA- und Messhinweise fehlt');
+assert(read('tests/nsh-steuve-gemeinsame-messung-test.js').includes('nsh-steuve-gemeinsame-messung-test: OK'), 'Regressionstest für NSH-/SteuVE-Mischmessung fehlt');
+assert(read('tests/commissioning-date-hint-test.js').includes('commissioning-date-hint-test: OK'), 'Regressionstest für den optionalen Inbetriebnahmedatum-Hinweis fehlt');
 assert(!modelText.includes('heatingRodPower') && canvasRendererText.includes('Elektrische Gesamtleistung inkl. Heizstab') && !canvasRendererText.includes('data-mk-field="heatingRodPower"') && !editorText.includes('heatingRodPower'), 'Messkonzept-Editor: separate Heizstababfrage darf nicht zurückkehren');
 
 // Optionale technische Stammdaten für PV/Wind und Speicher bleiben von der
@@ -222,6 +271,7 @@ assert(documentationText.includes('tests/link-check-test.js'), 'docs/projekt-tes
 assert(documentationText.includes('tests/seo-test.js'), 'docs/projekt-teststandard.md: SEO-Test fehlt');
 assert(documentationText.includes('tests/messlogic-invariants-test.js'), 'docs/projekt-teststandard.md: Messlogik-Invarianten-Test fehlt');
 assert(documentationText.includes('tests/meter-rail-spacing-test.js'), 'docs/projekt-teststandard.md: Rail-Abstandstest fehlt');
+assert(documentationText.includes('tests/smart-meter-control-test.js'), 'docs/projekt-teststandard.md: iMSys-/Steuerungstest fehlt');
 assert((indexText.match(/class="mk-fachhinweis"/g) || []).length === 1, 'index.html: Der fachliche Hinweis soll als eine gemeinsame Hinweisbox erscheinen');
 assert(indexText.includes('VBEW-Referenz &amp; Lizenzhinweise'), 'index.html: Der VBEW-Referenzlink fehlt in der gemeinsamen Hinweisbox');
 assert(indexText.includes('class="mk-start-home-icon"'), 'index.html: Der Startauswahl-Schalter benötigt ein klares Häuschen-Symbol');
@@ -247,7 +297,7 @@ assert(stylesText.includes('[data-theme="light"] .mk-topology-btn.active') && st
 assert(stylesText.includes('[data-theme="light"] .mk-start-group--shared') && stylesText.includes('--mk-group-icon-fg: #047857;') && stylesText.includes('--mk-group-icon-fg: #6d28d9;'), 'Tag-Modus: Messkonzept-Icons brauchen gesättigte Linienfarben auf hellen Flächen');
 assert(stylesText.includes('.module-card-context') && stylesText.includes('font-size: 0.98rem') && stylesText.includes('font-weight: 500'), 'Startseite: Werkzeugbeschreibungen müssen ausreichend groß und kräftig lesbar sein');
 assert(indexText.includes('Wattspur · öffentliche Beta') && indexText.includes('Lokal verarbeitet · unverbindliche Ergebnisse') && !indexText.includes('Wattspur · Energiewerkzeuge · öffentliche Beta') && stylesText.includes('font-size: 0.84rem'), 'Fußzeile: kurze, gut lesbare Statuszeilen statt doppelter Produktbeschreibung');
-assert(indexText.includes('class="mk-brand mk-brand-link"') && indexText.includes('id="btn-mk-back" href="index.html#top"') && stylesText.includes('.mk-brand-link:focus-visible'), 'Messkonzept-Navigation: das Logo muss als zugänglicher Rückweg statt als separater Button dienen');
+assert(/class="mk-brand mk-brand-link(?: wattspur-brand)?"/.test(indexText) && indexText.includes('id="btn-mk-back" href="index.html#top"') && stylesText.includes('.mk-brand-link:focus-visible'), 'Messkonzept-Navigation: das Logo muss als zugänglicher Rückweg statt als separater Button dienen');
 assert(indexText.includes('<a class="module-logo module-logo-link" href="index.html#top"') && stylesText.includes('.module-logo-link:focus-visible'), 'Lastgang-Navigation: Das Seitenleisten-Logo muss ebenfalls als zugänglicher Rückweg zur Werkzeugauswahl dienen');
 assert(!indexText.includes('Vorlage auswählen und direkt starten.') && !stylesText.includes('.mk-start-cases-heading p'), 'Startvorlagen: der kleine doppelte Anleitungstext soll entfallen');
 assert(!indexText.includes('Skizze selbst aufbauen') && !stylesText.includes('.mk-start-free-button-copy small'), 'Startaktion: der zu kleine Untertitel soll entfallen');
@@ -256,7 +306,8 @@ assert(presetText.includes('kein Umbau für einen zweiten Zähler') && presetTex
 assert(presetText.includes('Ein separater Zählpunkt schafft die Voraussetzung, Modul 2 nach § 14a EnWG zu wählen.') && !presetText.includes('Modul 3 ist nur zusammen mit Modul 1 möglich') && !presetText.includes('Modul 2 setzt ihn voraus') && presetText.includes('Preisvorteil ist nicht automatisch garantiert'), 'Startvorlagen: Parallelmessung muss die Voraussetzung für Modul 2 verständlich und ohne unnötige Wiederholung erklären');
 assert(presetText.includes('Eine separate Messung kann die Voraussetzungen für eine günstigere Konzessionsabgabe schaffen') && presetText.includes('Die konkrete Konzessionsabgabe hängt von Liefervertrag, Messung und Ort ab') && presetText.includes("label: 'Wärmepumpenprivilegierung nach § 22 EnFG'"), 'Startvorlagen: mögliche Konzessionsabgabe und Wärmepumpen-Umlageprivileg müssen als Chance mit klarer Einschränkung und Quelle erklärt werden');
 assert(presetText.includes('Geeignet, wenn Haushalt und Anlagen gemeinsam über einen Zähler gemessen werden sollen') && presetText.includes('Geeignet, wenn Wärmepumpe oder Wallbox getrennt vom Haushaltsstrom gemessen werden sollen') && presetText.includes('Geeignet, wenn Wärmepumpe oder Wallbox separat gemessen, aber weiterhin durch PV-Strom mitversorgt werden sollen') && presetText.includes('Differenzbildung: Bezug an Z1 minus Bezug an Z2'), 'Startvorlagen: jede Gruppe muss Zielgruppe und Kaskadenprinzip verständlich beschreiben');
-assert(presetText.includes('Geeignet für eine Mieterstromgemeinschaft') && presetText.includes('technische Modellannahme') && presetText.includes('alle teilnehmenden Anschlussnutzer'), 'Startvorlagen: Mieterstrominfo muss Zielgruppe, technische Modellannahme und Nutzerbezug erklären');
+assert(presetText.includes('Mieterstrom beschreibt die Versorgung von Bewohnern') && presetText.includes('Netzentgelte, netzseitige Umlagen, Stromsteuer und Konzessionsabgabe') && presetText.includes('Mieterstromzuschlag') && presetText.includes('Markt- und Messlokationsführung') && presetText.includes("label: 'BNetzA: Mieterstrom'"), 'Startvorlagen: Mieterstrominfo muss allgemeine Vorteile, Abstimmungshinweise und belastbare Quellen enthalten');
+assert(stylesText.includes('.mk-start-group--mieterstrom .mk-start-info-panel') && stylesText.includes('transform: translate(-50%, -50%)') && stylesText.includes('max-height: min(82vh, 44rem)'), 'Startvorlagen: Mieterstrominfo muss mittig im sichtbaren Bereich erscheinen und ohne Seiten-Scrollen auskommen');
 
 if (failures.length > 0) {
     console.error(`Projekt-Qualitäts-Gate: FEHLER (${failures.length})`);

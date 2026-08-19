@@ -98,9 +98,7 @@ const display = assetDisplay.createAssetDisplayController({
     renderSelectOptions: () => '',
     steuveModuleOptions: []
 });
-const notice = display.renderSteuveNotice(heatPump);
-assert(notice.includes('Gesamtleistung') && notice.includes('Heizstab'), 'Der Objekteditor muss die inklusive Gesamtleistung verständlich erklären');
 const moduleFields = display.renderSteuveModuleFields({ ...heatPump, power: '4,3' });
 assert(moduleFields.includes('data-mk-field="steuveModule"'), 'Das §14a-Modulfeld muss bei einer Gesamtleistung über 4,2 kW erscheinen');
 
-console.log('SteuVE-Gesamtleistungs-Test: OK (Wärmepumpe inklusive Heizstab, Grenzwert und UI-Hinweis)');
+console.log('SteuVE-Gesamtleistungs-Test: OK (Wärmepumpe inklusive Heizstab, Grenzwert und Prüfstatus)');

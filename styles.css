@@ -836,6 +836,56 @@ html[data-tool="lastgang"] .landing-main {
     text-decoration: underline;
 }
 
+/* Rechtliche Direktlinks bleiben auch in den dynamischen Werkzeugansichten
+   erreichbar, ohne die Arbeitsfläche mit einem großen Navigationsblock zu
+   belasten. */
+.app-legal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.25rem;
+    padding: 0.45rem 1rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    line-height: 1.3;
+}
+
+.app-legal-footer nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.app-legal-footer a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.app-legal-footer a:hover,
+.app-legal-footer a:focus-visible {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+#dashboard-screen .main-workspace {
+    position: relative;
+}
+
+#dashboard-screen .app-legal-footer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--surface-color) 94%, transparent);
+    backdrop-filter: blur(8px);
+}
+
+#dashboard-screen .dashboard-content {
+    padding-bottom: 4rem;
+}
+
 /* Rechtliche Seiten */
 .legal-page {
     min-height: 100vh;
@@ -1958,6 +2008,23 @@ html[data-tool="lastgang"] .landing-main {
     }
 }
 
+/* Mieterstrominfos werden als eigenständige Orientierung eingeblendet. Die
+   feste, mittige Position verhindert, dass der lange Inhalt die Startseite
+   nach unten drückt oder den Nutzer zu einem zweiten Scrollweg zwingt. */
+.mk-start-group--mieterstrom .mk-start-info-panel {
+    position: fixed;
+    top: 50%;
+    right: auto;
+    left: 50%;
+    width: min(42rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    max-height: min(82vh, 44rem);
+    overflow-y: auto;
+    box-sizing: border-box;
+    transform: translate(-50%, -50%);
+    z-index: 2100;
+}
+
 .mk-start-group-icon {
     width: 2.5rem;
     height: 2.5rem;
@@ -2265,7 +2332,7 @@ html[data-tool="lastgang"] .landing-main {
     min-height: 48px;
     margin: 0;
     padding: 0.5rem 0.55rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
     border-radius: var(--radius-md);
     color: var(--text-main);
     background: var(--surface-hover);
@@ -2513,29 +2580,6 @@ html[data-tool="lastgang"] .landing-main {
 .mk-fan-blade-1 { transform: translate(-50%, -92%) rotate(0deg); }
 .mk-fan-blade-2 { transform: translate(-50%, -92%) rotate(120deg); }
 .mk-fan-blade-3 { transform: translate(-50%, -92%) rotate(240deg); }
-
-.mk-steuve-editor-hint,
-.mk-steuve-editor-notice,
-.mk-steuve-module-hint,
-.mk-steuve-power-hint {
-    margin: 0.5rem 0 0;
-    font-size: 0.76rem;
-    line-height: 1.4;
-}
-
-.mk-steuve-editor-hint,
-.mk-steuve-module-hint,
-.mk-steuve-power-hint {
-    color: var(--text-muted);
-}
-
-.mk-steuve-editor-notice {
-    padding: 0.65rem 0.75rem;
-    border: 1px solid rgba(245, 158, 11, 0.45);
-    border-radius: var(--radius-sm);
-    color: #92400e;
-    background: #fffbeb;
-}
 
 .mk-builder-card {
     overflow: hidden;
@@ -4197,6 +4241,72 @@ body.mk-modal-open {
     opacity: 1;
 }
 
+/* Reine Symbolkarten (z. B. Speicher und Wallbox) erhalten ihre laufende
+   Kennziffer getrennt vom Icon. Absolute Positionierung hält Kartenbreite,
+   Kartenhöhe und damit die Leitungsgeometrie unverändert. */
+.mk-icon-object-sequence {
+    position: absolute;
+    right: -0.42rem;
+    bottom: -0.42rem;
+    z-index: 4;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.2rem;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid var(--primary-color);
+    border-radius: 999px;
+    background: var(--surface-color);
+    color: var(--primary-color);
+    box-shadow: 0 0.18rem 0.4rem rgba(2, 6, 23, 0.28);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.mk-icon-object-sequence.storage {
+    border-color: var(--mk-storage-fg);
+    background: var(--mk-storage-bg);
+    color: var(--mk-storage-fg);
+}
+
+.mk-icon-object-sequence.generation {
+    border-color: var(--mk-generation-fg);
+    background: var(--mk-generation-bg);
+    color: var(--mk-generation-fg);
+}
+
+.mk-icon-object-sequence.nsh {
+    border-color: var(--mk-nsh-fg);
+    background: var(--mk-nsh-bg);
+    color: var(--mk-nsh-fg);
+}
+
+.mk-icon-object-sequence.wallbox {
+    border-color: var(--mk-wallbox-fg);
+    background: var(--mk-wallbox-bg);
+    color: var(--mk-wallbox-fg);
+}
+
+.mk-icon-object-sequence.heatpump {
+    border-color: var(--mk-heatpump-fg);
+    background: var(--mk-heatpump-bg);
+    color: var(--mk-heatpump-fg);
+}
+
+.mk-icon-object-sequence.climate {
+    border-color: var(--mk-climate-fg);
+    background: var(--mk-climate-bg);
+    color: var(--mk-climate-fg);
+}
+
+.mk-icon-object-sequence.steuve {
+    border-color: var(--mk-steuve-fg);
+    background: var(--mk-steuve-bg);
+    color: var(--mk-steuve-fg);
+}
+
 .mk-asset-form {
     display: grid;
     gap: 0.55rem;
@@ -4250,84 +4360,6 @@ body.mk-modal-open {
     grid-column: 1 / -1;
 }
 
-.mk-nsh-editor-hint {
-    margin: 0;
-    padding: 0.5rem 0.6rem;
-    border-left: 2px solid var(--warning-color);
-    color: var(--text-muted);
-    background: rgba(245, 158, 11, 0.08);
-    font-size: 0.68rem;
-    line-height: 1.45;
-}
-
-.mk-storage-editor-hint {
-    margin: 0;
-    padding: 0.5rem 0.6rem;
-    border-left: 2px solid var(--mk-storage-bg);
-    color: var(--text-muted);
-    background: color-mix(in srgb, var(--mk-storage-bg) 10%, transparent);
-    font-size: 0.68rem;
-    line-height: 1.45;
-}
-
-.mk-storage-source-links {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.62rem;
-    line-height: 1.4;
-}
-
-.mk-storage-source-links a {
-    color: var(--primary-color);
-    text-decoration: underline;
-    text-underline-offset: 0.12em;
-}
-
-.mk-storage-info {
-    position: relative;
-    z-index: 2;
-    display: grid;
-    place-items: center;
-    width: 1.05rem;
-    height: 1.05rem;
-    margin-left: auto;
-    border: 1px solid rgba(56, 189, 248, 0.55);
-    border-radius: 50%;
-    color: var(--primary-color);
-    background: rgba(56, 189, 248, 0.1);
-    cursor: help;
-    font-size: 0.68rem;
-    font-weight: 900;
-}
-
-.mk-storage-info::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    z-index: 4;
-    right: -0.35rem;
-    bottom: calc(100% + 0.45rem);
-    width: min(18rem, calc(100vw - 2rem));
-    padding: 0.55rem 0.65rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    color: var(--text-main);
-    background: var(--surface-color);
-    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.35);
-    font-size: 0.68rem;
-    font-weight: 500;
-    line-height: 1.45;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(0.25rem);
-    transition: opacity 0.15s ease, transform 0.15s ease;
-}
-
-.mk-storage-info:hover::after,
-.mk-storage-info:focus-visible::after {
-    opacity: 1;
-    transform: translateY(0);
-}
-
 .mk-check-row {
     display: flex !important;
     grid-template-columns: none !important;
@@ -4374,45 +4406,201 @@ body.mk-modal-open {
     transform: translateX(-50%);
 }
 
-.mk-status-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 999px;
-    font-size: 0.64rem;
-    font-weight: 800;
-    text-transform: uppercase;
-}
-
-.mk-status-badge.neutral { color: var(--text-muted); background: var(--surface-hover); }
-.mk-status-badge.ok { color: #064e3b; background: #6ee7b7; }
-.mk-status-badge.warning { color: #78350f; background: #fde68a; }
-.mk-status-badge.error { color: #7f1d1d; background: #fecaca; }
-
 .mk-validation-list {
     display: grid;
     gap: 0.55rem;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .mk-validation-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.45rem;
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent);
+    border-radius: var(--radius-sm);
     color: var(--text-muted);
     font-size: 0.76rem;
+    background: color-mix(in srgb, var(--surface-hover) 22%, transparent);
 }
 
-.mk-validation-item span {
-    width: 1rem;
-    flex: 0 0 1rem;
-    font-weight: 900;
-    text-align: center;
+.mk-validation-item > summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    min-width: 0;
+    gap: 0.35rem;
+    padding: 0.48rem 0.55rem;
+    color: var(--text-main);
+    cursor: pointer;
+    list-style: none;
 }
 
-.mk-validation-item.ok span { color: var(--success-color); }
-.mk-validation-item.warning span { color: var(--warning-color); }
-.mk-validation-item.error span { color: #f87171; }
+.mk-validation-item > summary::-webkit-details-marker {
+    display: none;
+}
 
-.mk-validation-item p {
+.mk-validation-item > summary::before {
+    content: '';
+    flex: 0 0 0.75rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    line-height: 1.25;
+    border: 1px solid currentColor;
+    border-left: 0;
+    border-bottom: 0;
+    color: var(--text-muted);
+    transform: rotate(45deg) scale(0.55);
+    transition: transform 140ms ease, color 140ms ease;
+}
+
+.mk-validation-item[open] > summary::before {
+    transform: rotate(135deg) scale(0.55);
+}
+
+.mk-validation-item > summary:hover,
+.mk-validation-item > summary:focus-visible {
+    background: color-mix(in srgb, var(--primary-color) 14%, transparent);
+    outline: none;
+}
+
+.mk-validation-tag {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    margin-left: 0;
+    padding: 0.22rem 0.42rem;
+    border: 1px solid color-mix(in srgb, currentColor 48%, transparent);
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.mk-validation-item.ok .mk-validation-tag { color: #064e3b; background: #6ee7b7; }
+.mk-validation-item.info .mk-validation-tag { color: var(--mk-meter-fg); background: var(--mk-meter-bg); }
+.mk-validation-item.warning .mk-validation-tag { color: #9a3412; background: #fed7aa; }
+.mk-validation-item.error .mk-validation-tag { color: #7f1d1d; background: #fecaca; }
+.mk-validation-item.neutral .mk-validation-tag { color: var(--text-muted); background: var(--surface-hover); }
+
+.mk-validation-asset-tag {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 12rem;
+    padding: 0.2rem 0.42rem;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
+    border-radius: 999px;
+    color: var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+    font-size: 0.58rem;
+    font-weight: 800;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+}
+
+.mk-validation-asset-tag--meter {
+    --mk-validation-asset-fg: var(--mk-meter-fg);
+    --mk-validation-asset-bg: var(--mk-meter-bg);
+}
+
+.mk-validation-asset-tag--meter-external {
+    --mk-validation-asset-fg: var(--mk-meter-fg);
+    --mk-validation-asset-bg: transparent;
+    border-style: dashed;
+}
+
+.mk-validation-asset-tag--generation {
+    --mk-validation-asset-fg: var(--mk-generation-fg);
+    --mk-validation-asset-bg: var(--mk-generation-bg);
+}
+
+.mk-validation-asset-tag--consumer {
+    --mk-validation-asset-fg: var(--mk-consumer-fg);
+    --mk-validation-asset-bg: var(--mk-consumer-bg);
+}
+
+.mk-validation-asset-tag--mieterstrom-user {
+    --mk-validation-asset-fg: var(--mk-consumer-fg);
+    --mk-validation-asset-bg: transparent;
+    border-style: dashed;
+}
+
+.mk-validation-asset-tag--storage {
+    --mk-validation-asset-fg: var(--mk-storage-fg);
+    --mk-validation-asset-bg: var(--mk-storage-bg);
+}
+
+.mk-validation-asset-tag--wallbox {
+    --mk-validation-asset-fg: var(--mk-wallbox-fg);
+    --mk-validation-asset-bg: var(--mk-wallbox-bg);
+}
+
+.mk-validation-asset-tag--heatpump {
+    --mk-validation-asset-fg: var(--mk-heatpump-fg);
+    --mk-validation-asset-bg: var(--mk-heatpump-bg);
+}
+
+.mk-validation-asset-tag--climate {
+    --mk-validation-asset-fg: var(--mk-climate-fg);
+    --mk-validation-asset-bg: var(--mk-climate-bg);
+}
+
+.mk-validation-asset-tag--nsh {
+    --mk-validation-asset-fg: var(--mk-nsh-fg);
+    --mk-validation-asset-bg: var(--mk-nsh-bg);
+}
+
+.mk-validation-asset-tag--steuve,
+.mk-validation-asset-tag--mixed {
+    --mk-validation-asset-fg: var(--primary-color);
+    --mk-validation-asset-bg: color-mix(in srgb, var(--primary-color) 9%, var(--surface-color));
+}
+
+.mk-validation-asset-tag[class*="mk-validation-asset-tag--"] {
+    color: var(--mk-validation-asset-fg, var(--primary-color));
+    border-color: color-mix(in srgb, var(--mk-validation-asset-fg, var(--primary-color)) 48%, var(--border-color));
+    background: var(--mk-validation-asset-bg, transparent);
+}
+
+.mk-validation-item > summary:hover .mk-validation-tag,
+.mk-validation-item > summary:focus-visible .mk-validation-tag {
+    filter: brightness(1.04);
+}
+
+.mk-validation-body {
+    min-width: 0;
+    padding: 0 0.75rem 0.65rem 2.35rem;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.mk-validation-body p {
     margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.mk-validation-body .mk-validation-rule-title {
+    margin-bottom: 0.25rem;
+    color: var(--text-main);
+    font-weight: 800;
+}
+
+.mk-validation-links {
+    display: flex;
+    flex-wrap: wrap;
+    min-width: 0;
+    gap: 0.35rem 0.65rem;
+    margin-top: 0.25rem;
+    font-size: 0.72rem;
+    overflow-wrap: anywhere;
+}
+
+.mk-validation-links .mk-reference-link {
+    color: var(--primary-color);
+    overflow-wrap: anywhere;
 }
 
 .mk-export-button {
@@ -6683,7 +6871,7 @@ body.mk-modal-open {
 /* Projektangaben, Abstimmungsnotizen und zusätzliche Zähler */
 .mk-project-meta {
     margin-bottom: 1rem;
-    padding: 0.85rem 1rem 1rem;
+    padding: 0.5rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: rgba(30, 41, 59, 0.72);
@@ -6694,9 +6882,16 @@ body.mk-modal-open {
     align-items: center;
     justify-content: flex-start;
     gap: 0.75rem;
-    margin-bottom: 0;
+    min-height: 3rem;
+    margin: 0;
+    padding: 0.62rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 55%, var(--border-color));
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    background: color-mix(in srgb, var(--primary-color) 16%, var(--surface-color));
     cursor: pointer;
     list-style: none;
+    transition: color 140ms ease, border-color 140ms ease, background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 }
 
 .mk-project-meta > summary::-webkit-details-marker {
@@ -6706,18 +6901,19 @@ body.mk-modal-open {
 .mk-project-meta > summary::before {
     content: '+';
     display: grid;
-    flex: 0 0 1.45rem;
+    flex: 0 0 1.6rem;
     place-items: center;
-    width: 1.45rem;
-    height: 1.45rem;
+    width: 1.6rem;
+    height: 1.6rem;
     border: 1px solid var(--primary-color);
     border-radius: 50%;
     color: var(--bg-color);
     background: var(--primary-color);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 18%, transparent);
-    font-size: 1.05rem;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 24%, transparent);
+    font-size: 1.15rem;
     font-weight: 800;
     line-height: 1;
+    transition: transform 140ms ease, box-shadow 140ms ease;
 }
 
 .mk-project-meta > summary::after,
@@ -6727,6 +6923,14 @@ body.mk-modal-open {
 
 .mk-project-meta[open] > summary {
     margin-bottom: 0.65rem;
+}
+
+.mk-project-meta > summary:hover,
+.mk-project-meta > summary:focus-visible {
+    border-color: var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 24%, var(--surface-color));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 14%, transparent);
+    transform: translateY(-1px);
 }
 
 .mk-project-meta[open] > summary::before {
@@ -6896,15 +7100,6 @@ body.mk-modal-open {
     font-weight: 800;
 }
 
-.mk-palette-items--mieterstrom .mk-palette-item {
-    border-color: color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
-}
-
-.mk-palette-items--mieterstrom .mk-palette-item:hover,
-.mk-palette-items--mieterstrom .mk-palette-item:focus-visible {
-    border-color: var(--primary-color);
-}
-
 .mk-palette-icon.mk-mieterstrom-user {
     color: var(--mk-consumer-bg);
     background: transparent;
@@ -6919,16 +7114,6 @@ body.mk-modal-open {
     background: transparent;
     border: 1px dashed var(--primary-color);
     box-shadow: none;
-}
-
-.mk-mieter-meter-note {
-    margin: 0.65rem 0 0;
-    padding: 0.55rem 0.65rem;
-    border-left: 2px solid var(--primary-color);
-    color: var(--text-muted);
-    background: color-mix(in srgb, var(--primary-color) 8%, transparent);
-    font-size: 0.72rem;
-    line-height: 1.45;
 }
 
 .mk-notes-panel {
@@ -7338,10 +7523,15 @@ body.mk-printing .mk-print-sheet {
     body.mk-printing .mk-print-canvas-frame {
         box-sizing: border-box;
         max-width: 100%;
-        overflow-x: auto;
+        overflow: hidden;
         padding: 0.8rem;
         border: 1px solid #cbd5e1;
         background: #f8fafc;
+    }
+
+    body.mk-printing .mk-print-canvas-fit {
+        max-width: 100%;
+        overflow: hidden;
     }
 
     body.mk-printing .mk-print-canvas-stage {
@@ -7368,35 +7558,96 @@ body.mk-printing .mk-print-sheet {
     }
 
     body.mk-printing .mk-print-status {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 1rem;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     body.mk-printing .mk-print-status ul {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
         margin: 0;
-        padding-left: 1rem;
+        padding: 0;
+        list-style: none;
     }
 
-    body.mk-printing .mk-print-status li.ok { color: #047857; }
-    body.mk-printing .mk-print-status li.warning { color: #a16207; }
-    body.mk-printing .mk-print-status li.error { color: #b91c1c; }
-
-    body.mk-printing .mk-print-detail-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.55rem;
+    /* Der Textbereich beginnt bewusst auf einer neuen Seite. So bleiben
+       Projektangaben und Prüfstatus auf Seite 1 kompakt und die Skizze
+       erhält die volle verfügbare Breite für ihre Leitungsgeometrie. */
+    body.mk-printing .mk-print-topology {
+        page-break-before: always;
+        break-before: page;
     }
 
-    body.mk-printing .mk-print-detail-block {
-        padding: 0.55rem;
-        border: 1px solid #cbd5e1;
+    body.mk-printing .mk-print-status li {
+        margin: 0 0 0.45rem;
+        padding: 0 0 0.45rem;
+        border-bottom: 1px solid #cbd5e1;
+        color: #0f172a;
+        break-inside: avoid;
+        overflow-wrap: anywhere;
+    }
+
+    body.mk-printing .mk-print-status li:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: 0;
+    }
+
+    body.mk-printing .mk-print-status-label {
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    body.mk-printing .mk-print-table-section {
+        margin-top: 0.75rem;
         page-break-inside: avoid;
     }
 
-    body.mk-printing .mk-print-detail-block h4 {
+    body.mk-printing .mk-print-table-section h4 {
         margin: 0 0 0.35rem;
         color: #0f172a;
+        font-size: 10pt;
+    }
+
+    body.mk-printing .mk-print-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    body.mk-printing .mk-print-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        color: #1e293b;
+        font-size: 8pt;
+    }
+
+    body.mk-printing .mk-print-table th,
+    body.mk-printing .mk-print-table td {
+        padding: 0.28rem 0.38rem;
+        border: 1px solid #cbd5e1;
+        text-align: left;
+        vertical-align: top;
+        overflow-wrap: anywhere;
+    }
+
+    body.mk-printing .mk-print-table thead th {
+        color: #0f172a;
+        background: #e2e8f0;
+        font-weight: 700;
+    }
+
+    body.mk-printing .mk-print-table tbody th {
+        width: 13%;
+        color: #0f172a;
+        background: #f8fafc;
+        font-weight: 700;
+    }
+
+    body.mk-printing .mk-print-table--key-value {
+        table-layout: auto;
     }
 
     body.mk-printing .mk-meter-detail-value {
@@ -7858,5 +8109,90 @@ body.mk-printing .mk-print-sheet {
         min-width: 0;
         max-width: none;
         width: 100%;
+    }
+}
+
+/*
+ * Gemeinsamer Wattspur-Schriftzug:
+ * Alle öffentlichen Seiten und die beiden Werkzeug-Header verwenden dieselben
+ * Abstände, Schriftgrade und Icon-Proportionen. So wirkt der Markenauftritt
+ * auch beim Wechsel zwischen Startseite, Werkzeug und Rechtstexten identisch.
+ */
+.wattspur-brand {
+    gap: 0.7rem;
+    min-width: 0;
+}
+
+.wattspur-brand > img {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    object-fit: contain;
+}
+
+.wattspur-brand-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+    min-width: 0;
+    line-height: 1;
+}
+
+.wattspur-brand-copy > strong {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.wattspur-brand-copy > small,
+.wattspur-brand-copy .wattspur-brand-meta {
+    margin-top: 0;
+    color: color-mix(in srgb, var(--text-main) 76%, var(--text-muted));
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.wattspur-brand-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+}
+
+.wattspur-brand-copy .wattspur-brand-meta small {
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+}
+
+@media (max-width: 480px) {
+    .wattspur-brand > img {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+    }
+
+    .wattspur-brand-copy > strong {
+        font-size: 1rem;
+    }
+
+    .wattspur-brand-copy > small,
+    .wattspur-brand-copy .wattspur-brand-meta {
+        font-size: 0.6rem;
+    }
+
+    .app-legal-footer {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.45rem 0.65rem;
+        font-size: 0.7rem;
     }
 }

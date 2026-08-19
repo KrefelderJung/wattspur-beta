@@ -12,7 +12,6 @@
     const SELECTORS = Object.freeze({
         canvas: '#mk-canvas',
         validation: '#mk-validation-list',
-        statusBadge: '#mk-status-badge',
         objectModal: '#mk-object-modal',
         objectModalContent: '#mk-object-modal-content',
         objectModalTitle: '#mk-object-modal-title',
@@ -40,7 +39,6 @@
             body: documentRef.body || null,
             canvas: query(SELECTORS.canvas),
             validation: query(SELECTORS.validation),
-            statusBadge: query(SELECTORS.statusBadge),
             objectModal: query(SELECTORS.objectModal),
             objectModalContent: query(SELECTORS.objectModalContent),
             objectModalTitle: query(SELECTORS.objectModalTitle),

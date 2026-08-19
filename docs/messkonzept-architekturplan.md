@@ -175,7 +175,7 @@ Verbindungsmodul weder `mkConfiguratorState` noch `mkElements` und kann nicht
 mehr versehentlich fachliche Zustände verändern. Die bisherige Geometrie bleibt
 bewusst unverändert; lediglich die Zuständigkeit ist verschoben.
 
-Der Cache wurde auf `2026.08.18-beta.323` angehoben und enthält das neue
+Der Cache wurde auf `2026.08.19-beta.336` angehoben und enthält das neue
 Verbindungsmodul sowie die überarbeitete Trafo-Darstellung. Der HTTP-Testlauf umfasst jetzt 110 Tests und ist vollständig
 grün. Zusätzlich prüft ein Architekturtest, dass die Leitungslogik nicht in
 `messkonzept.js` zurückwandert, das Modul offline gecacht wird und keine globalen
@@ -302,7 +302,7 @@ Messungen, zwei parallele Zweitzähler, zwei Kaskaden und eine
 Mieterstrom-D1-Vorlage. Der browserfreie
 `tests/preset-loader-test.js` prüft insbesondere, dass „Haushalt“ intern ein
 `consumer` bleibt und dass PV sowie Speicher in der Kaskade tatsächlich hinter
-dem erzeugten Z2 hängen. Der Cache steht auf `2026.08.18-beta.323`.
+dem erzeugten Z2 hängen. Der Cache steht auf `2026.08.19-beta.336`.
 
 ## Aktualisierter Architekturstatus – Objekteditor (17.08.2026)
 
@@ -340,7 +340,8 @@ Ansicht, Detailansicht und PDF auf dieselbe Nummernquelle zurück. Mieterstrom-
 zähler bilden dabei bewusst eine eigene sichtbare Folge `ZN1`, `ZN2`, … und
 erhöhen nicht die reguläre Netz-Zählerfolge `Z1`, `Z2`, …. Ein Browser-
 Regressionstest prüft Parallel-Grundzähler, beide Zusatz-Zählerfolgen und die
-PV-Kennung in einem gemeinsamen Szenario.
+getrennten Erzeugungsnummernkreise. PV und Steckersolar teilen sich den
+PV-Kreis; BHKW und Windenergieanlagen beginnen jeweils unabhängig bei 1.
 
 ## Aktualisierter Architekturstatus – Prüfstatus-Verkabelung (17.08.2026)
 
@@ -424,7 +425,7 @@ Editor nicht mehr versehentlich die Diagramm- oder Kapazitätslogik duplizieren.
 Die Auslagerung ist bewusst schrittweise: Der Editor nutzt vorerst die
 bestehenden State- und Dashboard-Adapter, damit sich das Nutzerverhalten nicht
 ändert. Ein isolierter Node-Test prüft die API und eine echte Zelländerung ohne
-Browser-DOM. Der Offline-Cache wurde auf `2026.08.18-beta.323` angehoben und
+Browser-DOM. Der Offline-Cache wurde auf `2026.08.19-beta.336` angehoben und
 enthält die neue Datei. Als nächster sinnvoller Schritt bleibt die spätere
 Injektion dieser Adapter; dafür besteht aktuell kein Änderungsdruck.
 
@@ -462,3 +463,82 @@ Doppelring-Symbol ohne rechteckige Zusatzbeschriftung dargestellt. Der
 Leitungsanker bleibt auf derselben Mittelachse wie HAK und Zähler, sodass die
 Abgänge linear in die Messskizze laufen. Die Bezeichnung „Trafo“ bleibt für
 Tooltip, Barrierefreiheit und den Objekteditor erhalten.
+
+## Aktualisierter Architekturstatus – Direktvermarktungshinweis (19.08.2026)
+
+Die Regel `MK-ASSET-006` bewertet die eingetragene Nennleistung einer
+Erzeugungsanlage zentral in `js/messkonzept/rules.js`. Das DOM-freie Ergebnis
+wird ausschließlich im Prüfstatus dargestellt. Der Objekteditor enthält nur
+die technischen Eingabefelder. Dadurch bleiben Schwellenwert, Formulierung
+und Tests an einer fachlichen Quelle und werden nicht in einzelnen Ansichten
+doppelt gepflegt.
+
+## Aktualisierter Architekturstatus – Optionaler Hinweis zum Inbetriebnahmedatum (19.08.2026)
+
+Das Inbetriebnahmedatum bleibt eine optionale Stamminformation. Der
+Objekteditor bietet bei Erzeugungsanlagen, steuerbaren
+Verbrauchseinrichtungen und Nachtspeicherheizungen nur das Eingabefeld an.
+Wenn es fehlt, erscheint eine kompakte Info im zentralen Prüfstatus. Nach der
+Eingabe verschwindet sie dort. Sie erzeugt weder einen Fehler noch eine
+automatische rechtliche Einordnung. Bei steuerbaren Verbrauchseinrichtungen
+ist das Datum als Feld ergänzt, damit die bereits vorhandene Bestandsregel vor
+und ab dem 01.01.2024 fachlich gepflegt werden kann. Regel, Rendering und
+Akzeptanzkriterien sind in `rules.js`, `canvas-renderer.js`, `editor.js` und
+`docs/inbetriebnahmedatum-hinweis-anforderungen.md` getrennt dokumentiert.
+
+## Aktualisierter Architekturstatus – iMSys- und Steuerungshinweis (19.08.2026)
+
+Die neue Regel `MK-ASSET-008` liegt zentral in
+`js/messkonzept/rules.js`. Sie bewertet nur Erzeugungsanlagen mit mehr als
+7 kW beziehungsweise 7 kWp eingetragener Leistung. Der Hinweis trennt die
+7-kW-Messstellenregel nach MsbG ausdrücklich von der 4,2-kW-Regel für
+steuerbare Verbrauchseinrichtungen nach § 14a EnWG.
+
+Der Text bleibt bewusst vorsichtig: Ein intelligentes Messsystem ist
+grundsätzlich vorgesehen, eine zusätzliche Steuerungseinrichtung kann
+erforderlich sein und der Messstellenbetreiber klärt den Einbau. Damit wird
+nicht behauptet, dass ein Anlagenbetreiber selbst eine Steuerbox beschaffen
+muss. `mME`, `iMSys` und Steuerungseinrichtung sind fachlich getrennte Begriffe.
+
+Die Regel wird ausschließlich im zentralen Prüfstatus angezeigt. Die
+Akzeptanzkriterien und offiziellen Quellen stehen in
+`docs/smart-meter-steuerung-hinweis-anforderungen.md`; der Grenztest liegt in
+`tests/smart-meter-control-test.js`. Ein neuer Hinweis darf erst in die
+Objektansicht übernommen werden, wenn dafür eine eigene Anforderung und ein
+separater UI-Test vorliegen.
+
+## Aktualisierter Architekturstatus – Trennung von §14a und Energietarif (19.08.2026)
+
+`MK-STEUVE-001` bewertet separat gemessene Wärmepumpen und Wallboxen. Die
+Regel nutzt die bestehende Messgruppen-Zuordnung und unterscheidet einen
+eigenen `meterId`-Zähler sowie einen Parallelzweig von einer gemeinsamen
+Messung. Der Hinweis erklärt im zentralen Prüfstatus, dass die §14a-Anmeldung
+zum Netzbetreiber gehört, während ein Wärmepumpen- oder Wallbox-Tarif beim
+gewählten Energieversorger angefragt wird. So werden Netzentgeltreduzierung
+und Energieliefervertrag nicht miteinander verwechselt.
+
+## Aktualisierter Architekturstatus – KWK- und BAFA-Hinweise (19.08.2026)
+
+Die Regeln `MK-KWK-001` und `MK-KWK-002` liegen zentral in
+`js/messkonzept/rules.js`. Die erste Regel wird bei jeder KWK- beziehungsweise
+BHKW-Anlage als vorsichtiger Infohinweis ausgelöst und verlinkt die offiziellen
+BAFA-Unterlagen zur Zulassung und zum Anzeigeverfahren. Die zweite Regel wird
+nur ausgelöst, wenn im Objekt keine eigene Erzeugungsmessung aktiviert ist.
+
+Die Regeln behaupten weder eine automatische Förderberechtigung noch eine
+allgemein verbindliche Zähleranordnung. Sie erinnern daran, die erzeugte und
+eingespeiste KWK-Arbeit sowie mögliche Vollbenutzungsstunden mit dem konkreten
+Förderfall abzugleichen. Die Anforderungen stehen in
+`docs/kwk-bafa-hinweis-anforderungen.md`; der Regressionstest liegt in
+`tests/kwk-bafa-hinweis-test.js`. Quellenlinks werden ausschließlich über den
+zentralen Prüfstatus gerendert und nicht in jedem Objekt wiederholt.
+
+## Aktualisierter Architekturstatus – Nachtspeicherheizung und neue SteuVE (19.08.2026)
+
+`MK-NSH-001` nutzt dieselbe zähler- und zonenbasierte Zuordnung wie die
+Leistungssummierung der SteuVE. Dadurch wird ein Hinweis nur erzeugt, wenn eine
+Nachtspeicherheizung und eine neue oder zeitlich noch offene SteuVE tatsächlich
+am selben Messpunkt liegen. Eine alte Nachtspeicherregelung wird nicht
+automatisch auf eine neue Anlage übertragen. Die fachliche Grundlage und die
+Grenzfälle stehen in `docs/nsh-steuve-gemeinsame-messung-anforderungen.md`;
+der Regressionstest liegt in `tests/nsh-steuve-gemeinsame-messung-test.js`.

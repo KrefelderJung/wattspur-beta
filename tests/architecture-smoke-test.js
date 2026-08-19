@@ -165,7 +165,7 @@ removedRuleIds.forEach(ruleId => {
     assert(!rulesText.includes(ruleId), `rules.js: entfernte Prüfregel ${ruleId} ist noch aktiv`);
 });
 
-const activeRuleIds = ['MK-ASSET-001', 'MK-ASSET-002', 'MK-ASSET-003', 'MK-SINGLE-001'];
+const activeRuleIds = ['MK-ASSET-001', 'MK-ASSET-002', 'MK-ASSET-003', 'MK-ASSET-006', 'MK-ASSET-008', 'MK-ASSET-009', 'MK-STEUVE-001', 'MK-SINGLE-001'];
 activeRuleIds.forEach(ruleId => {
     assert(rulesText.includes(ruleId), `rules.js: aktive Prüfregel ${ruleId} fehlt`);
 });

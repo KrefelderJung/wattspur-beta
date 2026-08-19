@@ -72,15 +72,21 @@
         { value: 'medium', label: 'Mittelspannung', objectLabel: 'Trafo' }
     ]);
     const meterDetailFields = Object.freeze([
-        { key: 'maloBezug', label: 'MaLo Bezug', type: 'text' },
-        { key: 'maloLieferung', label: 'MaLo Lieferung', type: 'text' },
-        { key: 'melo', label: 'MeLo', type: 'text', maxLength: 33 },
+        { key: 'maloBezug', label: 'Marktlokation Bezug', type: 'text' },
+        { key: 'maloLieferung', label: 'Marktlokation Lieferung', type: 'text' },
+        { key: 'melo', label: 'Messlokation', type: 'text', maxLength: 33 },
         { key: 'meterNumber', label: 'Zählernummer', type: 'text' },
         { key: 'installationDate', label: 'Einbaudatum', type: 'date' }
     ]);
 
     function getGenerationDisplay(energyCarrier) {
         return generationDisplay[energyCarrier] || defaultGenerationDisplay;
+    }
+
+    // PV und Steckersolar teilen sich bewusst einen sichtbaren Nummernkreis.
+    // BHKW/KWK und Windenergieanlagen werden jeweils separat gezählt.
+    function getGenerationNumberKey(energyCarrier) {
+        return energyCarrier === 'Balkonkraftwerk' ? 'PV' : energyCarrier || 'PV';
     }
 
     function normalizeStorageGridChoice(value) {
@@ -225,11 +231,16 @@
             && (type !== 'steuve' || normalizeSteuveType(asset.steuveType) === selectedSteuveType)
             && (type !== 'generation' || asset.energyCarrier === selectedEnergyCarrier)
             && (type !== 'consumer' || (asset.mieterstromObject === 'user') === isMieterstromUser)).length + 1;
-        // Erzeugungsanlagen erhalten eine eigene, energietraegerunabhaengige
-        // laufende Nummer. Die sichtbare Kennung (z. B. PV1, BHKW2 oder WE3)
-        // wird aus der gewählten Anlagenart abgeleitet.
+        // Erzeugungsanlagen erhalten je fachlicher Gruppe einen eigenen
+        // Nummernkreis. Die sichtbare Kennung (z. B. PV1, BHKW1 oder WE1)
+        // wird aus der gewählten Anlagenart abgeleitet; Steckersolar teilt
+        // bewusst den PV-Nummernkreis.
+        const generationNumberKey = type === 'generation'
+            ? getGenerationNumberKey(selectedEnergyCarrier)
+            : '';
         const existingGenerationNumbers = currentState.assets
-            .filter(asset => asset.type === 'generation')
+            .filter(asset => asset.type === 'generation'
+                && getGenerationNumberKey(asset.energyCarrier) === generationNumberKey)
             .map((asset, index) => {
                 const storedNumber = Number(asset.generationNumber);
                 // Alte gespeicherte Konzepte haben dieses Feld noch nicht.
@@ -271,6 +282,7 @@
             storageDischargePower: type === 'storage' ? '' : '',
             storageInverterPower: type === 'storage' ? '' : '',
             generationNumber,
+            generationNumberKey,
             meterScope: type === 'meter' ? 'asset' : '',
             targetAssetId: '',
             // Wird nur bei einer Zielanlagen-Loeschung gesetzt. Der Wert
@@ -470,6 +482,7 @@
         moveAssetAfter,
         moveMeterSubtreeToZone,
         getGenerationDisplay,
+        getGenerationNumberKey,
         normalizeStorageGridChoice,
         getStorageOperation,
         normalizeHakVoltageLevel,

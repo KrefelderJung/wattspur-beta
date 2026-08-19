@@ -14,9 +14,17 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`styles.css`** | `/` | Modernes CSS3-Designsystem (Darkmode, Glasmorphismus, Layout-Grid, Ampel-Badges, Buttons, Tabellen). |
 | **`manifest.json`** | `/` | Web App Manifest (PWA) für die Installation als eigenständige App auf Desktop und Smartphone. |
 | **`robots.txt` / `sitemap.xml`** | `/` | Legen Indexierungsregeln und die öffentlichen Kernseiten für Suchmaschinen fest. |
-| **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.08.18-beta.323`). Speichert alle Modulpfade lokal im Browser für den Offlinebetrieb. |
-| **`tests.html`** | `/` | Automatische Test-Engine im Browser. Führt aktuell 155 Unit-, Integrations- und Regressionstests aus. |
+| **`service-worker.js`** | `/` | Offline-Cache-Manager (`v2026.08.19-beta.336`). Speichert alle Modulpfade lokal im Browser für den Offlinebetrieb. |
+| **`tests.html`** | `/` | Automatische Test-Engine im Browser. Führt aktuell 156 Unit-, Integrations- und Regressionstests aus. |
 | **`tests/seo-test.js`** | `tests/` | Prüft stabile URLs, Meta-Daten, Canonicals, robots.txt und Sitemap. |
+| **`docs/brand-header-anforderungen.md`** | `docs/` | Anforderungen und Akzeptanzkriterien für den einheitlichen Wattspur-Schriftzug über alle Seiten. |
+| **`docs/public-footer-anforderungen.md`** | `docs/` | Anforderungen für direkte Links zu Impressum, Datenschutz und Kontakt in allen öffentlichen Ansichten. |
+| **`docs/mieterstrom-infobox-anforderungen.md`** | `docs/` | Anforderungen, Quellen und Akzeptanzkriterien für die allgemeine Mieterstrom-Infobox. |
+| **`docs/inbetriebnahmedatum-hinweis-anforderungen.md`** | `docs/` | Anforderungen und Akzeptanzkriterien für den optionalen Hinweis zum Inbetriebnahmedatum. |
+| **`docs/smart-meter-steuerung-hinweis-anforderungen.md`** | `docs/` | Anforderungen, Quellen und Grenzfälle für den Hinweis zu iMSys und Steuerungseinrichtung ab mehr als 7 kW. |
+| **`docs/steuve-tarif-hinweis-anforderungen.md`** | `docs/` | Anforderungen für die verständliche Trennung von §14a-Anmeldung und Energietarif bei separater Messung. |
+| **`docs/kwk-bafa-hinweis-anforderungen.md`** | `docs/` | Anforderungen, Quellen und Akzeptanzkriterien für BAFA- und Messhinweise bei KWK/BHKW. |
+| **`docs/nsh-steuve-gemeinsame-messung-anforderungen.md`** | `docs/` | Anforderungen und Quelle für den Hinweis bei Nachtspeicherheizung und neuer SteuVE am selben Messpunkt. |
 | **`js/app.js`** | `js/` | Schlanker Anwendungsstarter (`initializeApp()`). Verbindet Controller und startet die App beim Laden. |
 
 ---
@@ -125,8 +133,8 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | :--- | :--- |
 | **`model.js`** | DOM-freies Zustandsmodell für Messobjekte, Projektangaben, Spannungsebene des Netzanschlusses, Historie und Moduswechsel. |
 | **`rules.js`** | Versionierter, DOM-freier Regelkatalog für Zähler, Anlagen, Speicher, NSH und Parallelmessung. |
-| **`validation-status.js`** | Verbindet den versionierten Regelkatalog mit der kompakten Prüfstatus-Anzeige. |
-| **`identifiers.js`** | Vergibt getrennte Zählerfolgen (`Z…` für Netz-Zähler, `ZN…` für Mieterstromzähler) und verständliche Kennungen für Erzeugungsanlagen ohne DOM- oder Renderlogik. |
+| **`validation-status.js`** | Verbindet den versionierten Regelkatalog mit der kompakten Anzeige „Infos und Hinweise“, nummerierten runden Info-/Hinweis-Tags und semantisch gefärbten Anlagen-Tags. |
+| **`identifiers.js`** | Vergibt getrennte Zählerfolgen (`Z…` für Netz-Zähler, `ZN…` für Mieterstromzähler) sowie getrennte Erzeugungsnummernkreise für PV/Steckersolar, BHKW und Wind ohne DOM- oder Renderlogik. |
 | **`meter-policy.js`** | Kapselt die fachlichen Regeln für Kaskadenstufen, Einzelzähler und Drop-Ziele. |
 | **`asset-display.js`** | Kapselt Labels, fachliche Objekt-Hinweise und die Icons des Messkonzept-Editors. |
 | **`render.js`** | Erzeugt Karten-, Rail- und Objekt-Markup ohne DOM-Messungen. |
@@ -163,9 +171,24 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`tests/link-check-test.js`** | Prüft lokale `href`-/`src`-Verweise; externe Links können mit `--external` als separates Release-Gate geprüft werden. |
 | **`tests/storage-operation-test.js`** | Prüft die Speicher-Betriebsweisen für Netzeinspeisung, Netzbezug zum Laden und reinen PV-Überschussbetrieb. |
 | **`tests/stecker-pv-limit-test.js`** | Prüft die 800-VA-Wechselrichtergrenze von Stecker-PV, Einheitenumrechnung und Summierung am selben Messpunkt. |
+| **`tests/direct-marketing-test.js`** | Prüft den Hinweis zur Vermarktungsform bei Erzeugungsanlagen über 100 kW/kWp und die getrennte KWK-Formulierung. |
+| **`tests/smart-meter-control-test.js`** | Prüft die 7-kW-Grenze für den iMSys-/Steuerungshinweis bei PV, Wind und KWK sowie die zentralisierte Darstellung. |
+| **`tests/stecker-pv-mastr-test.js`** | Prüft den zentralen Hinweis zur MaStR-Registrierung und zur vereinfachten Meldung bei Steckersolargeräten. |
+| **`tests/steuve-tariff-separation-test.js`** | Prüft die getrennte Information zu §14a-Anmeldung und Wärmepumpen-/Wallbox-Tarif. |
+| **`tests/kwk-bafa-hinweis-test.js`** | Prüft BAFA-Link, vorsichtigen KWKG-Hinweis und Messhinweis bei fehlender Erzeugungsmessung. |
+| **`tests/nsh-steuve-gemeinsame-messung-test.js`** | Prüft die zeitliche Einordnung von Nachtspeicherheizung und neuer SteuVE je Messpunkt. |
 | **`tests/wallbox-icon-test.js`** | Sichert das sichtbare Wallbox-Kabel mit Steckergehäuse und Kontaktstiften in Palette und Messskizze ab. |
+| **`tests/icon-object-number-badges-test.js`** | Prüft die getrennten Kennziffern-Badges für Speicher, Wallboxen und Wärmepumpen sowie den Verzicht auf Doppelnummern bei Textkarten. |
+| **`tests/erzeugungsanlagen-nummerierung-test.js`** | Prüft getrennte Nummernkreise für PV/Steckersolar, BHKW und Wind sowie die Umnummerierung beim Anlagenartwechsel. |
+| **`tests/palette-border-standard-test.js`** | Prüft den gemeinsamen Randstil der regulären und der Mieterstrom-Bausteine. |
+| **`tests/pdf-status-layout-test.js`** | Prüft die Reihenfolge der PDF-Textseite, den Seitenumbruch vor der Messskizze und die breit gesetzte Prüfstatusliste. |
+| **`tests/pdf-object-tables-test.js`** | Prüft gemeinsame Zähler- und Anlagentabellen, leere Zellen und den Verzicht auf wiederholte Einzelkarten im PDF. |
+| **`tests/project-meta-toggle-test.js`** | Prüft den sichtbaren, barrierearmen Aufklappbereich für Projektangaben. |
+| **`tests/pruefstatus-collapsible-test.js`** | Prüft nummerierte, aufklappbare Prüfhinweise und den Textumbruch. |
 | **`tests/z5-second-asset-test.js`** | Regressionstest für einen zweiten Anschluss an einem verschachtelten Anlagenzähler. Prüft, dass der Unter-Rail erhalten bleibt und die Layout-Routine ihren Root-Anker kennt. |
 | **`docs/projekt-teststandard.md`** | Verständlicher Spickzettel für die fünf Testebenen und die Abnahmekriterien neuer Änderungen. |
 | **`docs/mieterstrom-d1-anforderungen.md`** | Anforderungen und Abnahmekriterien für die erste Mieterstromvorlage „MK D1: Mieterstromgemeinschaft“. |
+| **`docs/pdf-status-layout-anforderungen.md`** | Dokumentiert die Akzeptanzkriterien für PDF-Hinweis, Projektangaben, Prüfstatus und Messskizzen-Seite. |
+| **`docs/palette-border-anforderungen.md`** | Anforderungen für den einheitlichen blauen Rand aller Bausteine in der Auswahlleiste. |
 
 Der Einstiegspunkt [`messkonzept.js`](../messkonzept.js) orchestriert diese Module weiterhin. Zustandsänderungen werden über `commands.js` geführt; weitere Auslagerungen sollten diese Grenze beibehalten und nicht erneut DOM-, Geometrie- und Fachlogik vermischen.

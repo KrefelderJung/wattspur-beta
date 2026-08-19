@@ -32,6 +32,7 @@ const robots = read('robots.txt');
 const sitemap = read('sitemap.xml');
 const serviceWorker = read('service-worker.js');
 const messkonzeptRuntime = read('messkonzept.js');
+const headerPages = ['index.html', 'lastgang-analyse.html', 'messkonzept-konfigurator.html', 'kontakt.html', 'impressum.html', 'datenschutz.html'];
 
 assertSeoPage('index.html', '', 'Wattspur | Energiewerkzeuge im Browser', 'Lastganganalyse');
 assertSeoPage('lastgang-analyse.html', 'lastgang-analyse.html', 'Wattspur | Lastganganalyse', 'CSV- und MSCONS-Lastgänge');
@@ -39,6 +40,13 @@ assertSeoPage('messkonzept-konfigurator.html', 'messkonzept-konfigurator.html', 
 assertSeoPage('kontakt.html', 'kontakt.html', 'Wattspur | Kontakt', 'Kontakt zu Wattspur');
 assertSeoPage('impressum.html', 'impressum.html', 'Impressum | Wattspur', 'Impressum und Betreiberinformationen');
 assertSeoPage('datenschutz.html', 'datenschutz.html', 'Datenschutz | Wattspur', 'Datenschutzerklärung von Wattspur');
+
+headerPages.forEach(file => {
+    const source = read(file);
+    assert(/class="[^"]*\bwattspur-brand\b/.test(source), `${file}: gemeinsamer Wattspur-Header fehlt`);
+    assert(/class="[^"]*\bwattspur-brand-copy\b/.test(source), `${file}: gemeinsame Wortmarken-Klasse fehlt`);
+    assert(source.includes('styles.css?v=266'), `${file}: gemeinsamer Stylesheet-Stand fehlt`);
+});
 
 assert(index.includes('href="lastgang-analyse.html"'), 'Startseite: Lastganganalyse muss auf die stabile Einstiegsseite verlinken');
 assert(index.includes('href="messkonzept-konfigurator.html"'), 'Startseite: Messkonzept muss als crawlbarer Link vorhanden sein');
@@ -49,12 +57,14 @@ assert(!lastgang.includes('http-equiv="refresh"') && !lastgang.includes("locatio
 assert(lastgang.includes('href="index.html#lastgang"'), 'Lastganganalyse: Startbutton muss den stabilen Hash-Einstieg nutzen');
 assert(messkonzept.includes('href="index.html#messkonzept"'), 'Messkonzept: Startbutton muss den stabilen Hash-Einstieg nutzen');
 assert(messkonzeptRuntime.includes("window.location.hash === '#messkonzept'") && messkonzeptRuntime.includes('MK_START_FLOW.showScreen()'), 'Messkonzept: Hash-Einstieg muss die Konfiguratoransicht öffnen');
+assert((index.match(/class="app-legal-footer"/g) || []).length === 2, 'Start-App: dynamische Werkzeugansichten müssen eigene Rechtshinweise anbieten');
+assert(index.includes('class="app-legal-footer"') && (index.match(/href="(kontakt|impressum|datenschutz)\.html"/g) || []).length >= 6, 'Start-App: Impressum, Datenschutz und Kontakt müssen in beiden Werkzeugansichten erreichbar sein');
 
 assert(robots.includes('Allow: /') && robots.includes('Disallow: /tests.html') && robots.includes('Sitemap: https://wattspur.de/sitemap.xml'), 'robots.txt: Indexierungsregeln oder Sitemap-Verweis fehlen');
 ['https://wattspur.de/', 'https://wattspur.de/lastgang-analyse.html', 'https://wattspur.de/messkonzept-konfigurator.html', 'https://wattspur.de/kontakt.html', 'https://wattspur.de/impressum.html', 'https://wattspur.de/datenschutz.html'].forEach(url => {
     assert(sitemap.includes(`<loc>${url}</loc>`), `sitemap.xml: ${url} fehlt`);
 });
-assert(serviceWorker.includes("'lastgang-analyse.html'") && serviceWorker.includes("'messkonzept-konfigurator.html'") && /beta\.323/.test(serviceWorker), 'Offline-Cache: stabile SEO-Einstiegsseiten oder Versionsstand fehlen');
+assert(serviceWorker.includes("'lastgang-analyse.html'") && serviceWorker.includes("'messkonzept-konfigurator.html'") && /beta\.336/.test(serviceWorker), 'Offline-Cache: stabile SEO-Einstiegsseiten oder Versionsstand fehlen');
 
 if (failures.length) {
     console.error(`SEO-Test: FEHLER (${failures.length})`);

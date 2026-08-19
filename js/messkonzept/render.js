@@ -25,6 +25,8 @@
         });
         const getMeterDetailIndex = deps.getMeterDetailIndex || (() => 0);
         const getGenerationMeterNumber = deps.getGenerationMeterNumber || (() => null);
+        const getIconObjectNumber = deps.getIconObjectNumber || (() => null);
+        const getIconObjectToneClass = deps.getIconObjectToneClass || (() => '');
         const renderAssetIcon = deps.renderAssetIcon || (() => '');
         const renderInlineMeter = deps.renderInlineMeter || (() => '');
         const renderAssetSummary = deps.renderAssetSummary || (() => '');
@@ -33,9 +35,6 @@
         const getRailEntries = deps.getRailEntries || (rail => (rail.assets || []).map(asset => ({ kind: 'asset', asset, order: 0 })));
         const getAssetsPerRow = deps.getAssetsPerRow || (count => Math.max(1, count));
         const getLayoutGeometry = deps.getLayoutGeometry || (() => ({}));
-        const getStorageOperation = deps.getStorageOperation || (() => ({ notice: '' }));
-        const storageInfoText = deps.storageInfoText || '';
-        const balconyInfoText = deps.balconyInfoText || '';
 
         function renderAsset(asset, options = {}) {
             const meta = assetMeta[asset.type] || { label: 'Baustein', className: '', short: '' };
@@ -53,14 +52,6 @@
             const generationMeterNumber = asset.type === 'generation' && asset.generationMeter && !attachedMeter
                 ? getGenerationMeterNumber(asset)
                 : null;
-            const storageOperation = asset.type === 'storage' ? getStorageOperation(asset) : null;
-            const storageNotice = [storageInfoText, storageOperation?.notice].filter(Boolean).join(' ');
-            const storageInfoMarkup = asset.type === 'storage' && viewMode === 'detail'
-                ? `<span class="mk-storage-info" data-tooltip="${escapeHtml(storageNotice)}" title="${escapeHtml(storageNotice)}" role="img" tabindex="0" aria-label="Hinweis zum Speicher">i</span>`
-                : '';
-            const balconyInfoMarkup = asset.type === 'generation' && asset.energyCarrier === 'Balkonkraftwerk' && viewMode === 'detail'
-                ? `<span class="mk-storage-info" data-tooltip="${escapeHtml(balconyInfoText)}" title="${escapeHtml(balconyInfoText)}" role="img" tabindex="0" aria-label="Hinweis zum Balkonkraftwerk">i</span>`
-                : '';
             const meterDropTargetMarkup = attachedMeter
                 ? `data-mk-meter-group-target="${escapeHtml(attachedMeter.id)}" title="Weitere Anlagen an ${escapeHtml(meterLabel)} anschließen"`
                 : '';
@@ -73,18 +64,23 @@
                 : generationMeterNumber
                     ? `<span class="mk-generation-meter mk-inline-meter" title="Eigener Erzeugungszähler Z${generationMeterNumber}" role="img" aria-label="Z${generationMeterNumber}: Zähler vor ${escapeHtml(asset.name)}"><b>Z${generationMeterNumber}</b></span><span class="mk-generation-meter-link" aria-hidden="true"></span>`
                     : '';
+            const iconObjectNumber = getIconObjectNumber(asset);
+            const iconObjectToneClass = getIconObjectToneClass(asset);
+            const iconObjectBadgeMarkup = iconObjectNumber
+                ? `<span class="mk-icon-object-sequence ${escapeHtml(iconObjectToneClass)}" data-mk-icon-sequence="${iconObjectNumber}" title="${escapeHtml(typeLabel || meta.label)} ${iconObjectNumber}" aria-hidden="true">${iconObjectNumber}</span>`
+                : '';
+            const iconObjectCardClass = iconObjectNumber ? ' mk-icon-object-card' : '';
 
             return `
         <div class="mk-asset-branch ${viewMode === 'detail' ? 'detail-mode' : 'simple-mode'} ${generationMeterMarkup ? 'has-generation-meter' : ''} ${meterGroupSize > 1 ? 'has-meter-group' : ''} ${sharedMeterMarkup ? 'has-shared-meter' : ''}" ${meterDropTargetMarkup}>
             ${generationMeterMarkup}
             ${sharedMeterMarkup}
-            <article class="mk-asset-card ${viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}${mieterstromUserClass}" draggable="true" data-mk-asset-id="${escapeHtml(asset.id)}" data-mk-drag-asset="${escapeHtml(asset.id)}" data-mk-select-asset="${escapeHtml(asset.id)}" data-mk-position-target="${escapeHtml(asset.id)}" data-mk-meter-target="${escapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${escapeHtml(asset.name)} auswählen und verschieben">
+            <article class="mk-asset-card ${viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}${mieterstromUserClass}${iconObjectCardClass}" draggable="true" data-mk-asset-id="${escapeHtml(asset.id)}" data-mk-drag-asset="${escapeHtml(asset.id)}" data-mk-select-asset="${escapeHtml(asset.id)}" data-mk-position-target="${escapeHtml(asset.id)}" data-mk-meter-target="${escapeHtml(asset.id)}" role="button" tabindex="0" aria-label="${escapeHtml(asset.name)} auswählen und verschieben">
                 <div class="mk-asset-head">
                     <span class="mk-asset-icon ${meta.className} ${mieterstromMeterClass} ${getSteuveIconClass(asset)}" aria-label="${asset.type === 'storage' ? 'Batteriespeicher' : escapeHtml(typeLabel || meta.label)}">${renderAssetIcon(asset)}</span>
-                    ${balconyInfoMarkup}
-                    ${storageInfoMarkup}
                     <button type="button" class="mk-remove-asset" data-mk-remove-asset="${escapeHtml(asset.id)}" title="Baustein entfernen" aria-label="${escapeHtml(asset.name)} entfernen">×</button>
                 </div>
+                ${iconObjectBadgeMarkup}
                 ${detailMarkup}
             </article>
         </div>

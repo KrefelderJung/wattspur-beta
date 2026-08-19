@@ -39,15 +39,9 @@
                 call('refreshObjectModal', { kind: 'asset', id: asset.id });
             }
             if (asset.type === 'storage' && ['storageGridFeedIn', 'storageGridImport'].includes(field)) {
-                const notice = card.querySelector(`[data-mk-storage-notice="${asset.id}"]`);
-                if (notice) {
-                    notice.textContent = call('getStorageOperation', asset)?.notice || '';
-                }
                 call('render');
             }
             if (asset.type === 'steuve' && ['power', 'steuveType'].includes(field)) {
-                const notice = card.querySelector(`[data-mk-steuve-notice="${asset.id}"]`);
-                if (notice) notice.innerHTML = call('renderSteuveNotice', asset) || '';
                 const moduleFields = card.querySelector(`[data-mk-steuve-module-fields="${asset.id}"]`);
                 if (moduleFields) moduleFields.innerHTML = call('renderSteuveModuleFields', asset) || '';
                 // Nach einem Wechsel der Anlagenart muss der Dialog seine

@@ -18,7 +18,7 @@
     <!-- PapaParse -->
     <script src="lib/papaparse.min.js"></script>
     
-    <link rel="stylesheet" href="styles.css?v=260">
+    <link rel="stylesheet" href="styles.css?v=266">
     <link rel="icon" type="image/svg+xml" href="wattspur-mark.svg">
     <!-- PWA Meta tags -->
     <link rel="manifest" href="manifest.json">
@@ -39,9 +39,9 @@
         <!-- Public beta landing page and upload screen -->
         <div id="upload-screen" class="screen active">
             <header class="landing-header" aria-label="Seitennavigation">
-                    <a class="landing-brand" href="index.html#top" aria-label="Zur Werkzeugauswahl">
+                    <a class="landing-brand wattspur-brand" href="index.html#top" aria-label="Zur Werkzeugauswahl">
                     <img class="landing-brand-icon" src="wattspur-mark.svg" alt="" aria-hidden="true">
-                    <span class="landing-brand-copy"><strong>Wattspur</strong><span class="landing-brand-meta"><small>Energiewerkzeuge</small><span class="beta-badge landing-brand-beta">Beta</span></span></span>
+                    <span class="landing-brand-copy wattspur-brand-copy"><strong>Wattspur</strong><span class="landing-brand-meta wattspur-brand-meta"><small>Energiewerkzeuge</small><span class="beta-badge landing-brand-beta">Beta</span></span></span>
                 </a>
                     <nav class="landing-links" aria-label="Anzeigeoptionen">
                         <button type="button" class="btn btn-icon theme-toggle" data-theme-toggle title="Tag- oder Nachtmodus wählen" aria-label="Tag- oder Nachtmodus wählen"></button>
@@ -201,7 +201,7 @@
         <!-- Messkonzept-Konfigurator MVP -->
         <div id="messkonzept-screen" class="screen hidden">
             <header class="mk-header">
-                <a class="mk-brand mk-brand-link" id="btn-mk-back" href="index.html#top" aria-label="Zur Werkzeugauswahl" title="Zur Werkzeugauswahl"><img class="mk-brand-mark" src="wattspur-mark.svg" alt=""><span class="mk-brand-copy"><strong>Wattspur</strong><small>Messkonzept-Konfigurator</small></span></a>
+                <a class="mk-brand mk-brand-link wattspur-brand" id="btn-mk-back" href="index.html#top" aria-label="Zur Werkzeugauswahl" title="Zur Werkzeugauswahl"><img class="mk-brand-mark" src="wattspur-mark.svg" alt=""><span class="mk-brand-copy wattspur-brand-copy"><strong>Wattspur</strong><small>Messkonzept-Konfigurator</small></span></a>
                 <button type="button" class="btn btn-icon theme-toggle mk-theme-toggle" data-theme-toggle title="Tag- oder Nachtmodus wählen" aria-label="Tag- oder Nachtmodus wählen"></button>
             </header>
             <main class="mk-main">
@@ -380,7 +380,7 @@
                     <summary class="mk-project-meta-heading" title="Projektangaben ein- oder ausblenden">
                         <span class="mk-project-meta-summary-copy">
                             <span class="mk-panel-heading-label" id="mk-project-meta-title">Projektangaben</span>
-                            <small>Optional · erscheinen im PDF-Export</small>
+                            <small>Öffnen und bearbeiten · erscheint im PDF-Export</small>
                         </span>
                     </summary>
                     <div class="mk-project-meta-groups">
@@ -525,7 +525,7 @@
                     </section>
 
                     <aside class="mk-summary-panel" aria-labelledby="mk-summary-title">
-                        <div class="mk-panel-heading"><span id="mk-summary-title">Prüfstatus</span><span id="mk-status-badge" class="mk-status-badge neutral">Start</span></div>
+                        <div class="mk-panel-heading"><span id="mk-summary-title">Infos und Hinweise</span></div>
                         <div id="mk-validation-list" class="mk-validation-list"></div>
                         <div class="mk-export-actions" aria-label="PDF-Export">
                             <button type="button" class="btn mk-export-button mk-export-button--sketch" id="btn-mk-export-sketch" title="Kompakte Skizze mit Projektangaben, Warnungen und Kommentar als PDF drucken">Skizze als PDF</button>
@@ -535,6 +535,14 @@
                 </div>
                 </div>
             </main>
+            <footer class="app-legal-footer">
+                <span>Wattspur · öffentliche Beta</span>
+                <nav aria-label="Rechtliche Hinweise">
+                    <a href="kontakt.html">Kontakt</a>
+                    <a href="impressum.html">Impressum</a>
+                    <a href="datenschutz.html">Datenschutz</a>
+                </nav>
+            </footer>
             <div id="mk-object-modal" class="mk-object-modal hidden" aria-hidden="true">
                 <div class="mk-object-dialog" role="dialog" aria-modal="true" aria-labelledby="mk-object-modal-title">
                     <div class="mk-object-dialog-header"><div><span class="landing-kicker">Objektangaben</span><h2 id="mk-object-modal-title">Angaben erfassen</h2></div><button type="button" class="mk-modal-close" id="btn-mk-modal-close" title="Fenster schließen" aria-label="Fenster schließen">×</button></div>
@@ -570,9 +578,9 @@
 
             <div class="main-workspace">
                 <header class="dashboard-header">
-                    <a class="brand brand-link" href="index.html#top" aria-label="Zur Werkzeugauswahl" title="Zur Werkzeugauswahl">
+                    <a class="brand brand-link wattspur-brand" href="index.html#top" aria-label="Zur Werkzeugauswahl" title="Zur Werkzeugauswahl">
                         <img src="wattspur-mark.svg" alt="">
-                        <span class="brand-copy">
+                        <span class="brand-copy wattspur-brand-copy">
                             <strong>Wattspur</strong>
                             <small>Lastganganalyse</small>
                         </span>
@@ -1551,6 +1559,14 @@
                         </div>
                     </div>
                 </main>
+                <footer class="app-legal-footer">
+                    <span>Wattspur · öffentliche Beta</span>
+                    <nav aria-label="Rechtliche Hinweise">
+                        <a href="kontakt.html">Kontakt</a>
+                        <a href="impressum.html">Impressum</a>
+                        <a href="datenschutz.html">Datenschutz</a>
+                    </nav>
+                </footer>
             </div>
         </div> <!-- Closes main-workspace -->
     </div> <!-- Closes dashboard-screen -->
@@ -1772,35 +1788,35 @@
     <script src="app.js?v=309"></script>
     <script src="js/lastgang/data-editor.js?v=2"></script>
     <script src="js/messkonzept/model.js?v=11"></script>
-    <script src="js/messkonzept/presets.js?v=16"></script>
+    <script src="js/messkonzept/presets.js?v=17"></script>
     <script src="js/messkonzept/preset-loader.js?v=3"></script>
     <script src="messkonzept-geometry.js?v=13"></script>
     <script src="messkonzept-topology.js?v=1"></script>
-    <script src="js/messkonzept/rules.js?v=7"></script>
+    <script src="js/messkonzept/rules.js?v=8"></script>
     <script src="js/messkonzept/layout-calculations.js?v=3"></script>
     <script src="js/messkonzept/validation-status.js?v=1"></script>
     <script src="js/messkonzept/identifiers.js?v=1"></script>
     <script src="js/messkonzept/meter-policy.js?v=1"></script>
-    <script src="js/messkonzept/asset-display.js?v=6"></script>
+    <script src="js/messkonzept/asset-display.js?v=9"></script>
     <script src="js/messkonzept/layout.js?v=9"></script>
-    <script src="js/messkonzept/render.js?v=6"></script>
+    <script src="js/messkonzept/render.js?v=7"></script>
     <script src="js/messkonzept/zone-renderer.js?v=1"></script>
     <script src="js/messkonzept/connections.js?v=3"></script>
     <script src="js/messkonzept/geometry-runtime.js?v=1"></script>
-    <script src="js/messkonzept/export.js?v=4"></script>
+    <script src="js/messkonzept/export.js?v=5"></script>
     <script src="js/messkonzept/viewport.js?v=1"></script>
     <script src="js/messkonzept/history.js?v=1"></script>
     <script src="js/messkonzept/commands.js?v=1"></script>
     <script src="js/messkonzept/project-meta.js?v=1"></script>
     <script src="js/messkonzept/decision-calculator.js?v=4"></script>
-    <script src="js/messkonzept/canvas-renderer.js?v=10"></script>
-    <script src="js/messkonzept/editor.js?v=5"></script>
+    <script src="js/messkonzept/canvas-renderer.js?v=12"></script>
+    <script src="js/messkonzept/editor.js?v=7"></script>
     <script src="js/messkonzept/start-flow.js?v=1"></script>
     <script src="js/messkonzept/render-cycle.js?v=1"></script>
     <script src="js/messkonzept/drag-drop.js?v=6"></script>
     <script src="js/messkonzept/interaction.js?v=9"></script>
     <script src="js/messkonzept/bootstrap.js?v=2"></script>
     <script src="js/messkonzept/module-contracts.js?v=1"></script>
-    <script src="messkonzept.js?v=123"></script>
+    <script src="messkonzept.js?v=125"></script>
 </body>
 </html>

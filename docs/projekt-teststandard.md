@@ -55,14 +55,31 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
    node tests/data-editor-module-test.js
    node tests/hak-voltage-test.js
    node tests/steuve-total-power-test.js
+   node tests/direct-marketing-test.js
+   node tests/smart-meter-control-test.js
+   node tests/stecker-pv-mastr-test.js
+   node tests/steuve-tariff-separation-test.js
+   node tests/kwk-bafa-hinweis-test.js
+   node tests/nsh-steuve-gemeinsame-messung-test.js
+   node tests/commissioning-date-hint-test.js
    node tests/stecker-pv-limit-test.js
    node tests/meter-rail-spacing-test.js
    node tests/project-quality-test.js
    node tests/link-check-test.js
    node tests/seo-test.js
    node tests/pdf-export-variants-test.js
+   node tests/pdf-status-layout-test.js
+   node tests/pdf-object-tables-test.js
+   node tests/project-meta-toggle-test.js
+   node tests/pruefstatus-collapsible-test.js
    node tests/mieterstrom-objects-test.js
+   node tests/icon-object-number-badges-test.js
    ```
+
+   Der SEO-Test prüft zusätzlich, dass alle öffentlichen Seiten und die beiden
+   Werkzeug-Header dieselben Markenklassen und denselben Stylesheet-Stand
+   verwenden. So fallen abweichende Logoabstände durch alte Seitencaches oder
+   individuelle Header-Regeln früh auf.
 
    Der SteuVE-Test deckt dabei drei fachliche Fälle ab: eine einzelne
    Wärmepumpe mit Gesamtleistung einschließlich Heizstab, die Summierung
@@ -118,6 +135,12 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
    Prüfstatus-Warnung. Er stellt außerdem sicher, dass die Eingabemaske eine
    Gruppe hinzufügen und wieder entfernen kann.
 
+   Der Kennzifferntest prüft die kleinen, getrennten Nummern-Badges für
+   Symbolkarten. Wallboxen, Wärmepumpen und Speicher werden je fachlichem
+   Typ gezählt, während Textkarten wie PV1 oder V1 kein zusätzliches Badge
+   erhalten. Die Kennziffern sind reine Darstellung und beeinflussen keine
+   Karten- oder Leitungsgeometrie.
+
 6. **Browser-Ablauftest**
 
    Öffnet die Anwendung über HTTP in einem isolierten Browserfenster und führt
@@ -142,6 +165,12 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
    Exportbuttons erreichbar bleiben. Eine breite Skizze darf innerhalb des
    Zeichenbereichs horizontal verschiebbar sein, darf aber keinen horizontalen
    Überlauf der gesamten Seite erzeugen.
+
+Der PDF-Status-Layout-Test prüft zusätzlich statisch, dass Hinweis,
+Projektangaben, Prüfstatus und Notizen vor der auf eine eigene Seite
+verschobenen Messskizze stehen und der Status die verfügbare Breite nutzt.
+Der PDF-Objekttabellen-Test prüft die festen Stammdatenspalten der
+Zählertabelle sowie die Ausblendung interner Strukturangaben.
 
 ## Was diese Tests nicht beweisen
 

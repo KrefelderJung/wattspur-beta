@@ -18,7 +18,6 @@ const MK_ASSET_TYPE_OPTIONS = MK_MODEL.assetTypeOptions;
 const MK_STEUVE_MODULE_OPTIONS = MK_MODEL.steuveModuleOptions;
 const MK_STORAGE_GRID_OPTIONS = MK_MODEL.storageGridOptions;
 const MK_STORAGE_INFO_TEXT = MK_MODEL.storageInfoText;
-const MK_BALCONY_INFO_TEXT = MK_MODEL.balconyInfoText;
 const MK_ASSETS_PER_ROW = 3;
 const MK_CANVAS_ZOOM = Object.freeze({ min: 0.4, max: 1.2, step: 0.1 });
 // Die wiederverwendbaren Geometrie-Regeln liegen bewusst in einem eigenen
@@ -64,6 +63,8 @@ const MK_RENDER = window.WattspurMesskonzeptRender.createRenderer({
     getMeterLabel: mkGetMeterLabel,
     getMeterDetailIndex: mkGetMeterDetailIndex,
     getGenerationMeterNumber: mkGetGenerationMeterNumber,
+    getIconObjectNumber: asset => mkGetIconObjectNumber(asset),
+    getIconObjectToneClass: asset => mkGetIconObjectToneClass(asset),
     renderAssetIcon: mkRenderAssetIcon,
     renderInlineMeter: mkRenderInlineMeter,
     renderAssetSummary: mkRenderAssetSummary,
@@ -71,10 +72,7 @@ const MK_RENDER = window.WattspurMesskonzeptRender.createRenderer({
     getAdditionalMeters: mkGetAdditionalMeters,
     getRailEntries: mkGetRailEntries,
     getAssetsPerRow: mkGetAssetsPerRow,
-    getLayoutGeometry: () => MK_LAYOUT_GEOMETRY,
-    storageInfoText: MK_STORAGE_INFO_TEXT,
-    balconyInfoText: MK_BALCONY_INFO_TEXT,
-    getStorageOperation: asset => MK_MODEL.getStorageOperation(asset)
+    getLayoutGeometry: () => MK_LAYOUT_GEOMETRY
 });
 
 // Drop-Zonen und Rail-Komposition erzeugen nur Markup. Topologie, Layout und
@@ -142,7 +140,8 @@ const MK_IDENTIFIERS = window.WattspurMesskonzeptIdentifiers.createIdentifierCon
     getState: () => mkConfiguratorState,
     getAdditionalMeters: () => mkGetAdditionalMeters(),
     getMeterForAsset: asset => mkGetMeterForAsset(asset),
-    getGenerationDisplay: energyCarrier => MK_MODEL.getGenerationDisplay(energyCarrier)
+    getGenerationDisplay: energyCarrier => MK_MODEL.getGenerationDisplay(energyCarrier),
+    getGenerationNumberKey: energyCarrier => MK_MODEL.getGenerationNumberKey(energyCarrier)
 });
 
 const MK_METER_POLICY = window.WattspurMesskonzeptMeterPolicy.createMeterPolicyController({
@@ -156,6 +155,7 @@ const MK_ASSET_DISPLAY = window.WattspurMesskonzeptAssetDisplay.createAssetDispl
     getAssetMeta: () => MK_ASSET_META,
     getAssetTypeOptions: () => MK_ASSET_TYPE_OPTIONS,
     getGenerationDisplay: asset => MK_MODEL.getGenerationDisplay(asset?.energyCarrier),
+    getGenerationNumberKey: energyCarrier => MK_MODEL.getGenerationNumberKey(energyCarrier),
     getPowerNumber: value => MK_RULES.parsePowerNumber(value),
     getSteuveEffectivePower: asset => MK_RULES.getSteuveEffectivePower(asset),
     renderSelectOptions: (options, selected, placeholder) => mkRenderSelectOptions(options, selected, placeholder),
@@ -165,6 +165,7 @@ const MK_ASSET_DISPLAY = window.WattspurMesskonzeptAssetDisplay.createAssetDispl
     getMeterNumber: meter => MK_IDENTIFIERS.getMeterNumber(meter),
     getMeterLabel: meter => MK_IDENTIFIERS.getMeterLabel(meter),
     getMeterDetailIndex: meter => MK_IDENTIFIERS.getMeterDetailIndex(meter),
+    getAllAssets: () => mkConfiguratorState.assets,
     canBuildCascadeAfterMeter: meter => MK_METER_POLICY.canBuildCascadeAfterMeter(meter),
     escapeHtml: value => mkEscapeHtml(value)
 });
@@ -191,7 +192,6 @@ const MK_CANVAS_RENDERER = window.WattspurMesskonzeptCanvasRenderer.createCanvas
     getHakVoltageLevel: () => MK_MODEL.getHakVoltageLevel(mkConfiguratorState),
     getBaseMeterZone: index => mkGetBaseMeterZone(index),
     renderSelectOptions: (options, selected, placeholder) => mkRenderSelectOptions(options, selected, placeholder),
-    renderSteuveNotice: asset => mkRenderSteuveNotice(asset),
     renderSteuveModuleFields: asset => mkRenderSteuveModuleFields(asset),
     getAssetMeterLabel: asset => mkGetAssetMeterLabel(asset),
     getGenerationMeterNumber: asset => mkGetGenerationMeterNumber(asset),
@@ -226,7 +226,6 @@ const MK_EDITOR = window.WattspurMesskonzeptEditor.createEditorController({
         refreshObjectModal: selection => MK_CANVAS_RENDERER.openObjectModal(selection),
         syncGenerationName: asset => mkSyncGenerationName(asset),
         getStorageOperation: asset => MK_MODEL.getStorageOperation(asset),
-        renderSteuveNotice: asset => mkRenderSteuveNotice(asset),
         renderSteuveModuleFields: asset => mkRenderSteuveModuleFields(asset),
         refreshInlineStatus: () => MK_VALIDATION_STATUS.refresh(),
         render: () => MK_RENDER_CYCLE.render()
@@ -375,7 +374,9 @@ const MK_EXPORT = window.WattspurMesskonzeptExport.createExporter({
     escapeHtml: mkEscapeHtml,
     validate: () => MK_VALIDATION_STATUS.evaluate(),
     renderMeterDetailsSummary: (index, includeEmpty) => mkRenderMeterDetailsSummary(index, includeEmpty),
+    getMeterSummaryEntries: (index, includeEmpty) => mkGetMeterSummaryEntries(index, includeEmpty),
     renderAssetSummary: (asset, includeEmpty) => mkRenderAssetSummary(asset, includeEmpty),
+    getAssetSummaryEntries: (asset, includeEmpty) => mkGetAssetSummaryEntries(asset, includeEmpty),
     getMeterNumber: meter => mkGetMeterNumber(meter),
     getMeterLabel: meter => mkGetMeterLabel(meter),
     getAssetMeta: type => MK_ASSET_META[type],
@@ -608,10 +609,6 @@ function mkGetSteuveRegime(asset) {
     return MK_ASSET_DISPLAY.getSteuveRegime(asset);
 }
 
-function mkRenderSteuveNotice(asset) {
-    return MK_ASSET_DISPLAY.renderSteuveNotice(asset);
-}
-
 function mkRenderSteuveModuleFields(asset) {
     return MK_ASSET_DISPLAY.renderSteuveModuleFields(asset);
 }
@@ -633,6 +630,14 @@ function mkGetConfiguredMeterCount() {
 /** Liefert die fortlaufende Nummer eines eigenen Erzeugungszählers. */
 function mkGetGenerationMeterNumber(asset) {
     return MK_IDENTIFIERS.getGenerationMeterNumber(asset);
+}
+
+function mkGetIconObjectNumber(asset) {
+    return MK_ASSET_DISPLAY.getIconObjectNumber(asset);
+}
+
+function mkGetIconObjectToneClass(asset) {
+    return MK_ASSET_DISPLAY.getIconObjectToneClass(asset);
 }
 
 function mkGetGenerationAssetNumber(asset) {
@@ -721,6 +726,10 @@ function mkRenderMeterDetailsSummary(index, includeEmpty = false) {
     return MK_CANVAS_RENDERER.renderMeterDetailsSummary(index, includeEmpty);
 }
 
+function mkGetMeterSummaryEntries(index, includeEmpty = false) {
+    return MK_CANVAS_RENDERER.getMeterDetailsEntries(index, includeEmpty);
+}
+
 function mkRenderMeterNode(index) {
     return MK_CANVAS_RENDERER.renderMeterNode(index);
 }
@@ -735,6 +744,10 @@ function mkRenderAssetEditorFields(asset) {
 
 function mkRenderAssetSummary(asset, includeEmpty = false) {
     return MK_CANVAS_RENDERER.renderAssetSummary(asset, includeEmpty);
+}
+
+function mkGetAssetSummaryEntries(asset, includeEmpty = false) {
+    return MK_CANVAS_RENDERER.getAssetSummaryEntries(asset, includeEmpty);
 }
 
 function mkRenderMeterEditorFields(index) {

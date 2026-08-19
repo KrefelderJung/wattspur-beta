@@ -23,11 +23,19 @@
         const getSteuveEffectivePower = options.getSteuveEffectivePower || (() => null);
         const getAdditionalMeters = options.getAdditionalMeters || (() => []);
 
-        function renderMeterDetailsSummary(index, includeEmpty = false) {
+        function getMeterDetailsEntries(index, includeEmpty = false) {
             const details = call('getMeterDetails', {}, index) || {};
             return meterDetailFields
                 .filter(field => includeEmpty || String(details[field.key] || '').trim())
-                .map(field => `<div class="mk-meter-detail-value"><span>${escapeHtml(field.label)}</span><b>${escapeHtml(String(details[field.key] || '—'))}</b></div>`)
+                .map(field => ({
+                    label: field.label,
+                    value: String(details[field.key] || '')
+                }));
+        }
+
+        function renderMeterDetailsSummary(index, includeEmpty = false) {
+            return getMeterDetailsEntries(index, includeEmpty)
+                .map(entry => `<div class="mk-meter-detail-value"><span>${escapeHtml(entry.label)}</span><b>${escapeHtml(entry.value || '—')}</b></div>`)
                 .join('');
         }
 
@@ -98,14 +106,12 @@
         <div class="mk-asset-form-grid">
             <label>Anlage<select data-mk-field="steuveType">${renderOptions(assetTypeOptions.steuve || [], selectedSteuveType)}</select></label>
             <label>${selectedSteuveType === 'Wärmepumpe' ? 'Elektrische Gesamtleistung inkl. Heizstab' : 'Leistung'}<input type="text" data-mk-field="power" value="${escapeHtml(asset.power)}" placeholder="z. B. 4,2 kW"></label>
-            ${selectedSteuveType === 'Wärmepumpe' ? '<p class="mk-steuve-power-hint" role="note">Bitte die elektrische Gesamtleistung der Wärmepumpe einschließlich Heizstab eintragen.</p>' : ''}
+            <label>Inbetriebnahme<input type="date" data-mk-field="commissioningDate" value="${escapeHtml(asset.commissioningDate)}"></label>
         </div>
-        <div data-mk-steuve-notice="${escapeHtml(asset.id)}">${call('renderSteuveNotice', '', asset)}</div>
         <div class="mk-asset-form-grid" data-mk-steuve-module-fields="${escapeHtml(asset.id)}">${call('renderSteuveModuleFields', '', asset)}</div>
     ` : '';
             const nshFields = asset.type === 'nsh' ? `
         <label>Bestand / Inbetriebnahme<input type="date" data-mk-field="commissioningDate" value="${escapeHtml(asset.commissioningDate)}"></label>
-        <p class="mk-nsh-editor-hint">Vor 2024 können historische Tarif- und Messbedingungen gelten. Bei gemeinsamer Messung mit einer aktuellen SteuVE bitte abstimmen.</p>
     ` : '';
             const storageFields = asset.type === 'storage' ? `
         <div class="mk-asset-form-grid mk-storage-technical-grid">
@@ -119,8 +125,6 @@
             <label>Ins öffentliche Netz einspeisen<select data-mk-field="storageGridFeedIn">${renderOptions(storageGridOptions, asset.storageGridFeedIn, 'Noch nicht festgelegt')}</select></label>
             <label>Zum Laden Strom aus dem Netz beziehen<select data-mk-field="storageGridImport">${renderOptions(storageGridOptions, asset.storageGridImport, 'Noch nicht festgelegt')}</select></label>
         </div>
-        <p class="mk-storage-editor-hint" data-mk-storage-notice="${escapeHtml(asset.id)}">${escapeHtml(call('getStorageOperation', { notice: '' }, asset)?.notice || '')}</p>
-        <p class="mk-storage-source-links">Fachliche Orientierung: <a href="https://www.clearingstelle-eeg-kwkg.de/haeufige-rechtsfrage/181" target="_blank" rel="noopener noreferrer">Clearingstelle EEG|KWKG</a> · <a href="https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/ErneuerbareEnergien/Solaranlagen/Nutzung_table.html" target="_blank" rel="noopener noreferrer">Bundesnetzagentur</a></p>
     ` : '';
             return `
         <div class="mk-object-editor-form" data-mk-asset-id="${escapeHtml(asset.id)}">
@@ -136,12 +140,22 @@
     `;
         }
 
-        function renderAssetSummary(asset, includeEmpty = false) {
+        function getAssetSummaryEntries(asset, includeEmpty = false) {
             const currentState = getState();
             const getAssetMeterLabel = item => call('getAssetMeterLabel', '', item);
             const getGenerationMeterNumber = item => call('getGenerationMeterNumber', null, item);
+            const meterDetailIndex = asset.type === 'meter'
+                ? call('getMeterDetailIndex', null, asset)
+                : null;
+            const meterDetails = asset.type === 'meter' && Number.isInteger(meterDetailIndex)
+                ? (call('getMeterDetails', {}, meterDetailIndex) || {})
+                : {};
+            const meterDataEntries = asset.type === 'meter'
+                ? meterDetailFields.map(field => ({ label: field.label, value: String(meterDetails[field.key] || '') }))
+                : [];
             const entries = [
                 { label: 'Bezeichnung', value: asset.name },
+                ...meterDataEntries,
                 asset.type === 'meter' ? { label: 'Zählerfunktion', value: asset.meterRole } : null,
                 asset.type === 'meter' ? { label: 'Messbereich', value: asset.meterScope === 'base' ? 'Hinter Basiszähler' : asset.meterScope === 'asset' ? 'Vor einzelner Anlage' : 'Vor Anlagengruppe' } : null,
                 asset.type === 'meter' ? { label: 'Zähler vor', value: asset.meterScope === 'base' ? 'Basiszähler der Messstufe' : asset.meterScope === 'asset' ? (currentState.assets.find(item => item.id === asset.targetAssetId)?.name || 'Einzelanlage') : 'Anlagengruppe' } : null,
@@ -168,24 +182,27 @@
                 asset.type === 'storage' ? { label: 'Netzeinspeisung', value: asset.storageGridFeedIn === 'yes' ? 'Ja' : asset.storageGridFeedIn === 'no' ? 'Nein' : 'Noch offen' } : null,
                 asset.type === 'storage' ? { label: 'Netzbezug zum Laden', value: asset.storageGridImport === 'yes' ? 'Ja' : asset.storageGridImport === 'no' ? 'Nein' : 'Noch offen' } : null
             ].filter(Boolean).filter(entry => includeEmpty || String(entry.value || '').trim());
-            return entries.map(entry => `<div class="mk-meter-detail-value"><span>${escapeHtml(entry.label)}</span><b>${escapeHtml(String(entry.value || '—'))}</b></div>`).join('');
+            return entries;
+        }
+
+        function renderAssetSummary(asset, includeEmpty = false) {
+            return getAssetSummaryEntries(asset, includeEmpty)
+                .map(entry => `<div class="mk-meter-detail-value"><span>${escapeHtml(entry.label)}</span><b>${escapeHtml(String(entry.value || '—'))}</b></div>`)
+                .join('');
         }
 
         function renderMeterEditorFields(index) {
             const details = call('getMeterDetails', {}, index) || {};
             const meter = getAdditionalMeters().find(item => call('getMeterDetailIndex', null, item) === index);
             const meterLabel = meter ? (call('getMeterLabel', '', meter) || `Z${index + 1}`) : `Z${index + 1}`;
-            const mieterstromNote = meter?.mieterstromObject === 'external-meter'
-                ? '<p class="mk-mieter-meter-note" role="note"><b>Teilnehmender Mieterstromzähler</b> Dieser Zähler wird als technischer Modellbaustein ohne reguläre Netzbetreiberabrechnung dargestellt.</p>'
-                : '';
             const fields = meterDetailFields.map(field => `
         <label>${escapeHtml(field.label)}<input type="${field.type}"${field.maxLength ? ` maxlength="${field.maxLength}"` : ''} data-mk-meter-field="${escapeHtml(field.key)}" data-mk-meter-index="${index}" value="${escapeHtml(details[field.key])}"></label>
     `).join('');
             return `
         <div class="mk-object-editor-head">
-                <span class="mk-asset-icon meter${meter?.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : ''}">${escapeHtml(meterLabel)}</span>
+                <span class="mk-asset-icon meter${meter?.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : ''}" aria-label="${meter?.mieterstromObject === 'external-meter' ? 'Teilnehmender Mieterstromzähler' : escapeHtml(meterLabel)}">${escapeHtml(meterLabel)}</span>
         </div>
-        <div class="mk-object-editor-form"><div class="mk-meter-form">${fields}</div>${mieterstromNote}</div>
+        <div class="mk-object-editor-form"><div class="mk-meter-form">${fields}</div></div>
     `;
         }
 
@@ -358,10 +375,12 @@
 
         return Object.freeze({
             renderMeterDetailsSummary,
+            getMeterDetailsEntries,
             renderMeterNode,
             renderMeterLayout,
             renderAssetEditorFields,
             renderAssetSummary,
+            getAssetSummaryEntries,
             renderMeterEditorFields,
             renderHakEditorFields,
             renderObjectEditor,

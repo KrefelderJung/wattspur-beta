@@ -29,7 +29,7 @@ const labelAssets = ['PV', 'KWK', 'Wind', 'Balkonkraftwerk'].map(energyCarrier =
     labelState.assets.push(asset);
     return asset;
 });
-assert(labelAssets.map(asset => asset.name).join('|') === 'PV1|BHKW2|WE3|PV4', 'Erzeugungsanlagen müssen ihre sichtbare Kurzkennung mit einer fortlaufenden Nummer erhalten.');
+assert(labelAssets.map(asset => asset.name).join('|') === 'PV1|BHKW1|WE1|PV2', 'PV und Stecker-PV müssen gemeinsam, BHKW und Wind jeweils in eigenen Nummernkreisen nummeriert werden.');
 
 const catalog = presets.getCatalog();
 assert(catalog.length === 9, 'Der Katalog muss neun Startvorlagen enthalten.');
@@ -42,6 +42,10 @@ const infoTexts = ['single', 'parallel', 'cascade', 'mieterstrom']
     .map(group => presets.getGroupInfo(group))
     .flatMap(info => [info.intro, ...info.advantages, ...info.cautions]);
 assert(infoTexts.every(text => !/[–—]/.test(text)), 'Die sichtbaren Infobox-Texte dürfen keine Gedankenstriche enthalten.');
+const mieterstromInfo = presets.getGroupInfo('mieterstrom');
+assert(mieterstromInfo.intro.includes('Mieterstrom beschreibt die Versorgung von Bewohnern') && mieterstromInfo.advantages.some(text => text.includes('Netzentgelte, netzseitige Umlagen')) && mieterstromInfo.advantages.some(text => text.includes('Mieterstromzuschlag')), 'Die Mieterstrominfo muss allgemein formuliert sein und den lokalen Vorteil sowie den möglichen Zuschlag erklären.');
+assert(mieterstromInfo.cautions.some(text => text.includes('Markt- und Messlokationsführung')) && mieterstromInfo.links.some(link => link.label === 'BNetzA: Mieterstrom'), 'Die Mieterstrominfo muss Marktkommunikation vorsichtig einordnen und eine offizielle Quelle verlinken.');
+assert(!infoTexts.some(text => text.includes('technische Modellannahme') || text.includes('alle Anschlussnutzer von der Erzeugungsanlage')), 'Die allgemeine Mieterstrominfo darf nicht auf MK D1 verengt werden.');
 assert(presets.getGroupInfo('parallel').cautions.some(text => text.includes('Wärmepumpenprivilegierung nach § 22 EnFG')), 'Die Parallelmessung muss auf die Wärmepumpenprivilegierung nach § 22 EnFG hinweisen.');
 assert(presets.getGroupInfo('cascade').advantages.some(text => text === 'Steuerbare Verbrauchseinrichtungen nach § 14a EnWG können in der Kaskade über einen eigenen Zählpunkt von der Netzentgeltreduzierung nach Modul 2 profitieren.'), 'Die Kaskadeninfo muss den möglichen Vorteil von Modul 2 bei einem eigenen Zählpunkt klar benennen.');
 
