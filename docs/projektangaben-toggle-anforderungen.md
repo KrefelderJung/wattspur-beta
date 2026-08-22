@@ -4,8 +4,9 @@
 
 Der Bereich „Projektangaben“ soll auf den ersten Blick als aufklappbare
 Bedienfläche erkennbar sein. Die breite Leiste bleibt als ruhiges Layout-
-Element erhalten, der interaktive Kopf wird jedoch wie „Kommentar hinzufügen“
-als klar abgegrenzter Button dargestellt.
+Element erhalten, der interaktive Kopf wird als klar abgegrenzter Button
+dargestellt. Die Leiste steht nach dem Skizzeneditor und enthält auch den
+Kommentar als festen Abschnitt.
 
 ## Akzeptanzkriterien
 
@@ -13,12 +14,14 @@ als klar abgegrenzter Button dargestellt.
    erkennbar.
 2. Plus und Minus zeigen eindeutig, ob der Bereich geschlossen oder geöffnet
    ist.
-3. Hover- und Tastaturfokus sind sichtbar und entsprechen dem Stil des
-   Kommentar-Aufklappbereichs.
+3. Hover- und Tastaturfokus sind sichtbar und entsprechen dem Stil der übrigen
+   primären Bedienflächen.
 4. Die Funktion bleibt mit Maus, Tastatur und Touch bedienbar.
-5. Die Projektfelder und ihr PDF-Exportverhalten bleiben unverändert.
+5. Projektfelder, Kommentar und ihr PDF-Exportverhalten bleiben unverändert.
 6. Die Darstellung bleibt auf kleinen Bildschirmen lesbar und bricht nicht
    horizontal aus.
+7. Kommentar besitzt keinen eigenen Aufklappmechanismus, sondern ist nach dem
+   Öffnen der Projektangaben direkt erreichbar.
 
 ## Bewusste Designentscheidung
 

@@ -14,7 +14,7 @@ vm.createContext(context);
 vm.runInContext(read('js/messkonzept/rules.js'), context);
 const rules = context.window.WattspurMesskonzeptRules;
 assert(rules, 'Regelmodul konnte nicht geladen werden');
-assert(rules.rulesetVersion === '2026-08-19-beta.15', 'Regelwerksstand muss zu den KWK-Hinweisen passen');
+assert(rules.rulesetVersion === '2026-08-22-beta.16', 'Regelwerksstand muss zu den KWK-Hinweisen passen');
 assert(rules.getRuleCatalog().KWK_BAFA?.id === 'MK-KWK-001', 'BAFA-Regel muss MK-KWK-001 tragen');
 assert(rules.getRuleCatalog().KWK_MEASUREMENT?.id === 'MK-KWK-002', 'Messregel muss MK-KWK-002 tragen');
 

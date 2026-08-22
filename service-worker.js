@@ -1,13 +1,15 @@
-const APP_VERSION = '2026.08.19-beta.336';
+const APP_VERSION = '2026.08.22-beta.357';
 const CACHE_NAME = `lastgang-analyse-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
     './',
     'index.html',
     'lastgang-analyse.html',
+    'lastganganalyse/index.html',
     'kontakt.html',
     'impressum.html',
     'datenschutz.html',
+    'lizenz.html',
     'styles.css',
     'theme.js',
     'assets/hero-wattspur-trail.png',
@@ -17,6 +19,8 @@ const ASSETS_TO_CACHE = [
     'charts.js',
     'app.js',
     'messkonzept-konfigurator.html',
+    'messkonzeptkonfigurator/index.html',
+    'route-loader.js',
     'robots.txt',
     'sitemap.xml',
     'js/lastgang/data-editor.js',
@@ -43,10 +47,12 @@ const ASSETS_TO_CACHE = [
     'js/messkonzept/commands.js',
     'js/messkonzept/project-meta.js',
     'js/messkonzept/canvas-renderer.js',
+    'js/messkonzept/annotations.js',
     'js/messkonzept/editor.js',
     'js/messkonzept/start-flow.js',
     'js/messkonzept/render-cycle.js',
     'js/messkonzept/drag-drop.js',
+    'js/messkonzept/pointer-drag.js',
     'js/messkonzept/interaction.js',
     'js/messkonzept/bootstrap.js',
     'js/messkonzept/module-contracts.js',

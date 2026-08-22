@@ -1,7 +1,7 @@
 # Anforderungen: KWK/BHKW-Hinweise im Prüfstatus
 
 **Stand:** 2026-08-19  
-**Regelwerk:** `2026-08-19-beta.15`
+**Regelwerk:** `2026-08-22-beta.16`
 
 ## Ziel
 

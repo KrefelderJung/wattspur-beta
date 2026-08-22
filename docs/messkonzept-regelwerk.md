@@ -1,6 +1,6 @@
 # Wattspur – Regelwerk für Messkonzept-Hinweise
 
-**Regelwerksstand:** `2026-08-19-beta.15`
+**Regelwerksstand:** `2026-08-22-beta.16`
 **Geltungsbereich:** öffentliche Beta, lokale Orientierungsskizze  
 **Verbindlichkeit:** keine technische, rechtliche oder abrechnungsseitige Freigabe
 
@@ -51,7 +51,7 @@ gespeicherte Skizzen kompatibel bleiben. Die Kennung wird zentral in
 | ID | Auslöser | Stufe | Aktueller Hinweis / Zweck |
 | --- | --- | --- | --- |
 | `MK-ASSET-001` | Mindestens ein Speicher ist vorhanden. | `warning` | Betriebsrolle, Netzeinspeisung, Netzbezug zum Laden, MaStR, mögliche §14a-Relevanz und Abstimmung mit dem Netzbetreiber prüfen. |
-| `MK-ASSET-002` | Eine SteuVE hat eine Netzanschlussleistung über `4,2 kW`. Bei einer Wärmepumpe wird die elektrische Leistung einschließlich Zusatz- oder Notheizvorrichtung wie Heizstab betrachtet. | `warning` | §14a-EnWG-Einordnung, technische Eignung neuer Anlagen ab 01.01.2024, Anmeldung und passendes Modul prüfen. |
+| `MK-ASSET-002` | Eine SteuVE oder ein Speicher hat eine maßgebliche Leistung über `4,2 kW`. Bei einer Wärmepumpe wird die elektrische Leistung einschließlich Zusatz- oder Notheizvorrichtung wie Heizstab betrachtet. Bei einem Speicher zählt die maximale Ladeleistung. | `warning` | §14a-EnWG-Einordnung, technische Eignung neuer Anlagen ab 01.01.2024, Anmeldung und passendes Modul prüfen. |
 | `MK-ASSET-003` | Mindestens eine Nachtspeicherheizung ist vorhanden. | `warning` | Bei unbekanntem Datum oder Inbetriebnahme vor 2024 historische Tarif-/Messbedingungen berücksichtigen; ab 2024 nicht automatisch als aktuelle SteuVE behandeln. |
 | `MK-ASSET-004` | Eine SteuVE hat ein Inbetriebnahmedatum vor dem `01.01.2024`. | `warning` | Die Anwendung ordnet sie nicht automatisch dem neuen §14a-Regime zu. Ein Wechsel kann nach technischer Vorbereitung durch einen konzessionierten Elektrofachbetrieb und Bestätigung der Voraussetzungen durch den Netzbetreiber möglich sein. |
 | `MK-ASSET-005` | Eine Stecker-PV überschreitet am selben Netzanschlusspunkt zusammen mit weiteren Stecker-PV-Anlagen 800 VA Wechselrichterleistung. | `error` | Die vereinfachte Stecker-PV-Behandlung ist mit dieser Leistung nicht automatisch anwendbar. Wechselrichterleistung, Zuordnung und technische Anschlussbedingungen prüfen. Bei fehlender Angabe erscheint zunächst ein `warning`. |
@@ -138,7 +138,7 @@ mit `meterId` gehört zu diesem Zusatz-Zähler. Anlagen ohne Zusatz-Zähler werd
 dem Basiszähler ihres Messbereichs zugeordnet. SteuVE, die hinter demselben
 Zähler liegen, werden zu einer Messgruppe zusammengefasst. Ihre eingetragenen
 Leistungen werden addiert. So werden beispielsweise eine Wärmepumpe mit 2,6 kW
-und eine Raumkühlung mit 2,6 kW gemeinsam mit 5,2 kW bewertet. Sobald die Summe
+und eine Klimaanlage mit 2,6 kW gemeinsam mit 5,2 kW bewertet. Sobald die Summe
 über 4,2 kW liegt, erscheint ein Hinweis zur Einordnung nach §14a EnWG.
 
 Fehlt bei einer Anlage die Leistung, wird sie nicht stillschweigend als 0 kW
@@ -146,6 +146,12 @@ gerechnet. Die Prüfgruppe bleibt trotzdem sichtbar und kann dadurch später um
 den fehlenden Wert ergänzt werden. Die Zuordnung und Summierung ist in
 `getSteuveMeasurementGroups()` gekapselt und wird durch den Regressionstest
 `tests/steuve-total-power-test.js` abgesichert.
+
+Bei einem Batteriespeicher wird die maximale Ladeleistung in dieselbe
+Messpunktprüfung einbezogen. Liegt sie über 4,2 kW, erscheint die §14a-
+Modulabfrage im Objekteditor und die Leistung wird im Prüfstatus berücksichtigt.
+Die Anzeige ist ein fachlicher Prüfhinweis und ersetzt keine Abstimmung mit
+Netzbetreiber oder Messstellenbetreiber.
 
 ### Bestandsanlagen vor 2024
 

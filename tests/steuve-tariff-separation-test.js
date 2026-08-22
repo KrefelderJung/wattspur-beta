@@ -14,7 +14,7 @@ vm.createContext(context);
 vm.runInContext(read('js/messkonzept/rules.js'), context);
 const rules = context.window.WattspurMesskonzeptRules;
 assert(rules, 'Regelmodul konnte nicht geladen werden');
-assert(rules.rulesetVersion === '2026-08-19-beta.15', 'Regelwerksstand muss zum Tarif-Hinweis passen');
+assert(rules.rulesetVersion === '2026-08-22-beta.16', 'Regelwerksstand muss zum Tarif-Hinweis passen');
 assert(rules.getRuleCatalog().STEUVE_TARIFF_SEPARATION?.id === 'MK-STEUVE-001', 'Tarif-Trennungsregel muss MK-STEUVE-001 tragen');
 
 const separatedHeatPump = rules.evaluate({ mode: 'single', assets: [

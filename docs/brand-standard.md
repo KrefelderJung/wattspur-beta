@@ -16,7 +16,7 @@ Alle öffentlichen Werkzeuge verwenden dieselbe visuelle Hierarchie:
 - Wortmarke und Werkzeugname werden nicht mehr als uneinheitliche Punkt- oder Inline-Kombination dargestellt.
 - Werkzeugname ist unterhalb der Wortmarke sichtbar, ausreichend kontrastreich und mindestens semibold gesetzt.
 - Startseite, Lastganganalyse, Messkonzept sowie Kontakt, Impressum und Datenschutz verwenden dieselbe Dachmarke.
-- PDF-Exporte verwenden denselben kompakten Markenblock aus Symbol, Wortmarke und Werkzeugname. Der Exportstand steht rechts; technische Modusdetails werden nicht zusätzlich in der Kopfzeile wiederholt.
+- PDF-Exporte verwenden denselben kompakten Markenblock aus Symbol, Wortmarke und Werkzeugname. Exportstand und technische Modusdetails werden nicht zusätzlich in der Kopfzeile wiederholt.
 - Die Markenverlinkung führt zurück zur Werkzeugauswahl.
 - Die Darstellung bleibt bei schmalen Viewports lesbar; der Werkzeugname darf ellipsiert werden, aber nicht die Dachmarke.
 - Änderungen an der Markenstruktur werden durch den Release-Test „Dachmarke und Werkzeugnamen“ abgesichert.

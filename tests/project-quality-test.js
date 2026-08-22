@@ -56,11 +56,13 @@ const requiredFiles = [
     'impressum.html',
     'datenschutz.html',
     'kontakt.html',
+    'lizenz.html',
     'LICENSE.md',
     'COPYRIGHT.md',
     'THIRD-PARTY-NOTICES.md',
     'service-worker.js',
     'tests.html',
+    'docs/lizenz-navigation-anforderungen.md',
     'tests/architecture-smoke-test.js',
     'tests/preset-loader-test.js',
     'tests/decision-calculator-test.js',
@@ -91,14 +93,26 @@ const requiredFiles = [
     'tests/palette-border-standard-test.js',
     'tests/link-check-test.js',
     'tests/pdf-export-variants-test.js',
+    'tests/pdf-export-filename-test.js',
     'tests/pdf-status-layout-test.js',
     'tests/pdf-object-tables-test.js',
     'tests/project-meta-toggle-test.js',
+    'tests/drop-target-hitbox-test.js',
+    'tests/toolbar-responsive-test.js',
+    'tests/export-button-contrast-test.js',
+    'tests/messkonzept-info-panel-test.js',
+    'tests/messkonzept-bezeichnungen-test.js',
+    'tests/meter-click-target-test.js',
+    'tests/pointer-drag-test.js',
     'tests/pruefstatus-collapsible-test.js',
+    'tests/meter-annotation-blocks-test.js',
+    'tests/object-annotation-visibility-test.js',
     'docs/architecture-smoke-test.md',
     'docs/messkonzept-regelwerk.md',
     'docs/messkonzept-startvorlagen.md',
     'docs/projekt-teststandard.md',
+    'docs/pruefstatus-marker-anforderungen.md',
+    'docs/darstellung-einfache-toolbar-anforderungen.md',
     'docs/technische-anlagenfelder.md',
     'docs/inbetriebnahmedatum-hinweis-anforderungen.md',
     'docs/smart-meter-steuerung-hinweis-anforderungen.md',
@@ -107,9 +121,22 @@ const requiredFiles = [
     'docs/nsh-steuve-gemeinsame-messung-anforderungen.md',
     'docs/seo-anforderungen.md',
     'docs/icon-object-number-badges-anforderungen.md',
+    'docs/objektnummern-standard-anforderungen.md',
+    'docs/klimaanlage-bezeichnung-anforderungen.md',
+    'docs/projektangaben-editorbreite-anforderungen.md',
+    'docs/drop-ziel-trefferflaechen-anforderungen.md',
+    'docs/toolbar-responsive-anforderungen.md',
+    'docs/export-button-kontrast-anforderungen.md',
+    'docs/messkonzept-info-panel-anforderungen.md',
+    'docs/messkonzept-bezeichnungen-anforderungen.md',
+    'docs/pdf-objektbezeichnung-anforderungen.md',
     'docs/pdf-status-layout-anforderungen.md',
+    'docs/pdf-dateiname-anforderungen.md',
     'docs/palette-border-anforderungen.md',
-    'docs/pruefstatus-und-objektnummern-anforderungen.md'
+    'docs/pruefstatus-und-objektnummern-anforderungen.md',
+    'docs/meter-click-selection-anforderungen.md',
+    'docs/meter-annotation-blocks-anforderungen.md',
+    'docs/object-annotation-visibility-anforderungen.md'
 ];
 requiredFiles.forEach(relativePath => assert(fs.existsSync(absolute(relativePath)), `${relativePath}: erwartete Qualitätsdatei fehlt`));
 
@@ -119,6 +146,7 @@ const testText = read('tests.html');
 const stylesText = read('styles.css');
 const serviceWorkerText = read('service-worker.js');
 const documentationText = read('docs/projekt-teststandard.md');
+const licenseNavigationText = read('docs/lizenz-navigation-anforderungen.md');
 const copyrightText = read('COPYRIGHT.md');
 const presetText = read('js/messkonzept/presets.js');
 const modelText = read('js/messkonzept/model.js');
@@ -133,6 +161,7 @@ const dragDropText = read('js/messkonzept/drag-drop.js');
 const interactionText = read('js/messkonzept/interaction.js');
 const exportText = read('js/messkonzept/export.js');
 const validationStatusText = read('js/messkonzept/validation-status.js');
+const annotationText = read('js/messkonzept/annotations.js');
 
 // Veröffentlichung darf keine externen Script-/Stylesheet-Abhängigkeiten
 // erzwingen. Fachliche Referenzlinks (z. B. VBEW) sind davon ausgenommen.
@@ -162,27 +191,39 @@ localCoreFiles.forEach(relativePath => {
     assert(!networkApiPattern.test(source), `${relativePath}: Netzwerk-API gehört nicht in den lokalen Messkonzept-Kern`);
 });
 assert(serviceWorkerText.includes('event.request.mode === \'navigate\''), 'service-worker.js: Offline-/Navigationsstrategie fehlt');
-assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && /beta\.336/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
+assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && serviceWorkerText.includes("'lizenz.html'") && /beta\.357/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
 
 // Der Netzanschluss ist ein eigenes, bearbeitbares Objekt. Diese Prüfungen
 // verhindern, dass ein späteres Refactoring den HAK nur visuell anklickbar
 // macht, aber Modell, Modal, Tastaturpfad oder Export vergisst.
-assert(modelText.includes("hak: { voltageLevel: 'low' }") && modelText.includes('setHakVoltageLevel') && modelText.includes('hak: clone'), 'model.js: Spannungsebene des HAK muss modelliert und historienfähig sein');
+assert(modelText.includes("hak: { voltageLevel: 'low'") && modelText.includes('setHakVoltageLevel') && modelText.includes('hak: clone'), 'model.js: Spannungsebene des HAK muss modelliert und historienfähig sein');
 assert(canvasRendererText.includes('data-mk-select-hak') && canvasRendererText.includes('renderHakEditorFields') && canvasRendererText.includes('mk-transformer-symbol'), 'canvas-renderer.js: HAK-Auswahl und Trafo-Ringe müssen gerendert werden');
 assert(editorText.includes('mkHakField') && editorText.includes('updateHakField'), 'editor.js: Spannungsebenenfeld muss über den Objekteditor aktualisiert werden');
 assert(dragDropText.includes('[data-mk-select-hak]') && interactionText.includes('[data-mk-select-hak]'), 'Interaktion: HAK muss per Maus und Tastatur auswählbar sein');
 assert(exportText.includes('state.hak?.voltageLevel') && exportText.includes('Spannungsebene'), 'export.js: gewählte HAK-Spannungsebene muss im Gesamtexport erscheinen');
-assert(exportText.includes('renderExportNotice') && exportText.includes('Prüfstatus und Hinweise') && exportText.includes('mk-print-topology'), 'export.js: PDF-Textseite und Messskizze müssen strukturiert getrennt bleiben');
+assert(exportText.includes('renderExportNotice') && exportText.includes('mk-print-sheet--one-page') && exportText.includes('mk-print-topology') && !exportText.includes('renderExportDetails()}'), 'export.js: PDF muss als kompakter One-Pager mit Hinweis, Projektangaben und Skizze aufgebaut sein');
 assert(read('tests/pdf-status-layout-test.js').includes('PDF-Status-Layout-Test: OK'), 'Regressionstest für die PDF-Textseite fehlt');
 assert(read('tests/pdf-object-tables-test.js').includes('PDF-Objekttabellen-Test: OK'), 'Regressionstest für die PDF-Objekttabellen fehlt');
+assert(read('tests/pdf-object-tables-test.js').includes('keine Objekttabellen'), 'Regressionstest für den reduzierten PDF-Export fehlt');
 assert(read('tests/project-meta-toggle-test.js').includes('Projektangaben-Aufklapp-Test: OK'), 'Regressionstest für den sichtbaren Projektangaben-Aufklappbereich fehlt');
+assert(read('tests/drop-target-hitbox-test.js').includes('Drop-Ziel-Trefferflächen-Test: OK'), 'Regressionstest für einheitliche Drop-Trefferflächen fehlt');
+assert(read('tests/toolbar-responsive-test.js').includes('Responsive-Toolbar-Test: OK'), 'Regressionstest für die responsive Bedienleiste fehlt');
+assert(read('tests/export-button-contrast-test.js').includes('Exportbutton-Kontrast-Test: OK'), 'Regressionstest für lesbare PDF-Exportbuttons fehlt');
+assert(read('tests/messkonzept-info-panel-test.js').includes('Messkonzept-Infopanel-Test: OK'), 'Regressionstest für die Messkonzept-Infoboxen fehlt');
+assert(read('tests/messkonzept-bezeichnungen-test.js').includes('Messkonzept-Bezeichnungen-Test: OK'), 'Regressionstest für die Messkonzeptbezeichnungen fehlt');
+assert(read('tests/meter-click-target-test.js').includes('stabile Modell-ID') && read('tests/meter-click-target-test.js').includes('Zähler-Klickziel-Test: OK'), 'Regressionstest für stabile Zähler-Klickziele fehlt');
+assert(read('tests/pointer-drag-test.js').includes('Pointer-DnD-Test: OK'), 'Regressionstest für Tablet-Pointer-DnD fehlt');
+assert(read('tests/project-field-standard-test.js').includes('Projektfelder-Standard-Test: OK'), 'Regressionstest für die standardisierten Projektfelder fehlt');
 assert(read('tests/pruefstatus-collapsible-test.js').includes('Prüfstatus-Aufklapp-Test: OK'), 'Regressionstest für den aufklappbaren Prüfstatus fehlt');
-assert(validationStatusText.includes('mk-validation-item') && validationStatusText.includes('<details') && validationStatusText.includes('statusCounters') && validationStatusText.includes('mk-validation-asset-tag'), 'validation-status.js: kompakte, nummerierte Prüfstatus-Tags müssen als aufklappbare Details gerendert werden');
+assert(annotationText.includes('mk-meter-annotation-card') && annotationText.includes('pointerdown') && stylesText.includes('mk-meter-annotation-connector') && stylesText.includes('stroke-dasharray'), 'Zählerangaben: verschiebbare Karten und Bezugslinien fehlen');
+assert(read('tests/meter-annotation-blocks-test.js').includes('Zähler-Infokarten-Test: OK'), 'Regressionstest für verschiebbare Zählerangaben fehlt');
+assert(read('tests/object-annotation-visibility-test.js').includes('Objekt-Infobox-Sichtbarkeit-Test: OK'), 'Regressionstest für Infobox-Sichtbarkeit fehlt');
+assert(validationStatusText.includes('mk-validation-item') && validationStatusText.includes('<details') && validationStatusText.includes('statusCounters') && validationStatusText.includes('mk-validation-asset-tag') && validationStatusText.includes('mk-validation-summary-main') && validationStatusText.includes('mk-validation-summary-assets'), 'validation-status.js: kompakte, nummerierte Prüfstatus-Tags müssen als aufklappbare Details gerendert werden');
 assert(stylesText.includes('.mk-validation-item > summary::before') && stylesText.includes('overflow-wrap: anywhere'), 'styles.css: Prüfstatus braucht sichtbare Aufklappmarker und sicheren Textumbruch');
-assert(stylesText.includes('border-radius: 999px') && stylesText.includes('.mk-validation-item.info .mk-validation-tag') && stylesText.includes('.mk-validation-asset-tag--heatpump'), 'styles.css: Info-/Hinweis-Tags und Objekt-Tags müssen semantisch und rund dargestellt werden');
+assert(stylesText.includes('.mk-validation-status-marker') && stylesText.includes('.mk-validation-item.info .mk-validation-status-icon') && stylesText.includes('.mk-validation-asset-tag--heatpump') && !stylesText.includes('.mk-validation-item.info .mk-validation-tag'), 'styles.css: Status-Marker und Objekt-Tags müssen getrennt gestaltet werden');
 assert(!indexText.includes('id="mk-status-badge"') && !stylesText.includes('.mk-validation-severity-dot'), 'Prüfstatus: globaler Tag und zusätzliche Bulletpoints sollen entfallen');
 assert(indexText.includes('id="mk-summary-title">Infos und Hinweise</span>'), 'Prüfstatus-Panel muss für Endanwender verständlich als Infos und Hinweise beschriftet sein');
-assert(assetDisplayText.includes("'generation', 'nsh'") && stylesText.includes('.mk-icon-object-sequence.generation') && stylesText.includes('.mk-icon-object-sequence.nsh'), 'Objektnummern: Erzeugungsanlagen und Nachtspeicherheizungen brauchen farbige Kennziffern-Badges');
+assert(assetDisplayText.includes("const badgeAssetTypes = new Set(['storage', 'steuve'])") && assetDisplayText.includes('getNshAssetNumber') && !stylesText.includes('.mk-icon-object-sequence.generation') && !stylesText.includes('.mk-icon-object-sequence.nsh'), 'Objektnummern: Textkarten müssen ihre Kennung im Text tragen, reine Symbolkarten erhalten Badges');
 
 // §14a: Bei Wärmepumpen wird ein einziges Leistungsfeld inklusive Heizstab
 // gegen 4,2 kW geprüft. Ein separates Heizstabfeld darf nicht zurückkehren.
@@ -272,6 +313,7 @@ assert(documentationText.includes('tests/seo-test.js'), 'docs/projekt-teststanda
 assert(documentationText.includes('tests/messlogic-invariants-test.js'), 'docs/projekt-teststandard.md: Messlogik-Invarianten-Test fehlt');
 assert(documentationText.includes('tests/meter-rail-spacing-test.js'), 'docs/projekt-teststandard.md: Rail-Abstandstest fehlt');
 assert(documentationText.includes('tests/smart-meter-control-test.js'), 'docs/projekt-teststandard.md: iMSys-/Steuerungstest fehlt');
+assert(licenseNavigationText.includes('Zur Startseite') && licenseNavigationText.includes('lizenz.html'), 'Lizenznavigation: Anforderungen und sichtbarer Rückweg fehlen');
 assert((indexText.match(/class="mk-fachhinweis"/g) || []).length === 1, 'index.html: Der fachliche Hinweis soll als eine gemeinsame Hinweisbox erscheinen');
 assert(indexText.includes('VBEW-Referenz &amp; Lizenzhinweise'), 'index.html: Der VBEW-Referenzlink fehlt in der gemeinsamen Hinweisbox');
 assert(indexText.includes('class="mk-start-home-icon"'), 'index.html: Der Startauswahl-Schalter benötigt ein klares Häuschen-Symbol');
@@ -282,13 +324,13 @@ assert(copyrightText.includes('Salvatore Napolitano') && copyrightText.includes(
 assert(read('README.md').includes('öffentliche Beta') && read('README.md').includes('THIRD-PARTY-NOTICES.md'), 'README.md: knapper Beta-Hinweis oder Drittanbieter-Verweis fehlt');
 assert(messkonzeptText.includes('mkGetPresetFlowChipClass') && stylesText.includes('.mk-start-flow-chip--generation') && stylesText.includes('.mk-start-flow-chip--storage'), 'Startvorlagen: semantische Farben für die wichtigsten Objekt-Chips fehlen');
 assert(indexText.includes('mk-start-group--mieterstrom') && indexText.includes('Mieterstromkonzept') && presetText.includes('mieterstrom-d1') && presetText.includes("group: 'mieterstrom'") && stylesText.includes('.mk-start-flow-chip--mieterstrom-user'), 'Mieterstrom: D1-Kategorie, Nutzerchip und Startkarte fehlen');
-assert(presetText.includes("title: 'MK D1: Mieterstromgemeinschaft'") && presetText.includes("flow: ['PV', 'Mieterstromnutzer']") && messkonzeptText.includes("kinds.push('mieterstrom-user')") && stylesText.includes('--mk-chip-bg: transparent'), 'Mieterstrom: D1-Bezeichnung und semantischer Nutzerchip fehlen');
+assert(presetText.includes("modelCode: 'MK D1'") && presetText.includes("modelName: 'Selbstversorgergemeinschaft'") && presetText.includes("flow: ['PV', 'Mieterstromnutzer']") && messkonzeptText.includes("kinds.push('mieterstrom-user')") && stylesText.includes('--mk-chip-bg: transparent'), 'Mieterstrom: D1-Bezeichnung und semantischer Nutzerchip fehlen');
 assert(indexText.includes('mk-start-free-button-icon') && stylesText.includes('.mk-start-free-button:active') && stylesText.includes('[data-theme="light"] .mk-start-free-button') && stylesText.includes('color: #ffffff;'), 'Startaktion: Symbol, fühlbarer Druckzustand und ausreichender Tagmodus-Kontrast fehlen');
 assert(presetText.includes("flow: ['Wärmepumpe', 'Haushalt', 'PV', 'Speicher']") && presetText.includes("flow: ['Wallbox', 'Haushalt', 'PV', 'Speicher']"), 'Startvorlagen: Kaskaden-Objektchips müssen ohne interne Zählernummern verständlich bleiben');
 assert(presetText.includes("flow: ['Haushalt', 'Wärmepumpe']") && presetText.includes("flow: ['Haushalt', 'Wallbox']"), 'Startvorlagen: Parallelchips sollen ebenfalls ohne interne Zählernummern auskommen');
 assert(stylesText.includes('white-space: nowrap') && stylesText.includes('flex: 0 0 auto'), 'Startvorlagen: Objektchips dürfen nicht zusammenschrumpfen oder ineinanderlaufen');
 assert(indexText.includes('mk-start-group-icon') && !indexText.includes('>Häufige Fälle</span>') && !indexText.includes('>Getrennte Messung</span>'), 'Startvorlagen: Kategorien sollen mit einem klaren Linien-Symbol statt Zusatzlabels erklärt werden');
-assert(!messkonzeptText.includes('mk-start-card-summary'), 'Startvorlagen: wiederholende Kartenzusammenfassungen sollen nicht erneut visuell erscheinen');
+assert(presetText.includes('showSummary: true') && stylesText.includes('.mk-start-card-summary'), 'Startvorlagen: MK D1 muss die optionale Kurzbeschreibung gezielt anzeigen können');
 assert(indexText.includes('mk-start-group--shared') && indexText.includes('mk-start-group--parallel') && indexText.includes('mk-start-group--cascade') && stylesText.includes('.mk-start-group--cascade'), 'Startvorlagen: Topologiegruppen brauchen getrennte visuelle Zustände');
 assert(indexText.includes('data-mk-preset-group="mieterstrom"') && stylesText.includes('grid-template-columns: repeat(4, minmax(0, 1fr))'), 'Startvorlagen: die vierte Mieterstromkategorie muss im responsiven Gruppengitter berücksichtigt werden');
 assert(indexText.includes('btn-mk-decision-calculator') && indexText.includes('Lohnt sich ein Umbau auf eine Zweitmessung?') && indexText.includes('mk-decision-callout') && indexText.includes('Wirtschaftlichkeits-Check') && indexText.includes('mk-decision-calculator') && indexText.includes('decision-calculator.js') && stylesText.includes('.mk-decision-question') && stylesText.includes('.mk-decision-trigger small') && stylesText.includes('background: var(--mk-storage-bg)') && stylesText.includes('border: 1px solid var(--mk-storage-fg)'), 'Wirtschaftlichkeits-Check: Die Leitfrage muss den Beta-Rechner verständlich einordnen und der Button klar lesbar sein');
@@ -307,7 +349,7 @@ assert(presetText.includes('Ein separater Zählpunkt schafft die Voraussetzung, 
 assert(presetText.includes('Eine separate Messung kann die Voraussetzungen für eine günstigere Konzessionsabgabe schaffen') && presetText.includes('Die konkrete Konzessionsabgabe hängt von Liefervertrag, Messung und Ort ab') && presetText.includes("label: 'Wärmepumpenprivilegierung nach § 22 EnFG'"), 'Startvorlagen: mögliche Konzessionsabgabe und Wärmepumpen-Umlageprivileg müssen als Chance mit klarer Einschränkung und Quelle erklärt werden');
 assert(presetText.includes('Geeignet, wenn Haushalt und Anlagen gemeinsam über einen Zähler gemessen werden sollen') && presetText.includes('Geeignet, wenn Wärmepumpe oder Wallbox getrennt vom Haushaltsstrom gemessen werden sollen') && presetText.includes('Geeignet, wenn Wärmepumpe oder Wallbox separat gemessen, aber weiterhin durch PV-Strom mitversorgt werden sollen') && presetText.includes('Differenzbildung: Bezug an Z1 minus Bezug an Z2'), 'Startvorlagen: jede Gruppe muss Zielgruppe und Kaskadenprinzip verständlich beschreiben');
 assert(presetText.includes('Mieterstrom beschreibt die Versorgung von Bewohnern') && presetText.includes('Netzentgelte, netzseitige Umlagen, Stromsteuer und Konzessionsabgabe') && presetText.includes('Mieterstromzuschlag') && presetText.includes('Markt- und Messlokationsführung') && presetText.includes("label: 'BNetzA: Mieterstrom'"), 'Startvorlagen: Mieterstrominfo muss allgemeine Vorteile, Abstimmungshinweise und belastbare Quellen enthalten');
-assert(stylesText.includes('.mk-start-group--mieterstrom .mk-start-info-panel') && stylesText.includes('transform: translate(-50%, -50%)') && stylesText.includes('max-height: min(82vh, 44rem)'), 'Startvorlagen: Mieterstrominfo muss mittig im sichtbaren Bereich erscheinen und ohne Seiten-Scrollen auskommen');
+assert(stylesText.includes('.mk-start-info-panel') && stylesText.includes('transform: translate(-50%, -50%)') && stylesText.includes('max-height: min(82vh, 44rem)'), 'Startvorlagen: Infoboxen müssen mittig im sichtbaren Bereich erscheinen und ohne Seiten-Scrollen auskommen');
 
 if (failures.length > 0) {
     console.error(`Projekt-Qualitäts-Gate: FEHLER (${failures.length})`);

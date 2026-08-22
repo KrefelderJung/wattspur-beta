@@ -59,13 +59,6 @@
             recordHistory(previousState);
         }
 
-        function changeViewMode(viewMode) {
-            if (!['simple', 'detail'].includes(viewMode) || viewMode === state?.viewMode) return false;
-            state.viewMode = viewMode;
-            render();
-            return true;
-        }
-
         function changeMode(mode) {
             if (!['single', 'parallel'].includes(mode) || mode === state?.mode) return false;
             const previousState = captureHistoryState();
@@ -104,7 +97,6 @@
         return Object.freeze({
             addAsset,
             reset,
-            changeViewMode,
             changeMode,
             changeCascadeLevels,
             swapAssetPositions,

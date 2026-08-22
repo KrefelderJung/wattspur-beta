@@ -202,6 +202,19 @@
             return wires;
         }
 
+        function dedupeWireMarkup(markup) {
+            const seen = new Set();
+            return markup.filter(Boolean).filter(wire => {
+                const pathData = String(wire).match(/<path\b[^>]*class="[^"]*mk-dynamic-wire[^\"]*"[^>]*\bd="([^"]+)"/);
+                const key = pathData
+                    ? `path:${pathData[1].replace(/\s+/g, ' ').trim()}`
+                    : String(wire);
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
         function updateDynamicConnections() {
             const elements = getElements();
             const stage = elements.canvas?.querySelector('.mk-canvas-stage');
@@ -246,7 +259,7 @@
             layer.setAttribute('height', String(height));
             layer.style.setProperty('--mk-connector-width-px', `${width}px`);
             layer.style.setProperty('--mk-connector-height-px', `${height}px`);
-            layer.innerHTML = wires.filter(Boolean).join('') + dynamicNodes.map(buildNode).join('');
+            layer.innerHTML = dedupeWireMarkup(wires).join('') + dynamicNodes.map(buildNode).join('');
         }
 
         return Object.freeze({

@@ -209,8 +209,9 @@ Regressionstest `tests/pdf-wire-geometry-test.js` schützt diese Regel.
 
 ### 9.1 PDF-Ausgabevarianten
 
-Die kompakte Ausgabe und der Gesamtexport nutzen dieselbe Skizzen-Snapshot-
-Funktion. Der kompakte Export lässt nur die ausführlichen Objektdetails weg;
-Projektangaben, Warnhinweis, Prüfstatus und Kommentar bleiben erhalten. Dadurch
-ist die Skizze für eine schnelle Abstimmung weitergebbar, ohne dass für die
-Kurzfassung eine zweite Leitungslogik gepflegt werden muss.
+Die kompakte Ausgabe nutzt dieselbe Skizzen-Snapshot-Funktion wie der Editor.
+Sie enthält Warnhinweis, Skizze, Projektangaben und einen optionalen Kommentar.
+Prüfstatus und ausführliche Objektdetails bleiben bewusst außerhalb. Die
+Projektangaben stehen unter der Skizze, damit die Zeichnung zuerst ins Auge
+fällt. Ein langer Kommentar darf auf eine zweite Druckseite umbrechen, ohne
+dass dafür eine zweite Leitungslogik gepflegt werden muss.

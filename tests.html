@@ -1057,11 +1057,10 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             assert(!indexText.includes('<span class="landing-kicker">Eigenes Schema'), 'Der Konfigurator-Kopfbereich darf keine zusätzliche Schema-Kickerzeile anzeigen');
             assert(indexText.includes('VBEW-inspiriert') && indexText.includes('keine technische Abstimmung') && indexText.includes('class="mk-reference-link"') && !indexText.includes('class="mk-reference"'), 'Hinweise zu Zweck, Grenzen und Quelle müssen in einem kompakten Einführungstext zusammengeführt sein');
              assert(indexText.includes('Prüfstatus') && !indexText.includes('Technischer Hinweisstatus') && messkonzeptExportText.includes('Prüfstatus'), 'Der Status muss als kompakter Prüfstatus und nicht als fachliche Freigabe bezeichnet werden');
-             assert(indexText.includes('data-mk-project-field="name"') && indexText.includes('data-mk-project-field="reference"') && indexText.includes('data-mk-project-field="street"') && indexText.includes('data-mk-project-field="houseNumber"') && indexText.includes('data-mk-project-field="postalCode"') && indexText.includes('data-mk-project-field="city"') && indexText.includes('data-mk-project-field="planStatus"') && indexText.includes('data-mk-plan-status="Vor dem Umbau"') && indexText.includes('data-mk-plan-status="Aktuell"') && indexText.includes('data-mk-plan-status="In Planung"') && indexText.includes('Stand der Skizze') && modelText.includes("planStatus: 'Aktuell'") && messkonzeptExportText.includes("['Stand der Skizze', project.planStatus]"), 'Projektangaben und der standardisierte Stand der Skizze müssen für den PDF-Export erfasst werden können');
+             assert(indexText.includes('data-mk-project-field="name"') && indexText.includes('data-mk-project-field="reference"') && indexText.includes('data-mk-project-field="measurementConcept"') && indexText.includes('data-mk-project-field="street"') && indexText.includes('data-mk-project-field="houseNumber"') && indexText.includes('data-mk-project-field="postalCode"') && indexText.includes('data-mk-project-field="city"') && indexText.includes('Messkonzept') && indexText.includes('z. B. MK D1') && !indexText.includes('Stand der Skizze') && !indexText.includes('data-mk-plan-status'), 'Projektangaben und das freie Messkonzeptfeld müssen für den PDF-Export erfasst werden können');
              assert(indexText.includes('class="mk-fachhinweis"') && indexText.includes('Dieser Konfigurator dient nur als Orientierung') && indexText.includes('zugelassenen Elektrofachbetrieb') && indexText.includes('zuständigen Netzbetreiber') && stylesText.includes('.mk-fachhinweis') && stylesText.includes('mk-fachhinweis-icon'), 'Der sichtbare Fachhinweis muss verständlich, prominent und auch auf kleinen Bildschirmen lesbar sein');
              assert(!canvasText.includes('Einen eigenen Zähler setzt du per Drag') && !canvasText.includes('mk-meter-assignment-hint'), 'Der entfernte Zähler-Hinweis darf nicht mehr im Objektdialog erscheinen');
-             assert(stylesText.includes('.mk-plan-status-button {') && stylesText.includes('min-height: 2.5rem') && stylesText.includes('text-align: center') && stylesText.includes('white-space: normal') && !stylesText.includes('@media (min-width: 641px) {\n    .mk-plan-status-button {\n        white-space: nowrap;'), 'Die drei Statusbuttons müssen gleichwertig bleiben und ihre Beschriftungen ohne Abschneiden an Wortgrenzen umbrechen können');
-             assert(indexText.includes('data-mk-notes-field') && indexText.includes('Kommentar hinzufügen') && indexText.includes('>Kommentar</label>') && indexText.includes('Kommentar oder besondere Hinweise') && !indexText.includes('Freitext für Kunde, Elektriker und interne Abstimmung') && messkonzeptText.includes('mkRenderNotes') && messkonzeptExportText.includes('Exportstand'), 'Der Kommentarbereich muss kompakt beschriftet und weiterhin im PDF-Export berücksichtigt werden');
+             assert(indexText.includes('data-mk-notes-field') && indexText.includes('class="mk-project-meta-notes"') && indexText.includes('>Kommentar</label>') && indexText.includes('Kommentar oder besondere Hinweise') && !indexText.includes('class="mk-notes-panel"') && !indexText.includes('Freitext für Kunde, Elektriker und interne Abstimmung') && messkonzeptText.includes('mkRenderNotes') && messkonzeptExportText.includes('Exportstand'), 'Der Kommentarbereich muss als fester Teil der Projektangaben beschriftet und weiterhin im PDF-Export berücksichtigt werden');
             assert(indexText.includes('data-theme-toggle') && indexText.includes('mk-theme-toggle') && stylesText.includes('.landing-links .theme-toggle') && stylesText.includes('[data-theme="light"] .landing-module-icon-messkonzept') && stylesText.includes('#047857') && serviceWorkerText.includes("'theme.js'"), 'Der Tag-/Nachtmodus muss auf Startseite, Lastganganalyse und Messkonzept verfügbar sein; die helle Kartenfarbe muss kontrastreich bleiben');
             assert(indexText.includes('shop.vbew-gmbh.de/produkt/vbew-messkonzepte-handout/') && indexText.includes('VBEW-Referenz') && indexText.includes('Lizenzhinweise') && !indexText.includes('cdn-matterhorn.swk.de'), 'Die Messkonzept-Referenz muss neutral auf die offizielle VBEW-Publikationsseite zeigen und darf nicht über einen Stadtwerke-CDN laufen');
             assert(indexText.includes('<details id="transparency"'), 'Ausführliche Hinweise müssen standardmäßig einklappbar sein');
@@ -1071,17 +1070,17 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             assert(indexText.includes('Batteriespeicher') && indexText.includes('mk-battery-symbol') && !indexText.includes('mk-storage-icon-generation') && !indexText.includes('mk-storage-icon-battery'), 'Der Speicher muss als eigenständiges Batteriesymbol erscheinen');
             assert(indexText.includes('Messobjekte') && indexText.includes('btn-mk-palette-info') && indexText.includes('mk-palette-info') && indexText.includes('Ziehe einen Zähler auf einen anderen Zähler') && indexText.includes('Weitere Anlagen können ebenfalls direkt auf diesen Zähler gezogen werden'), 'Die Messobjektleiste muss den Aufbau per Drag & Drop kompakt erklären');
             assert(!indexText.includes('mk-palette-hint') && !(await fetchPublishedSource('styles.css?beta-copy=1')).includes('mk-palette-hint'), 'Die Bausteinleiste darf keinen zusätzlichen Erklärungskasten anzeigen');
-            assert(indexText.includes('data-mk-view="simple"') && indexText.includes('data-mk-view="detail"') && indexText.includes('mk-control-label'), 'Die Darstellung muss zwischen Einfach- und Detailansicht umschaltbar sein');
-            assert(indexText.includes('Darstellung') && indexText.includes('Messkonzept') && indexText.includes('Gemeinsame Messung') && indexText.includes('Parallelmessung') && !indexText.includes('Einzähler</button>') && !indexText.includes('Mehrzähler') && !indexText.includes('data-mk-mode="cascade"'), 'Die Auswahlgruppen müssen verständlich beschriftet sein; gemeinsame Messung und Parallelmessung bleiben verfügbar');
+            assert(!indexText.includes('data-mk-view=') && !indexText.includes('Detailansicht') && !indexText.includes('>Darstellung<') && indexText.includes('mk-control-label'), 'Die Darstellungswahl ist entfernt; die feste einfache Ansicht bleibt über die beschrifteten Steuerungsgruppen verständlich');
+            assert(indexText.includes('Messkonzept') && indexText.includes('Skizzenansicht') && indexText.includes('Gemeinsame Messung') && indexText.includes('Parallelmessung') && !indexText.includes('Einzähler</button>') && !indexText.includes('Mehrzähler') && !indexText.includes('data-mk-mode="cascade"'), 'Messkonzept und Skizzenansicht bleiben verständlich beschriftet; gemeinsame Messung und Parallelmessung bleiben verfügbar');
             assert(indexText.includes('data-mk-level="2"') && indexText.includes('data-mk-level="3"') && indexText.includes('data-mk-level="4"') && indexText.includes('mk-meter-count-switch') && indexText.includes('aria-label="Zähleranzahl für Parallelmessung"') && !indexText.includes('mk-cascade-controls') && !indexText.includes('eingeschränkter Kaskadenbereich'), 'Die Zähleranzahl bleibt direkt für Parallelmessung auswählbar; ein separater Mehrzähler-Modus entfällt');
-            assert(indexText.includes('mk-object-modal') && indexText.includes('btn-mk-modal-done'), 'Objektdetails müssen in einem separaten Fenster erfasst werden können');
+            assert(indexText.includes('mk-object-modal') && indexText.includes('btn-mk-modal-close') && !indexText.includes('btn-mk-modal-done') && !indexText.includes('Änderungen werden lokal im Browser gehalten.') && !indexText.includes('<span class="landing-kicker">Objektangaben</span>'), 'Objektdetails müssen kompakt in einem separaten Fenster erfasst werden können');
             assert(indexText.includes('btn-mk-export-pdf') && !indexText.includes('Technischer Export') && !indexText.includes('btn-mk-export-json') && !messkonzeptText.includes('function mkDownloadJson') && !stylesText.includes('.mk-technical-export'), 'Der öffentliche Konfigurator zeigt nur den verständlichen PDF-Export; der interne JSON-Export bleibt verborgen und entfernt');
             assert(messkonzeptText.includes('function mkRenderAssetRail') && messkonzeptText.includes('mkBuildZoneMeterTree(zone)') && renderAwareText.includes('data-mk-meter-rail') && messkonzeptText.includes('parentMeterId'), 'Direkte Anlagen und Zusatz-Zählergruppen müssen über einen fachlichen Zählerbaum statt nur nach Eingabereihenfolge angeordnet werden');
             assert(indexText.includes('js/messkonzept/render.js') && renderText.includes('function createRenderer') && renderText.includes('function renderAsset(') && renderText.includes('function renderAssetRail(') && !renderText.includes('document.') && !renderText.includes('getBoundingClientRect') && messkonzeptText.includes('const MK_RENDER = window.WattspurMesskonzeptRender.createRenderer') && messkonzeptText.includes('return MK_RENDER.renderAsset(asset, options)') && messkonzeptText.includes('return MK_RENDER.renderAssetRail(rail, isRoot)'), 'Anlagenkarten und Messschienen müssen über ein DOM-freies Render-Modul erzeugt werden; Geometrie bleibt davon getrennt');
             assert(indexText.includes('data-mk-level') && indexText.includes('js/messkonzept/render-cycle.js') && renderCycleText.includes('meterCountMode') && renderCycleText.includes('button.disabled = !meterCountMode') && modelAwareText.includes('mapAssetZoneForMode') && modelAwareText.includes('previousMode') && messkonzeptText.includes("mode === 'parallel'") && messkonzeptText.includes('mkRenderParallelCanvas') && !messkonzeptText.includes("['single', 'cascade', 'parallel']") && !messkonzeptText.includes("mode === 'cascade'") && !messkonzeptText.includes('mkElements.cascadeControls'), 'Die Zähleranzahl ist nur in der Parallelmessung aktiv; Einzähler bleibt der zentrale dynamische Messmodus');
              assert(domainText.includes('data-mk-base-meter-target') && canvasText.includes('Anlagen oder Zusatzzähler hinter Z') && canvasText.includes('getBaseMeterZone') && domainText.includes('baseMeterTarget') && domainText.includes('baseMeterIndex') && stylesText.includes('.mk-meter-layout[data-mk-base-meter-target]') && stylesText.includes('.mk-meter-drop-target-active') && !stylesText.includes('.mk-base-meter-target-active') && stylesText.includes('.mk-drop-zone.empty') && stylesText.includes('width: 0 !important'), 'Anlagen und Zusatzzähler müssen direkt hinter Z1/Z2/Z3/Z4 abgelegt werden können; leere generische Einfügebereiche dürfen nicht mehr sichtbar sein');
             assert(stylesText.includes('.mk-drop-zone {') && stylesText.includes('border: 0') && stylesText.includes('background: transparent') && stylesText.includes('[data-theme="light"] .mk-drop-zone') && stylesText.includes('.mk-drop-zone.restricted') && stylesText.includes('.mk-drop-zone.dragover'), 'Interne Ablagecontainer dürfen keine sichtbaren gestrichelten Rahmen oder Flächen mehr anzeigen');
-            assert(messkonzeptText.includes('mkChangeViewMode') && messkonzeptText.includes('viewMode') && messkonzeptExportText.includes('renderAssetSummary(asset, true)'), 'Einfach-/Detailansicht muss im Zustand und in der Darstellung berücksichtigt werden');
+            assert(!messkonzeptText.includes('mkChangeViewMode') && !messkonzeptText.includes('changeViewMode') && messkonzeptText.includes('viewMode') && messkonzeptExportText.includes('renderAssetSummary(asset, true)'), 'Die Darstellungswahl bleibt entfernt; der einfache Ansichtsstatus bleibt für Kompatibilität und Export erhalten');
             assert(messkonzeptText.includes('mk-zone-assets ${mkConfiguratorState.viewMode === \'detail\' ? \'detail-mode\' : \'simple-mode\'}') && modelAwareText.includes("label: 'Steuerbare Anlage'") && messkonzeptText.includes('mkGetSteuveRegime'), 'Die Einzeldarstellung muss zwischen einfachem und detailliertem Strang unterscheiden; die rechtliche Einordnung bleibt im Objekt');
              assert(modelAwareText.includes('generationDisplay') && modelAwareText.includes("{ value: 'PV', label: generationDisplay.PV.label }") && modelAwareText.includes("{ value: 'KWK', label: generationDisplay.KWK.label }") && modelAwareText.includes("{ value: 'Wind', label: generationDisplay.Wind.label }") && modelAwareText.includes("{ value: 'Balkonkraftwerk', label: generationDisplay.Balkonkraftwerk.label") && modelAwareText.includes("label: 'BHKW'") && modelAwareText.includes("prefix: 'BHKW'") && modelAwareText.includes("prefix: 'WE'") && modelAwareText.includes('Balkonkraftwerk / Steckersolargerät') && modelAwareText.includes('balconyInfoText') && !messkonzeptText.includes('mkGetGenerationIconClass') && assetDisplayText.includes('mk-charge-symbol') && assetDisplayText.includes('mk-charge-plug') && indexText.includes('mk-charge-plug') && stylesText.includes('.mk-charge-cable') && stylesText.includes('stroke-width: 2.1') && stylesText.includes('.mk-charge-plug') && stylesText.includes('stroke-width: 1.7') && stylesText.includes('.mk-charge-pin') && assetDisplayText.includes('mk-fan-symbol') && canvasText.includes('data-mk-field="steuveType"') && assetDisplayText.includes('data-mk-field="steuveModule"') && !messkonzeptText.includes('mkRenderSteuveNotice') && modelAwareText.includes('generationMeter') && assetDisplayText.includes('mk-generation-meter') && modelAwareText.includes("consumer: { label: 'Sonstige Verbraucher', short: 'V'") && modelAwareText.includes("storage: { label: 'Batteriespeicher', short: '▤'") && modelAwareText.includes("nsh: { label: 'Nachtspeicherheizung'") && messkonzeptText.includes('mkRenderAssetIcon') && messkonzeptText.includes('mkGetGenerationDisplay') && messkonzeptText.includes('mkSyncGenerationName') && !renderAwareText.includes('mk-storage-info') && !renderAwareText.includes('mk-mieter-meter-note'), 'Erzeugungsanlagen müssen mit verständlichen sichtbaren Kennungen (PV, BHKW, WE) erscheinen; das Wallbox-Symbol muss zusätzlich ein sichtbares Kabel mit Stecker zeigen; fachliche Hinweise bleiben im Prüfstatus');
              assert(!canvasText.includes('mk-nsh-editor-hint') && rulesText.includes('historische Tarif- und Messbedingungen') && rulesText.includes('Nachtspeicherheizung erkannt') && rulesText.includes('Netzbetreiber und Messstellenbetreiber abstimmen'), 'Der Nachtspeicher-Hinweis muss fachlich im zentralen Prüfstatus bleiben und darf nicht im Objekteditor dupliziert werden');
@@ -1345,7 +1344,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             assert(seoTestText.includes('canonical') && seoTestText.includes('robots.txt') && seoTestText.includes('sitemap.xml'), 'Der SEO-Test muss stabile URLs, Meta-Daten und die Suchmaschinen-Freigaben abdecken');
         });
 
-        addTest('release', 'PDF-Export enthält den vollständigen Projektstand', 'Prüft Projektfelder, Skizzenstand, Kommentar, Prüfstatus und sichere Textmaskierung in der Druckansicht', async function() {
+        addTest('release', 'PDF-Export enthält die vollständigen Projektangaben', 'Prüft Projektfelder, Messkonzept, Kommentar, Prüfstatus und sichere Textmaskierung in der Druckansicht', async function() {
             if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
             const exportText = await fetch(`js/messkonzept/export.js?export-completeness-test=${Date.now()}`).then(response => response.text());
             const exportApi = new Function(`${exportText}; return window.WattspurMesskonzeptExport;`)();
@@ -1359,7 +1358,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
                         houseNumber: '7',
                         postalCode: '47798',
                         city: 'Krefeld',
-                        planStatus: 'In Planung'
+                        measurementConcept: 'MK D1'
                     },
                     // Das schließende Tag wird absichtlich geteilt, damit es
                     // den umgebenden HTML-Testscriptblock nicht beendet.
@@ -1379,7 +1378,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             });
             const sheet = exporter.renderPrintSheet({ iso: '2026-08-16T12:34:00.000Z', label: '16.08.2026, 14:34' }, { scope: 'full' });
             const sketchSheet = exporter.renderPrintSheet({ iso: '2026-08-16T12:34:00.000Z', label: '16.08.2026, 14:34' }, { scope: 'sketch' });
-            ['mk-print-brand', 'wattspur-mark.svg', 'Messkonzept-Konfigurator', 'Projektangaben', 'Referenz / Artikelnummer', 'Stand der Skizze', 'In Planung', 'Messskizze', 'Abstimmungsnotizen', 'Prüfstatus', 'Objektdetails', 'Exportstand', 'REF-2026-001', 'Teststraße', '47798', 'Krefeld'].forEach(marker => {
+            ['mk-print-brand', 'wattspur-mark.svg', 'Messkonzept-Konfigurator', 'Projektangaben', 'Referenz / Artikelnummer', 'Messkonzept', 'MK D1', 'Messskizze', 'Abstimmungsnotizen', 'Prüfstatus', 'Objektdetails', 'Exportstand', 'REF-2026-001', 'Teststraße', '47798', 'Krefeld'].forEach(marker => {
                 assert(sheet.includes(marker), `PDF-Druckansicht muss „${marker}“ enthalten`);
             });
             assert(!sheet.includes('Gemeinsame Messung · dynamische Unterzähler') && !sheet.includes('<h1>Messkonzept</h1>'), 'Die PDF-Kopfzeile darf keine doppelte technische Moduszeile oder doppelte Messkonzept-Überschrift enthalten');
@@ -2358,7 +2357,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             }
         });
 
-        addTest('browser-e2e', 'PDF-Exportvarianten im echten Browser', 'Prueft Skizzenexport und Gesamtexport mit Projektkopf, Messskizze, Prüfstatus und vollständigen Objektdetails', async function() {
+        addTest('browser-e2e', 'PDF-One-Pager im echten Browser', 'Prueft den einzelnen PDF-Export mit Projektkopf, Hinweis, Projektangaben und Messskizze', async function() {
             if (window.location.protocol === 'file:') skipTest('Ueber file:// uebersprungen: Browser-E2E-Test benoetigt HTTP/HTTPS.');
 
             const frame = document.createElement('iframe');
@@ -2400,24 +2399,16 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
 
                 let printCalls = 0;
                 frameWindow.print = () => { printCalls += 1; };
-                const sketchButton = frameDocument.getElementById('btn-mk-export-sketch');
-                const fullButton = frameDocument.getElementById('btn-mk-export-pdf');
-                assert(sketchButton && fullButton, 'Browser-E2E: beide PDF-Exportbuttons fehlen');
+                const pdfButton = frameDocument.getElementById('btn-mk-export-pdf');
+                assert(pdfButton && !frameDocument.getElementById('btn-mk-export-sketch'), 'Browser-E2E: der einzelne PDF-Exportbutton fehlt oder es gibt noch eine alte Variante');
 
-                sketchButton.click();
-                await waitFor(() => frameDocument.querySelector('.mk-print-sheet[data-mk-export-scope="sketch"]'), 'Skizzenexport');
-                const sketchSheet = frameDocument.querySelector('.mk-print-sheet[data-mk-export-scope="sketch"]');
-                assert(sketchSheet?.querySelector('.mk-print-header') && sketchSheet.querySelector('.mk-print-project') && sketchSheet.querySelector('.mk-print-topology') && sketchSheet.querySelector('.mk-print-status'), 'Browser-E2E: Skizzenexport enthält nicht Kopf, Projektangaben, Skizze und Prüfstatus');
-                assert(!sketchSheet.querySelector('.mk-print-details'), 'Browser-E2E: Skizzenexport darf keine vollständigen Objektdetails enthalten');
-                await waitFor(() => printCalls === 1, 'Browser-Druckaufruf für Skizzenexport');
-                await waitFor(() => !frameDocument.querySelector('.mk-print-sheet'), 'Bereinigung nach Skizzenexport', 1200);
-
-                fullButton.click();
-                await waitFor(() => frameDocument.querySelector('.mk-print-sheet[data-mk-export-scope="full"]'), 'Gesamtexport');
-                const fullSheet = frameDocument.querySelector('.mk-print-sheet[data-mk-export-scope="full"]');
-                assert(fullSheet?.querySelector('.mk-print-header') && fullSheet.querySelector('.mk-print-project') && fullSheet.querySelector('.mk-print-topology') && fullSheet.querySelector('.mk-print-status') && fullSheet.querySelector('.mk-print-details'), 'Browser-E2E: Gesamtexport enthält nicht alle vorgesehenen Abschnitte');
-                assert(fullSheet.querySelectorAll('.mk-print-table-section tbody tr').length >= 4, 'Browser-E2E: Gesamtexport enthält nicht alle Vorlagenobjekte in den Tabellen');
-                await waitFor(() => printCalls === 2, 'Browser-Druckaufruf für Gesamtexport');
+                pdfButton.click();
+                await waitFor(() => frameDocument.querySelector('.mk-print-sheet[data-mk-export-scope="one-page"]'), 'PDF-One-Pager');
+                const sheet = frameDocument.querySelector('.mk-print-sheet[data-mk-export-scope="one-page"]');
+                assert(sheet?.querySelector('.mk-print-header') && sheet.querySelector('.mk-print-project') && sheet.querySelector('.mk-print-topology') && sheet.querySelector('.mk-print-notice'), 'Browser-E2E: One-Pager enthält nicht Kopf, Hinweis, Projektangaben und Skizze');
+                assert(!sheet.querySelector('.mk-print-status') && !sheet.querySelector('.mk-print-details'), 'Browser-E2E: One-Pager darf Prüfstatus und Objektdetails nicht enthalten');
+                await waitFor(() => printCalls === 1, 'Browser-Druckaufruf für PDF-One-Pager');
+                await waitFor(() => !frameDocument.querySelector('.mk-print-sheet'), 'Bereinigung nach PDF-One-Pager', 1200);
             } finally {
                 frame.remove();
             }
@@ -2466,10 +2457,10 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
 
                 const canvas = frameDocument.getElementById('mk-canvas');
                 const palette = frameDocument.querySelector('.mk-palette');
-                const controls = [...frameDocument.querySelectorAll('[data-mk-mode], [data-mk-view], #btn-mk-export-sketch, #btn-mk-export-pdf, .mk-palette-item')];
+                const controls = [...frameDocument.querySelectorAll('[data-mk-mode], [data-mk-zoom], #btn-mk-export-pdf, .mk-palette-item')];
                 assert(canvas && palette && controls.length >= 12, 'Browser-E2E: mobile Bedienbereiche fehlen');
                 assert([...frameDocument.querySelectorAll('.mk-palette-item')].every(item => item.getBoundingClientRect().width > 0 && item.getBoundingClientRect().right <= frameWindow.innerWidth + 1), 'Browser-E2E: Bausteine sind mobil nicht vollständig erreichbar');
-                assert([...frameDocument.querySelectorAll('[data-mk-mode], [data-mk-view], #btn-mk-export-sketch, #btn-mk-export-pdf')].every(item => item.getBoundingClientRect().width > 0 && item.getBoundingClientRect().right <= frameWindow.innerWidth + 1), 'Browser-E2E: Modus-, Darstellungs- oder Exportbuttons werden mobil abgeschnitten');
+                assert([...frameDocument.querySelectorAll('[data-mk-mode], [data-mk-zoom], #btn-mk-export-pdf')].every(item => item.getBoundingClientRect().width > 0 && item.getBoundingClientRect().right <= frameWindow.innerWidth + 1), 'Browser-E2E: Messmodus-, Zoom- oder Exportbutton werden mobil abgeschnitten');
 
                 frameDocument.getElementById('btn-mk-change-start')?.click();
                 await waitFor(() => !frameDocument.getElementById('mk-start-panel')?.classList.contains('hidden'), 'mobile Vorlagenauswahl');
@@ -2815,13 +2806,13 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
                 getMeterForAsset: () => null,
                 getMeterDescendantIds: () => []
             });
-            assert(commands.changeViewMode('detail') && state.viewMode === 'detail', 'Der Befehlscontroller muss den Darstellungsmodus ändern');
+            assert(!commands.changeViewMode && state.viewMode === 'simple', 'Der Befehlscontroller darf keine Darstellungswahl mehr anbieten und startet fest in der einfachen Ansicht');
             assert(commands.changeMode('parallel') && state.mode === 'parallel' && historyCalls === 1, 'Der Befehlscontroller muss den Messmodus mit Historieneintrag ändern');
             assert(commands.changeCascadeLevels(3) && state.cascadeLevels === 3 && historyCalls === 2, 'Der Befehlscontroller muss die Parallelstufen über das Modell ändern');
             assert(commands.addAsset('generation', 'parallel-0')?.zone === 'parallel-0' && renderCalls === 4, 'Der Befehlscontroller muss Anlagen anlegen und danach genau einmal rendern');
         });
 
-        addTest('ui', 'Projektmetadaten bleiben gekapselt', 'Prueft Projektfelder, Skizzenstand und Kommentar über eine DOM-nahe Kleinschnittstelle', async function() {
+        addTest('ui', 'Projektmetadaten bleiben gekapselt', 'Prueft Projektfelder, Messkonzept und Kommentar über eine DOM-nahe Kleinschnittstelle', async function() {
             if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
             const [metaText, indexText, messkonzeptText, serviceWorkerText] = await Promise.all([
                 fetch(`js/messkonzept/project-meta.js?project-meta-module-test=${Date.now()}`).then(response => response.text()),
@@ -2831,12 +2822,11 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             ]);
             assert(metaText.includes('createProjectMetaController') && metaText.includes('updateProjectField') && metaText.includes('updateNotes') && !metaText.includes('mkConfiguratorState') && !metaText.includes('mkElements'), 'Das Projektmetadaten-Modul darf keine Konfiguratorvariablen direkt verwenden');
             assert(indexText.includes('js/messkonzept/project-meta.js') && serviceWorkerText.includes("'js/messkonzept/project-meta.js'") && messkonzeptText.includes('const MK_PROJECT_META = window.WattspurMesskonzeptProjectMeta.createProjectMetaController') && messkonzeptText.includes('return MK_PROJECT_META.sync()'), 'Projektfelder und Kommentar müssen über eine eigene Schnittstelle synchronisiert werden');
-            const state = { project: { name: '', planStatus: 'Aktuell' }, notes: '' };
+            const state = { project: { name: '', measurementConcept: '' }, notes: '' };
             const fields = [{ dataset: { mkProjectField: 'name' }, value: '' }];
-            const statusButton = { dataset: { mkPlanStatus: 'Aktuell' }, classList: { toggle() {} }, setAttribute() {} };
             const notesField = { value: '' };
             const metaApi = new Function(`${metaText}; return window.WattspurMesskonzeptProjectMeta;`)();
-            const meta = metaApi.createProjectMetaController({ getState: () => state, getElements: () => ({ projectFields: fields, planStatusButtons: [statusButton], notesField }), bindHistoryButtons: () => {} });
+            const meta = metaApi.createProjectMetaController({ getState: () => state, getElements: () => ({ projectFields: fields, notesField }), bindHistoryButtons: () => {} });
             meta.updateProjectField('name', 'Testprojekt');
             meta.updateNotes('Abstimmung');
             meta.sync();
@@ -2898,7 +2888,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
             assert(serviceWorkerText.includes("'js/messkonzept/export.js'"), 'Das Export-Modul muss im Offline-Cache berücksichtigt werden');
             const exportApi = new Function(`${exportText}; return window.WattspurMesskonzeptExport;`)();
             const exporter = exportApi.createExporter({
-                getState: () => ({ mode: 'single', project: { name: '<Projekt>', planStatus: 'Vorplanung' }, notes: 'Hinweis', assets: [] }),
+                getState: () => ({ mode: 'single', project: { name: '<Projekt>', measurementConcept: 'MK D1' }, notes: 'Hinweis', assets: [] }),
                 getElements: () => ({ canvas: { innerHTML: '<div>Skizze</div>' } }),
                 escapeHtml: value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
                 validate: () => [{ level: 'warning', text: 'Prüfung' }],
@@ -3837,8 +3827,8 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
                 fetch(`index.html?project-groups-test=${Date.now()}`).then(response => response.text()),
                 fetch(`styles.css?project-groups-test=${Date.now()}`).then(response => response.text())
             ]);
-            assert(indexText.includes('class="mk-project-meta"') && indexText.includes('<summary class="mk-project-meta-heading"') && !indexText.includes('<details class="mk-project-meta" open') && indexText.includes('mk-project-meta-groups') && indexText.includes('mk-project-meta-group--project') && indexText.includes('mk-project-meta-group--location') && indexText.includes('<legend>Projekt &amp; Stand</legend>') && indexText.includes('<legend>Standort</legend>') && indexText.includes('data-mk-project-field="planStatus"'), 'Projektstatus und Standort muessen als zwei verstaendliche, standardmaessig eingeklappte Gruppen erreichbar sein');
-            assert(stylesText.includes('.mk-project-meta-group--project .mk-project-meta-group-fields') && stylesText.includes('minmax(18rem, 3fr)') && stylesText.includes('.mk-plan-status-button') && stylesText.includes('min-height: 2.5rem') && stylesText.includes('white-space: normal') && stylesText.includes('.mk-project-meta > summary::after') && stylesText.includes('.mk-project-meta[open] > summary::after') && stylesText.includes('.mk-project-meta-group--location .mk-project-meta-group-fields') && stylesText.includes('grid-template-columns: repeat(4, minmax(0, 1fr))') && stylesText.includes('grid-template-columns: repeat(2, minmax(0, 1fr))') && stylesText.includes('@media (max-width: 1100px)') && stylesText.includes('@media (max-width: 640px)') && stylesText.includes('grid-template-columns: 1fr') && stylesText.includes('[data-theme="light"] .mk-project-meta-group'), 'Der Standbereich muss auf breiten Ansichten etwas mehr Platz erhalten, die Statusauswahl darf nicht unnötig umbrechen und die Projektangaben muessen auf kleinen Ansichten zweispaltig bzw. untereinander angeordnet werden');
+            assert(indexText.includes('class="mk-project-meta"') && indexText.includes('<summary class="mk-project-meta-heading"') && !indexText.includes('<details class="mk-project-meta" open') && indexText.includes('mk-project-meta-groups') && indexText.includes('mk-project-meta-group--project') && indexText.includes('mk-project-meta-group--location') && indexText.includes('<legend>Projekt &amp; Messkonzept</legend>') && indexText.includes('<legend>Standort</legend>') && indexText.includes('data-mk-project-field="measurementConcept"') && indexText.includes('class="mk-project-meta-notes"') && indexText.indexOf('<div class="mk-layout">') < indexText.indexOf('<details class="mk-project-meta"') && !indexText.includes('data-mk-project-field="planStatus"'), 'Projektangaben und Standort muessen nach dem Editor als eingeklappte Gruppen erreichbar sein; der Kommentar liegt darin');
+            assert(stylesText.includes('.mk-project-meta-group--project .mk-project-meta-group-fields') && stylesText.includes('.mk-project-meta-group--location .mk-project-meta-group-fields') && stylesText.includes('.mk-project-meta-notes') && stylesText.includes('grid-template-columns: repeat(4, minmax(0, 1fr))') && stylesText.includes('grid-template-columns: repeat(2, minmax(0, 1fr))') && stylesText.includes('@media (max-width: 1100px)') && stylesText.includes('@media (max-width: 640px)') && stylesText.includes('grid-template-columns: 1fr') && stylesText.includes('[data-theme="light"] .mk-project-meta-group'), 'Die Projektangaben muessen auf breiten Ansichten gleichmaessig und auf kleinen Ansichten zweispaltig bzw. untereinander angeordnet werden');
         });
 
          addTest('ui', 'Projektangaben-Raster mit zwei Zeilen', 'Prueft die standardisierten Feldbreiten und die klare Gruppierung', async function() {
@@ -3853,19 +3843,7 @@ assert(!indexText.includes('href="#feedback"') && !indexText.includes('<a href="
                 fetch(`index.html?project-toggle-test=${Date.now()}`).then(response => response.text()),
                 fetch(`styles.css?project-toggle-test=${Date.now()}`).then(response => response.text())
             ]);
-            assert(indexText.includes('title="Projektangaben ein- oder ausblenden"') && stylesText.includes('.mk-project-meta > summary::before') && stylesText.includes('.mk-project-meta[open] > summary::before') && stylesText.includes('background: var(--primary-color)') && stylesText.includes('box-shadow: 0 0 0 3px'), 'Das Aufklappzeichen muss links stehen, hell hervorgehoben sein und seinen Plus/Minus-Zustand anzeigen');
-         });
-
-         addTest('ui', 'Skizzenstand als Auswahl', 'Prueft die drei Statusschaltflaechen mit Aktuell als Standardwert', async function() {
-            if (window.location.protocol === 'file:') skipTest('HTTP-Test erforderlich');
-            const [indexText, interactionText, bootstrapText, modelText] = await Promise.all([
-                fetch(`index.html?plan-status-buttons-test=${Date.now()}`).then(response => response.text()),
-                fetch(`js/messkonzept/interaction.js?plan-status-buttons-test=${Date.now()}`).then(response => response.text()),
-                fetch(`js/messkonzept/bootstrap.js?plan-status-buttons-test=${Date.now()}`).then(response => response.text()),
-                fetch(`js/messkonzept/model.js?plan-status-buttons-test=${Date.now()}`).then(response => response.text())
-            ]);
-            assert(indexText.includes('class="mk-plan-status-buttons"') && indexText.includes('aria-pressed="true"') && indexText.includes('value="Aktuell"'), 'Aktuell muss beim Start als ausgewählter Skizzenstand sichtbar sein');
-            assert(interactionText.includes('data-mk-plan-status') && interactionText.includes('updateProjectField') && interactionText.includes('setPlanStatusButtonState') && bootstrapText.includes('planStatusButtons') && modelText.includes("planStatus: 'Aktuell'"), 'Die Statusauswahl muss den Projektstatus fachlich aktualisieren und beim Rendern synchron bleiben');
+            assert(indexText.includes('title="Projektangaben und Kommentar ein- oder ausblenden"') && stylesText.includes('.mk-project-meta > summary::before') && stylesText.includes('.mk-project-meta[open] > summary::before') && stylesText.includes('background: var(--primary-color)') && stylesText.includes('box-shadow: 0 0 0 3px'), 'Das Aufklappzeichen muss links stehen, hell hervorgehoben sein und seinen Plus/Minus-Zustand anzeigen');
          });
 
          addTest('ui', 'Linke Navigation hält Sidebar offen', 'Prueft den gemeinsamen Hover-Bereich aus Modulnavigation und Filter-Sidebar', async function() {

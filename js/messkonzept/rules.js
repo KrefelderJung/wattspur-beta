@@ -11,7 +11,7 @@
 (function exposeMesskonzeptRules(global) {
     'use strict';
 
-    const RULESET_VERSION = '2026-08-19-beta.15';
+    const RULESET_VERSION = '2026-08-22-beta.16';
     const STEUVE_THRESHOLD_KW = 4.2;
     const SMART_METER_CONTROL_THRESHOLD_KW = 7;
     const DIRECT_MARKETING_THRESHOLD_KW = 100;
@@ -172,13 +172,16 @@
     }
 
     /**
-     * Das Leistungsfeld einer Wärmepumpe wird als elektrische
-     * Gesamtleistung einschließlich Zusatz- oder Notheizvorrichtung erfasst.
-     * Dadurch prüft die Regel genau denselben Wert, den der Nutzer im Dialog
-     * dokumentiert. Bei anderen SteuVE bleibt die Anlagenleistung maßgeblich.
+     * Liefert die für §14a maßgebliche Leistung am Messpunkt.
+     * Das Leistungsfeld einer Wärmepumpe wird als elektrische Gesamtleistung
+     * einschließlich Zusatz- oder Notheizvorrichtung erfasst. Bei Speichern
+     * ist die maximale Ladeleistung maßgeblich, weil der Speicher als
+     * steuerbarer Verbrauch bewertet werden kann.
      */
     function getSteuveEffectivePower(asset, parsePower = parsePowerNumber) {
-        if (!asset || asset.type !== 'steuve') return null;
+        if (!asset) return null;
+        if (asset.type === 'storage') return parsePower(asset.storageChargePower);
+        if (asset.type !== 'steuve') return null;
         return parsePower(asset.power);
     }
 
@@ -248,7 +251,8 @@
     }
 
     /**
-     * Liefert die fachliche Zuordnung der SteuVE zu ihrem Messpunkt.
+     * Liefert die fachliche Zuordnung der SteuVE und Speicher zu ihrem
+     * Messpunkt.
      * Ein Zusatz-Zähler steht direkt in meterId. Anlagen ohne Zusatz-Zähler
      * werden über ihre Zone dem Basiszähler des Messbereichs zugeordnet.
      * Die Funktion bleibt DOM-frei und ist deshalb auch für Prüfstatus,
@@ -257,7 +261,7 @@
     function getSteuveMeasurementGroups(state, parsePower = parsePowerNumber) {
         const assets = Array.isArray(state?.assets) ? state.assets : [];
         const groups = new Map();
-        assets.filter(asset => asset?.type === 'steuve').forEach(asset => {
+        assets.filter(asset => ['steuve', 'storage'].includes(asset?.type)).forEach(asset => {
             const meter = getAssignedMeter(assets, asset);
             const key = getMeasurementGroupKey(asset, meter);
             if (!groups.has(key)) {
@@ -495,9 +499,11 @@
         if (overThresholdGroups.length) {
             const groupTexts = overThresholdGroups.map(group => {
                 const heatPumpIncluded = group.assets.some(asset => asset.steuveType === 'Wärmepumpe');
-                const powerHint = heatPumpIncluded
-                    ? 'Bei Wärmepumpen zählt die Gesamtleistung einschließlich Heizstab.'
-                    : '';
+                const storageIncluded = group.assets.some(asset => asset.type === 'storage');
+                const powerHints = [];
+                if (heatPumpIncluded) powerHints.push('Bei Wärmepumpen zählt die Gesamtleistung einschließlich Heizstab.');
+                if (storageIncluded) powerHints.push('Bei Speichern ist die maximale Ladeleistung maßgeblich.');
+                const powerHint = powerHints.join(' ');
                 const missingPowerHint = group.missingPowerAssetIds.length
                     ? `Für ${group.missingPowerAssetIds.length === 1 ? 'eine zugeordnete Anlage fehlt' : `${group.missingPowerAssetIds.length} zugeordnete Anlagen fehlen`} noch die Leistungsangabe. Die Summe ist deshalb nur ein Mindestwert.`
                     : '';

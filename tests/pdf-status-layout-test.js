@@ -1,11 +1,7 @@
 'use strict';
 
 /*
- * Regressionstest für die PDF-Struktur.
- *
- * Die Prüfung bleibt bewusst DOM-frei: Sie stellt sicher, dass ein späteres
- * Export-Refactoring die Textseite nicht wieder in eine enge Statusspalte
- * und eine vorgezogene Messskizze aufteilt.
+ * Regressionstest für die kompakte PDF-One-Pager-Struktur.
  */
 
 const fs = require('fs');
@@ -22,24 +18,20 @@ function assert(condition, message) {
 
 const noticePosition = exportSource.indexOf('${renderExportNotice()}');
 const projectPosition = exportSource.indexOf('${renderProjectDetails()}');
-const statusPosition = exportSource.indexOf('class="mk-print-status"');
+const topologyPosition = exportSource.indexOf('<section class="mk-print-topology"');
 const notesPosition = exportSource.indexOf('${renderNotes()}');
-const topologyPosition = exportSource.indexOf('class="mk-print-topology"');
 
 assert(exportSource.includes('function renderExportNotice()'), 'PDF muss einen zentralen Hinweisbaustein besitzen');
-assert(exportSource.includes('Prüfstatus und Hinweise'), 'PDF muss die verständliche Überschrift „Prüfstatus und Hinweise“ verwenden');
-assert(noticePosition >= 0 && projectPosition > noticePosition, 'PDF-Reihenfolge: Hinweis muss vor den Projektangaben stehen');
-assert(statusPosition > projectPosition && (notesPosition < 0 || notesPosition > statusPosition), 'PDF-Reihenfolge: Prüfstatus muss direkt nach Projektangaben stehen');
-assert(topologyPosition > statusPosition && (notesPosition < 0 || topologyPosition > notesPosition), 'PDF-Reihenfolge: Messskizze muss nach Prüfstatus und Notizen stehen');
+assert(noticePosition >= 0 && topologyPosition > noticePosition, 'PDF-Reihenfolge: Hinweis muss vor der Messskizze stehen');
+assert(topologyPosition > 0 && projectPosition > topologyPosition, 'PDF-Reihenfolge: Projektangaben müssen unter der Messskizze stehen');
+assert(notesPosition > projectPosition && exportSource.includes('mk-print-sheet--one-page') && !exportSource.includes('renderExportDetails()}'), 'Kommentar muss nach den Projektangaben folgen; Prüfstatus und Objektdetails bleiben draußen');
+assert(exportSource.includes('mk-print-project-row') && exportSource.includes('Messkonzept'), 'Projektangaben müssen in kompakte Zeilen mit Messkonzept aufgeteilt werden');
 
 const topologyRule = stylesSource.indexOf('body.mk-printing .mk-print-topology {');
 assert(topologyRule >= 0, 'PDF-CSS muss eine eigene Messskizzenregel besitzen');
-assert(stylesSource.includes('page-break-before: always;') && stylesSource.includes('break-before: page;'), 'PDF-Messskizze muss auf einer neuen Seite beginnen');
-const statusRule = stylesSource.indexOf('body.mk-printing .mk-print-status {');
-const statusListRule = stylesSource.indexOf('body.mk-printing .mk-print-status ul {');
-assert(statusRule >= 0 && statusListRule > statusRule, 'PDF-CSS muss Statuscontainer und Statusliste getrennt gestalten');
-assert(stylesSource.includes('display: block;\n        width: 100%;') && stylesSource.includes('list-style: none;') && stylesSource.includes('.mk-print-status-label'), 'PDF-Prüfstatus muss einspaltig und druckneutral gestaltet sein');
-assert(exportSource.includes('statusCounters') && exportSource.includes('mk-print-status-label'), 'PDF-Prüfstatus muss nummerierte, neutrale Statuslabels ausgeben');
-assert(requirementsSource.includes('Prüfstatus und Hinweise') && requirementsSource.includes('Akzeptanzkriterien'), 'PDF-Layout-Anforderungen müssen dokumentiert sein');
+assert(!stylesSource.includes('page-break-before: always;') && !stylesSource.includes('break-before: page;'), 'PDF-One-Pager darf die Messskizze nicht auf eine zweite Seite zwingen');
+assert(stylesSource.includes('body.mk-printing .mk-print-status,') && stylesSource.includes('display: none !important;'), 'Prüfstatus und Objektdetails müssen im One-Pager ausgeblendet bleiben');
+assert(stylesSource.includes('body.mk-printing .mk-print-header') && stylesSource.includes('position: static;'), 'PDF-Kopfzeile muss im normalen Dokumentfluss bleiben und Inhalte nicht überdecken');
+assert(requirementsSource.includes('One-Pager') && requirementsSource.includes('Kommentar') && requirementsSource.includes('Akzeptanzkriterien'), 'PDF-Layout-Anforderungen müssen Reihenfolge und Kommentar dokumentieren');
 
 console.log('PDF-Status-Layout-Test: OK');

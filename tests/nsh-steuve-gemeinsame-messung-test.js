@@ -14,7 +14,7 @@ vm.createContext(context);
 vm.runInContext(read('js/messkonzept/rules.js'), context);
 const rules = context.window.WattspurMesskonzeptRules;
 assert(rules, 'Regelmodul konnte nicht geladen werden');
-assert(rules.rulesetVersion === '2026-08-19-beta.15', 'Regelwerksstand muss zur NSH-Regel passen');
+assert(rules.rulesetVersion === '2026-08-22-beta.16', 'Regelwerksstand muss zur NSH-Regel passen');
 assert(rules.getRuleCatalog().NSH_STEUVE_MIXED?.id === 'MK-NSH-001', 'NSH-Regel muss MK-NSH-001 tragen');
 
 const hasHint = checks => checks.some(check => check.ruleId === 'MK-NSH-001');

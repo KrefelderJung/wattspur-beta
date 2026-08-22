@@ -41,13 +41,15 @@
             if (asset.type === 'storage' && ['storageGridFeedIn', 'storageGridImport'].includes(field)) {
                 call('render');
             }
-            if (asset.type === 'steuve' && ['power', 'steuveType'].includes(field)) {
-                const moduleFields = card.querySelector(`[data-mk-steuve-module-fields="${asset.id}"]`);
+            if ((asset.type === 'steuve' && ['power', 'steuveType'].includes(field))
+                || (asset.type === 'storage' && field === 'storageChargePower')) {
+                const moduleFields = card.querySelector(`[data-mk-steuve-module-fields="${asset.id}"], [data-mk-storage-module-fields="${asset.id}"]`);
                 if (moduleFields) moduleFields.innerHTML = call('renderSteuveModuleFields', asset) || '';
                 // Nach einem Wechsel der Anlagenart muss der Dialog seine
                 // fachlich passende Leistungsbezeichnung neu aufbauen.
-                if (field === 'steuveType') call('refreshObjectModal', { kind: 'asset', id: asset.id });
+                if (asset.type === 'steuve' && field === 'steuveType') call('refreshObjectModal', { kind: 'asset', id: asset.id });
             }
+            call('refreshMeterAnnotations');
             call('refreshInlineStatus');
             if (previousState) call('recordHistory', previousState);
         }
@@ -60,7 +62,8 @@
             const previousState = call('getFieldHistoryBefore', event);
             const details = call('getMeterDetails', index);
             if (!details) return;
-            details[field] = target.value;
+            details[field] = target.type === 'checkbox' ? target.checked : target.value;
+            call('refreshMeterAnnotations');
             if (previousState) call('recordHistory', previousState);
         }
 
@@ -70,10 +73,15 @@
             if (!field) return;
             const previousState = call('getFieldHistoryBefore', event);
             call('updateHakField', field, target.type === 'checkbox' ? target.checked : target.value);
-            call('render');
-            if (getState()?.selectedObject?.kind === 'hak') {
-                call('refreshObjectModal', getState().selectedObject);
+            if (field === 'voltageLevel') {
+                call('render');
+                if (getState()?.selectedObject?.kind === 'hak') {
+                    call('refreshObjectModal', getState().selectedObject);
+                }
+            } else {
+                call('refreshMeterAnnotations');
             }
+            call('refreshInlineStatus');
             if (previousState) call('recordHistory', previousState);
         }
 

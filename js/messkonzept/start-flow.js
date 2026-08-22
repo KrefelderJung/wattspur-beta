@@ -48,8 +48,9 @@
                 const infoHost = group.closest('.mk-start-group')?.querySelector('[data-mk-preset-info]');
                 if (infoHost) infoHost.innerHTML = renderPresetInfo(groupId);
                 group.innerHTML = entries.map(entry => `
-                    <button type="button" class="mk-start-card" data-mk-preset="${escapeHtml(entry.id)}" aria-label="${escapeHtml(`Vorlage ${entry.title} laden. ${entry.summary}`)}">
-                        <span class="mk-start-card-title">${escapeHtml(entry.title)}</span>
+                    <button type="button" class="mk-start-card" data-mk-preset="${escapeHtml(entry.id)}" aria-label="${escapeHtml(`${entry.modelCode ? `${entry.modelCode}: ${entry.modelName}. ` : ''}Vorlage ${entry.title} laden.${entry.showSummary && entry.summary ? ` ${entry.summary}` : ''}`)}">
+                        ${entry.modelCode ? `<span class="mk-start-card-model"><span class="mk-start-card-model-code">${escapeHtml(entry.modelCode)}:</span><span class="mk-start-card-model-name">${escapeHtml(entry.modelName)}</span></span>` : ''}
+                        ${entry.showSummary && entry.summary ? `<span class="mk-start-card-summary">${escapeHtml(entry.summary)}</span>` : ''}
                         <span class="mk-start-card-flow" aria-hidden="true">${entry.flow.map(label => `<span class="mk-start-flow-chip ${getFlowChipClass(label)}">${escapeHtml(label)}</span>`).join('')}</span>
                     </button>
                 `).join('');

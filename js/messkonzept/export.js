@@ -42,40 +42,85 @@
             };
         }
 
+        function sanitizeFileNamePart(value) {
+            return String(value ?? '')
+                .trim()
+                .replace(/[<>:"/\\|?*\u0000-\u001F]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .replace(/[. ]+$/g, '')
+                .trim();
+        }
+
+        function getSuggestedFileName() {
+            const project = getState().project || {};
+            const location = [project.street, project.houseNumber]
+                .map(sanitizeFileNamePart)
+                .filter(Boolean)
+                .join(' ');
+            return location || 'Wattspur-Messkonzept';
+        }
+
         function renderNotes() {
             const notes = String(getState().notes || '').trim();
             if (!notes) return '';
-            return `<section class="mk-print-notes"><h2>Abstimmungsnotizen</h2><p>${escapeHtml(notes).replace(/\r?\n/g, '<br>')}</p></section>`;
+            return `<section class="mk-print-notes"><h2>Kommentar</h2><p>${escapeHtml(notes).replace(/\r?\n/g, '<br>')}</p></section>`;
         }
 
         function renderProjectDetails() {
             const project = getState().project || {};
-            const rows = [
-                ['Projektname', project.name],
-                ['Referenz / Artikelnummer', project.reference],
-                ['Straße', project.street],
-                ['Hausnummer', project.houseNumber],
-                ['PLZ', project.postalCode],
-                ['Ort', project.city],
-                ['Stand der Skizze', project.planStatus]
-            ];
-            return `<section class="mk-print-project"><h2>Projektangaben</h2><dl>${rows.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || '—')}</dd></div>`).join('')}</dl></section>`;
+            const renderRow = rows => `<div class="mk-print-project-row">${rows.map(([label, value]) => `
+                <div class="mk-print-project-field">
+                    <dt>${escapeHtml(label)}</dt>
+                    <dd>${escapeHtml(value || '—')}</dd>
+                </div>`).join('')}</div>`;
+            return `<section class="mk-print-project"><h2>Projektangaben</h2><dl class="mk-print-project-grid">
+                ${renderRow([
+                    ['Projektname', project.name],
+                    ['Referenz / Artikelnummer', project.reference],
+                    ['Messkonzept', project.measurementConcept]
+                ])}
+                ${renderRow([
+                    ['Straße', project.street],
+                    ['Hausnummer', project.houseNumber],
+                    ['PLZ', project.postalCode],
+                    ['Ort', project.city],
+                ])}
+            </dl></section>`;
         }
 
         function renderExportNotice() {
             return `<p class="mk-print-notice"><strong>Wichtiger Hinweis:</strong> Dieser Export zeigt den zum Exportzeitpunkt erfassten Stand. Die Skizze dient nur der Orientierung. Sie ersetzt keine fachliche Prüfung, technische Abstimmung oder Genehmigung. Vor Änderungen muss das Messkonzept durch einen konzessionierten Elektrofachbetrieb geprüft und mit dem zuständigen Netzbetreiber abgestimmt werden.</p>`;
         }
 
-        function renderCompactTable(title, fieldLabels, rows) {
+        function renderCompactTable(title, fieldLabels, rows, options = {}) {
             if (!rows.length) return '';
-            const columns = fieldLabels.length ? fieldLabels : ['Hinweis'];
+            const effectiveFields = fieldLabels.length ? fieldLabels : ['Hinweis'];
+            const leadingField = options.leadingField && effectiveFields.includes(options.leadingField)
+                ? options.leadingField
+                : null;
+            const leadingIndex = leadingField ? effectiveFields.indexOf(leadingField) : -1;
+            const columns = effectiveFields
+                .filter(label => label !== leadingField);
+            const rowLabelHeader = options.rowLabelHeader || 'Objekt';
+            const headerCells = leadingField
+                ? `<th scope="col">${escapeHtml(options.leadingHeader || leadingField)}</th><th scope="col">${escapeHtml(rowLabelHeader)}</th>`
+                : `<th scope="col">${escapeHtml(rowLabelHeader)}</th>`;
             return `
                 <section class="mk-print-table-section">
                     <h4>${escapeHtml(title)}</h4>
                     <div class="mk-print-table-wrap">
                         <table class="mk-print-table">
-                            <thead><tr><th scope="col">Objekt</th>${columns.map(label => `<th scope="col">${escapeHtml(label)}</th>`).join('')}</tr></thead>
-                            <tbody>${rows.map(row => `<tr><th scope="row">${escapeHtml(row.label)}</th>${columns.map((label, index) => `<td>${escapeHtml(row.values[index] || '')}</td>`).join('')}</tr>`).join('')}</tbody>
+                            <thead><tr>${headerCells}${columns.map(label => `<th scope="col">${escapeHtml(label)}</th>`).join('')}</tr></thead>
+                            <tbody>${rows.map(row => {
+                                const leadingCell = leadingField
+                                    ? `<td>${escapeHtml(row.values[leadingIndex] || '')}</td><th scope="row">${escapeHtml(row.label)}</th>`
+                                    : `<th scope="row">${escapeHtml(row.label)}</th>`;
+                                const valueCells = columns.map(label => {
+                                    const valueIndex = effectiveFields.indexOf(label);
+                                    return `<td>${escapeHtml(row.values[valueIndex] || '')}</td>`;
+                                }).join('');
+                                return `<tr>${leadingCell}${valueCells}</tr>`;
+                            }).join('')}</tbody>
                         </table>
                     </div>
                 </section>
@@ -143,9 +188,13 @@
             assets.filter(asset => asset.type !== 'meter').forEach(asset => {
                 const groupKey = asset.type || 'asset';
                 if (!assetGroups.has(groupKey)) assetGroups.set(groupKey, []);
+                const hideMeterBeforeColumn = ['storage', 'nsh', 'steuve'].includes(asset.type);
+                const hideNshClassification = asset.type === 'nsh';
                 assetGroups.get(groupKey).push({
                     label: asset.name || getAssetMeta(asset.type)?.label || 'Anlage',
-                    entries: getAssetSummaryEntries(asset, false).filter(entry => entry.label !== 'Bezeichnung')
+                    entries: getAssetSummaryEntries(asset, false).filter(entry => entry.label !== 'Bezeichnung'
+                        && !(hideMeterBeforeColumn && entry.label === 'Zähler davor')
+                        && !(hideNshClassification && entry.label === 'Einordnung'))
                 });
             });
             assetGroups.forEach((rows, type) => {
@@ -153,7 +202,13 @@
                 const tableRows = fields.length
                     ? toTableRows(rows, fields)
                     : rows.map(row => ({ label: row.label, values: ['Keine weiteren Angaben'] }));
-                detailSections.push(renderCompactTable(getAssetMeta(type)?.label || 'Anlagen', fields, tableRows));
+                const leadingField = fields.find(field => field === 'Anlagenart' || field === 'Anlage');
+                detailSections.push(renderCompactTable(
+                    getAssetMeta(type)?.label || 'Anlagen',
+                    fields,
+                    tableRows,
+                    leadingField ? { leadingField, leadingHeader: leadingField, rowLabelHeader: 'Objektbezeichnung' } : {}
+                ));
             });
 
             if (detailSections.length === 1) detailSections.push('<p class="mk-print-muted">Keine zusätzlichen Bausteine angelegt.</p>');
@@ -186,16 +241,31 @@
             };
             const width = parseDimension(connectorLayer?.getAttribute('width'), parseDimension(viewBox[2], stage.scrollWidth || stage.offsetWidth || 1));
             const height = parseDimension(connectorLayer?.getAttribute('height'), parseDimension(viewBox[3], stage.scrollHeight || stage.offsetHeight || 1));
-            // A4 portrait with standard print margins and the frame padding
-            // leaves roughly 650 CSS px for the sketch. Scale only the
-            // isolated PDF copy, never the editor stage, so wide topologies
-            // remain complete and aligned.
+            // The one-page export reserves space for the header, notice and
+            // project fields. Scale only the isolated PDF copy, never the
+            // editor stage, so the editor geometry remains unchanged.
             const maxPrintWidth = 650;
-            const scale = Math.min(1, maxPrintWidth / width);
+            const maxPrintHeight = 520;
+            const scale = Math.min(1, maxPrintWidth / width, maxPrintHeight / height);
             const scaledWidth = Math.ceil(width * scale);
             const scaledHeight = Math.ceil(height * scale);
 
-            clone.classList.add('mk-print-canvas-stage');
+            clone.classList.add('mk-print-canvas-stage', 'mk-print-geometry-svg-only');
+            /*
+             * Die langen Leitungswege werden im Editor bereits als geroutete
+             * SVG-Pfade in .mk-connector-layer gezeichnet. Ältere HTML/CSS-
+             * Anker und Pseudo-Elemente bleiben für die Bedienung wichtig,
+             * dürfen aber nicht in die isolierte Druckkopie gelangen. Sonst
+             * wird derselbe Weg im PDF doppelt dargestellt.
+             */
+            if (typeof clone.querySelectorAll === 'function') {
+                clone.querySelectorAll([
+                    '.mk-connection-line',
+                    '.mk-rail-meter-link',
+                    '.mk-zone-wrap-strand',
+                    '.mk-rail-junction-anchor'
+                ].join(',')).forEach(element => element.remove());
+            }
             clone.style.setProperty('width', `${Math.ceil(width)}px`);
             clone.style.setProperty('min-width', `${Math.ceil(width)}px`);
             clone.style.setProperty('height', `${Math.ceil(height)}px`);
@@ -215,35 +285,21 @@
             return `<div class="mk-print-canvas-frame"><div class="mk-print-canvas-fit" style="width:${scaledWidth}px;height:${scaledHeight}px">${clone.outerHTML}</div></div>`;
         }
 
-        function renderPrintSheet(stand = getExportStand(), options = {}) {
-            const scope = options.scope === 'sketch' ? 'sketch' : 'full';
-            const isSketchExport = scope === 'sketch';
+        function renderPrintSheet(stand = getExportStand()) {
             const topology = getTopologyMarkup();
-            const statusCounters = new Map();
-            const checks = validate().map(check => {
-                const statusLabel = check.level === 'error' ? 'Fehler'
-                    : check.level === 'warning' ? 'Hinweis'
-                        : check.level === 'ok' ? 'OK' : 'Info';
-                const statusNumber = (statusCounters.get(statusLabel) || 0) + 1;
-                statusCounters.set(statusLabel, statusNumber);
-                return `<li class="${check.level}"><strong class="mk-print-status-label">${escapeHtml(`${statusLabel} ${statusNumber}`)}:</strong> ${escapeHtml(check.text)}</li>`;
-            }).join('');
             return `
-        <section class="mk-print-sheet mk-print-sheet--${scope}" data-mk-export-scope="${scope}" aria-label="${isSketchExport ? 'Messskizzen-Export' : 'Messkonzept-Export'}">
+        <section class="mk-print-sheet mk-print-sheet--one-page" data-mk-export-scope="one-page" aria-label="Messkonzept-PDF">
             <header class="mk-print-header">
                 <div class="mk-print-brand" aria-label="Wattspur Messkonzept-Konfigurator">
                     <img class="mk-print-brand-mark" src="wattspur-mark.svg" alt="Wattspur">
                     <span class="mk-print-brand-copy"><strong>Wattspur</strong><span>Messkonzept-Konfigurator</span></span>
                 </div>
-                <div class="mk-print-meta"><b>Exportstand</b><span>${escapeHtml(stand.label)}</span></div>
             </header>
             ${renderExportNotice()}
-            ${renderProjectDetails()}
-            <section class="mk-print-status" aria-label="Prüfstatus und Hinweise"><h3>Prüfstatus und Hinweise</h3><ul>${checks}</ul></section>
-            ${renderNotes()}
             <section class="mk-print-topology"><h2>Messskizze</h2>${topology}</section>
-            ${isSketchExport ? '' : renderExportDetails()}
-            <footer class="mk-print-footer">Wattspur Beta · ${isSketchExport ? 'Skizzenexport' : 'Gesamtexport'} · lokal im Browser erstellt · Stand ${escapeHtml(stand.label)}</footer>
+            ${renderProjectDetails()}
+            ${renderNotes()}
+            <footer class="mk-print-footer">Wattspur Beta · Messkonzept-Skizze · lokal im Browser erstellt</footer>
         </section>
     `;
         }
@@ -252,14 +308,14 @@
             const doc = getDocument();
             const win = getWindow();
             const stand = getExportStand();
-            const scope = options.scope === 'sketch' ? 'sketch' : 'full';
-            const isSketchExport = scope === 'sketch';
             const wrapper = doc.createElement('div');
-            wrapper.innerHTML = renderPrintSheet(stand, { scope });
+            wrapper.innerHTML = renderPrintSheet(stand);
             const printSheet = wrapper.firstElementChild;
             doc.body.appendChild(printSheet);
             const previousTitle = doc.title;
-            doc.title = `Wattspur-${isSketchExport ? 'Messskizze' : 'Messkonzept'}-${stand.iso.slice(0, 10)}`;
+            // Browser verwenden den Dokumenttitel beim nativen Druckdialog in
+            // der Regel als vorgeschlagenen PDF-Dateinamen.
+            doc.title = getSuggestedFileName();
             const cleanup = () => {
                 printSheet.remove();
                 doc.title = previousTitle;
@@ -273,11 +329,12 @@
                     if (doc.body.contains(printSheet)) cleanup();
                 }, 250);
             }, 40);
-            notify(`${isSketchExport ? 'Skizzenexport' : 'Gesamtexport'} geöffnet. Wähle dort „Als PDF speichern“.`, 'info');
+            notify('PDF-Export geöffnet. Wähle dort „Als PDF speichern“.', 'info');
         }
 
         return Object.freeze({
             getExportStand,
+            getSuggestedFileName,
             renderNotes,
             renderProjectDetails,
             renderExportNotice,

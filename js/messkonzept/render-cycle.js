@@ -36,11 +36,6 @@
                 button.setAttribute('aria-pressed', String(active));
             });
 
-            (elements.viewButtons || []).forEach(button => {
-                const active = button.dataset.mkView === state.viewMode;
-                button.classList.toggle('active', active);
-                button.setAttribute('aria-pressed', String(active));
-            });
         }
 
         function render() {

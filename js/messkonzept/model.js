@@ -41,7 +41,7 @@
         steuve: [
             { value: 'Wärmepumpe', label: 'Wärmepumpe' },
             { value: 'Wallbox', label: 'Wallbox' },
-            { value: 'Klimaanlage', label: 'Raumkühlung / Klimaanlage' },
+            { value: 'Klimaanlage', label: 'Klimaanlage' },
             { value: 'offen', label: 'Fachliche Einordnung offen' }
         ]
     });
@@ -75,8 +75,9 @@
         { key: 'maloBezug', label: 'Marktlokation Bezug', type: 'text' },
         { key: 'maloLieferung', label: 'Marktlokation Lieferung', type: 'text' },
         { key: 'melo', label: 'Messlokation', type: 'text', maxLength: 33 },
-        { key: 'meterNumber', label: 'Zählernummer', type: 'text' },
-        { key: 'installationDate', label: 'Einbaudatum', type: 'date' }
+        { key: 'meterNumber', label: 'Zählernummer', type: 'text', maxLength: 11, inputmode: 'numeric', pattern: '[0-9]*' },
+        { key: 'installationDate', label: 'Einbaudatum', type: 'date' },
+        { key: 'remark', label: 'Bemerkung', type: 'textarea', maxLength: 240, rows: 3 }
     ]);
 
     function getGenerationDisplay(energyCarrier) {
@@ -155,8 +156,12 @@
             nextId: 1,
             assets: [],
             meterDetails: {},
-            hak: { voltageLevel: 'low' },
-            project: { name: '', reference: '', street: '', houseNumber: '', postalCode: '', city: '', planStatus: 'Aktuell' },
+            // Positionen der optionalen Zähler-Infokarten. Die Koordinaten
+            // liegen relativ zur Skizzenbühne und beeinflussen keine
+            // fachliche Zähler- oder Leitungslogik.
+            meterAnnotationPositions: {},
+            hak: { voltageLevel: 'low', annotationVisible: true, remark: '' },
+            project: { name: '', reference: '', measurementConcept: '', street: '', houseNumber: '', postalCode: '', city: '' },
             notes: '',
             selectedObject: null
         };
@@ -176,6 +181,7 @@
             nextId: currentState.nextId,
             assets: clone(currentState.assets),
             meterDetails: clone(currentState.meterDetails),
+            meterAnnotationPositions: clone(currentState.meterAnnotationPositions || {}),
             hak: clone(currentState.hak || { voltageLevel: 'low' })
         };
     }
@@ -198,10 +204,14 @@
         if (!snapshot) return;
         history.applying = true;
         currentState.mode = snapshot.mode;
+        // Die Oberfläche bietet bewusst nur die einfache Ansicht an. Auch alte
+        // Verlaufsstände dürfen daher niemals eine Detailansicht reaktivieren.
+        currentState.viewMode = 'simple';
         currentState.cascadeLevels = snapshot.cascadeLevels;
         currentState.nextId = snapshot.nextId;
         currentState.assets = clone(snapshot.assets);
         currentState.meterDetails = clone(snapshot.meterDetails);
+        currentState.meterAnnotationPositions = clone(snapshot.meterAnnotationPositions || {});
         currentState.hak = clone(snapshot.hak || { voltageLevel: 'low' });
         setHakVoltageLevel(currentState, currentState.hak.voltageLevel);
         currentState.selectedObject = null;
@@ -209,15 +219,18 @@
     }
 
     function createMeterDetails() {
-        return meterDetailFields.reduce((details, field) => {
-            details[field.key] = '';
-            return details;
+        const details = meterDetailFields.reduce((result, field) => {
+            result[field.key] = '';
+            return result;
         }, {});
+        details.annotationVisible = true;
+        return details;
     }
 
     function getMeterDetails(currentState, index) {
         const key = String(index + 1);
         if (!currentState.meterDetails[key]) currentState.meterDetails[key] = createMeterDetails();
+        if (currentState.meterDetails[key].annotationVisible === undefined) currentState.meterDetails[key].annotationVisible = true;
         return currentState.meterDetails[key];
     }
 
@@ -273,6 +286,8 @@
             // lösen aber keine automatische Netzbetreiberentscheidung aus.
             inverterPower: type === 'generation' ? '' : '',
             commissioningDate: '',
+            remark: '',
+            annotationVisible: true,
             meterRole: type === 'meter' ? 'Bezug / Lieferung' : '',
             generationMeter: false,
             storageGridFeedIn: type === 'storage' ? 'unknown' : '',
@@ -355,7 +370,8 @@
         currentState.nextId = 1;
         currentState.assets = [];
         currentState.meterDetails = {};
-        currentState.hak = { voltageLevel: 'low' };
+        currentState.meterAnnotationPositions = {};
+        currentState.hak = { voltageLevel: 'low', annotationVisible: true, remark: '' };
         currentState.selectedObject = null;
     }
 

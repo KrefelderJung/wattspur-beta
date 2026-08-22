@@ -14,7 +14,7 @@ vm.createContext(context);
 vm.runInContext(read('js/messkonzept/rules.js'), context);
 const rules = context.window.WattspurMesskonzeptRules;
 assert(rules, 'Regelmodul konnte nicht geladen werden');
-assert(rules.rulesetVersion === '2026-08-19-beta.15', 'Regelwerksstand muss zum iMSys-Hinweis passen');
+assert(rules.rulesetVersion === '2026-08-22-beta.16', 'Regelwerksstand muss zum iMSys-Hinweis passen');
 assert(rules.getRuleCatalog().SMART_METER_CONTROL?.id === 'MK-ASSET-008', 'iMSys-Regel muss MK-ASSET-008 tragen');
 
 const checksFor = asset => rules.evaluate({ mode: 'single', assets: [asset] });

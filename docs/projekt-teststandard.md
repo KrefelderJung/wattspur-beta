@@ -39,7 +39,7 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
 
 4. **Browser- und Bedienungstests**
 
-   Prüfen das, was ein Anwender sieht und bedient: Startvorlagen, beide PDF-Druckansichten (kompakte Skizze und Gesamtexport), Tastatur-/Maus-Navigation, Zoom, mobile Darstellung, Dialoge, sichtbare Drop-Ziele und die drei Planstatus-Schaltflächen.
+   Prüfen das, was ein Anwender sieht und bedient: Startvorlagen, den reduzierten PDF-Druck, Tastatur-/Maus-Navigation, Zoom, mobile Darstellung, Dialoge, sichtbare Drop-Ziele und die gemeinsame Toolbar ohne Darstellungsumschaltung.
 
 5. **Release- und Sicherheits-Gates**
 
@@ -136,9 +136,9 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
    Gruppe hinzufügen und wieder entfernen kann.
 
    Der Kennzifferntest prüft die kleinen, getrennten Nummern-Badges für
-   Symbolkarten. Wallboxen, Wärmepumpen und Speicher werden je fachlichem
-   Typ gezählt, während Textkarten wie PV1 oder V1 kein zusätzliches Badge
-   erhalten. Die Kennziffern sind reine Darstellung und beeinflussen keine
+   Symbolkarten. Wallboxen, Wärmepumpen, Klimaanlagen und Speicher werden je
+   fachlichem Typ gezählt, während Textkarten wie PV1, V1, NSH1 oder N1 kein
+   zusätzliches Badge erhalten. Die Kennziffern sind reine Darstellung und beeinflussen keine
    Karten- oder Leitungsgeometrie.
 
 6. **Browser-Ablauftest**
@@ -156,21 +156,26 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
    die tatsächliche Verkabelung und Bedienung der Oberfläche. Die acht
    Startvorlagen werden außerdem einzeln geöffnet. Dabei werden Messmodus,
    Objektanzahl, eindeutige Karten und die erwartete Kaskaden-Sammelschiene
-   kontrolliert. Beide PDF-Ausgaben werden ebenfalls im Browser ausgelöst:
-   Der Skizzenexport enthält Kopf, Projektangaben, Skizze und Prüfstatus, der
-   Gesamtexport zusätzlich die vollständigen Objektdetails. Beide Varianten
-   müssen den Browser-Druckaufruf erreichen und anschließend sauber aufräumen.
+   kontrolliert. Der PDF-Export wird ebenfalls im Browser ausgelöst:
+   Der reduzierte Skizzenexport enthält Kopf, Warnhinweis, Skizze,
+   Projektangaben und einen optionalen Kommentar. Prüfstatus und Objektdetails
+   werden bewusst nicht ausgegeben. Ein sehr langer Kommentar darf auf eine
+   zweite Druckseite umbrechen. Der Export muss den Browser-Druckaufruf
+   erreichen und anschließend sauber aufräumen.
    Ein zusätzlicher Lauf simuliert eine Smartphone-Breite von 390 Pixeln.
-   Dabei müssen Einstieg, Bausteinleiste, Messmodus, Darstellung und beide
+   Dabei müssen Einstieg, Bausteinleiste, Messmodus, feste einfache Ansicht und beide
    Exportbuttons erreichbar bleiben. Eine breite Skizze darf innerhalb des
    Zeichenbereichs horizontal verschiebbar sein, darf aber keinen horizontalen
    Überlauf der gesamten Seite erzeugen.
 
-Der PDF-Status-Layout-Test prüft zusätzlich statisch, dass Hinweis,
-Projektangaben, Prüfstatus und Notizen vor der auf eine eigene Seite
-verschobenen Messskizze stehen und der Status die verfügbare Breite nutzt.
+Der PDF-Status-Layout-Test prüft zusätzlich statisch, dass Hinweis und
+Messskizze vor den Projektangaben stehen, der optionale Kommentar danach folgt
+und die reduzierte Ausgabe keine Prüfstatus- oder Objektdetailseiten einfügt.
 Der PDF-Objekttabellen-Test prüft die festen Stammdatenspalten der
 Zählertabelle sowie die Ausblendung interner Strukturangaben.
+Er prüft außerdem, dass feste Anlagenarten vor der Objektbezeichnung stehen.
+Der PDF-Leitungsgeometrie-Test prüft zusätzlich, dass der Druckklon nur die
+geroutete SVG-Leitungsebene verwendet und doppelte SVG-Pfade entfernt.
 
 ## Was diese Tests nicht beweisen
 

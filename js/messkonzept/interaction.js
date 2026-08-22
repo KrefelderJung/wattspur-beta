@@ -56,7 +56,11 @@
                 return;
             }
             if (target.dataset.mkSelectMeter !== undefined) {
-                call('openObjectModal', { kind: 'meter', index: Number(target.dataset.mkSelectMeter) || 0 });
+                call('openObjectModal', {
+                    kind: 'meter',
+                    id: target.dataset.mkMeterId || '',
+                    index: Number(target.dataset.mkSelectMeter) || 0
+                });
             }
             if (target.dataset.mkSelectAsset) call('openObjectModal', { kind: 'asset', id: target.dataset.mkSelectAsset });
         }
@@ -77,7 +81,31 @@
             canvas.addEventListener('drop', event => call('handleCanvasDrop', event));
             canvas.addEventListener('dragstart', event => call('handleCanvasDragStart', event));
             canvas.addEventListener('dragend', event => call('handleCanvasDragEnd', event));
-            canvas.addEventListener('click', event => call('handleCanvasClick', event));
+            canvas.addEventListener('click', event => {
+                if (call('consumePointerClickSuppression')) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return;
+                }
+                /* Zusatzzaehler liegen in verschachtelten Schienen. Die
+                 * stabile Zähler-ID wird deshalb vor allen nachgelagerten
+                 * Canvas-Ereignissen ausgewertet. Entfernen-Schaltflächen
+                 * bleiben davon ausgenommen. */
+                const meterTarget = event.target?.closest?.('[data-mk-select-meter]');
+                const removeMeterTarget = event.target?.closest?.('[data-mk-remove-meter]');
+                if (meterTarget && !removeMeterTarget) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    call('openObjectModal', {
+                        kind: 'meter',
+                        id: meterTarget.dataset.mkMeterId || '',
+                        index: Number(meterTarget.dataset.mkSelectMeter) || 0
+                    });
+                    return;
+                }
+                call('handleCanvasClick', event);
+            }, true);
+            call('initializePointerDrag');
         }
 
         function initialize() {
@@ -98,8 +126,7 @@
                 call('reset');
                 call('notify', 'Messkonzept-Skizze zurückgesetzt.', 'info');
             });
-            bindClick('btn-mk-export-sketch', () => call('downloadPdf', { scope: 'sketch' }));
-            bindClick('btn-mk-export-pdf', () => call('downloadPdf', { scope: 'full' }));
+            bindClick('btn-mk-export-pdf', () => call('downloadPdf'));
 
             documentRef.querySelectorAll('[data-mk-preset]').forEach(button => {
                 button.addEventListener('click', () => call('loadPreset', button.dataset.mkPreset));
@@ -111,34 +138,15 @@
                     call('updateProjectField', key, event.target.value.trimStart());
                 });
             });
-            const planStatusField = documentRef.querySelector('[data-mk-project-field="planStatus"]');
-            const planStatusButtons = [...documentRef.querySelectorAll('[data-mk-plan-status]')];
-            const setPlanStatusButtonState = value => {
-                planStatusButtons.forEach(button => {
-                    const active = button.dataset.mkPlanStatus === value;
-                    button.classList.toggle('is-active', active);
-                    button.setAttribute('aria-pressed', String(active));
-                });
-            };
-            const initialPlanStatus = planStatusField?.value || 'Aktuell';
-            if (planStatusField && !planStatusField.value) planStatusField.value = initialPlanStatus;
-            setPlanStatusButtonState(initialPlanStatus);
-            planStatusButtons.forEach(button => button.addEventListener('click', () => {
-                const value = button.dataset.mkPlanStatus || 'Aktuell';
-                if (planStatusField) planStatusField.value = value;
-                setPlanStatusButtonState(value);
-                call('updateProjectField', 'planStatus', value);
-            }));
             documentRef.querySelector('[data-mk-notes-field]')?.addEventListener('input', event => {
                 call('updateNotes', event.target.value);
             });
             documentRef.querySelectorAll('[data-mk-mode]').forEach(button => button.addEventListener('click', () => call('changeMode', button.dataset.mkMode)));
             documentRef.querySelectorAll('[data-mk-level]').forEach(button => button.addEventListener('click', () => call('changeCascadeLevels', button.dataset.mkLevel)));
-            documentRef.querySelectorAll('[data-mk-view]').forEach(button => button.addEventListener('click', () => call('changeViewMode', button.dataset.mkView)));
             documentRef.querySelectorAll('[data-mk-zoom]').forEach(button => button.addEventListener('click', () => call('changeCanvasZoom', button.dataset.mkZoom)));
 
+            bindClick('btn-mk-modal-confirm', () => call('closeModal'));
             bindClick('btn-mk-modal-close', () => call('closeModal'));
-            bindClick('btn-mk-modal-done', () => call('closeModal'));
 
             const paletteInfoButton = documentRef.getElementById('btn-mk-palette-info');
             const paletteInfo = documentRef.getElementById('mk-palette-info');

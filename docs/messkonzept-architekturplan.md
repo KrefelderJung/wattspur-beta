@@ -61,7 +61,7 @@ Datei soll direkt auf interne Variablen einer anderen Schicht zugreifen.
   - Einzähler und Parallelmessung
   - 1 bis 4 Messstufen
   - eine Anlage, mehrere Anlagen und verschachtelte Zusatz-Zähler
-  - einfache Ansicht, Detailansicht und Zoom 40/100/120 %
+  - feste einfache Ansicht und Zoom 40/100/120 %
 
 ### Phase 1 – `model.js` zuerst
 
@@ -197,14 +197,13 @@ Browser mit einem simulierten Druckdialog auf Aufbau und Bereinigung geprüft.
 Die Arbeit bleibt lokal; eine Veröffentlichung auf GitHub Pages ist damit
 ausdrücklich noch nicht erfolgt.
 
-Der PDF-Export bietet nun zwei bewusst getrennte Ausgaben über dieselbe
-Export-API. Der **Skizzenexport** enthält Logo, Exportstand, Projektangaben,
-Orientierungshinweis, Prüfstatus und Kommentar, lässt aber die ausführlichen
-Objektdetails weg. Der **Gesamtexport** enthält zusätzlich diese Details. Beide
-Varianten verwenden dieselbe eingefrorene Editor-Bühne, sodass Leitungen und
-Karten geometrisch identisch bleiben. Die Auswahl wird nur als `scope:
-'sketch'` oder `scope: 'full'` an `export.js` übergeben; es gibt kein zweites,
-abweichendes PDF-Layout.
+Der PDF-Export bietet aktuell eine bewusst reduzierte Ausgabe über dieselbe
+Export-API. Der **Skizzenexport** enthält Logo, Orientierungshinweis,
+Messskizze, Projektangaben und einen optionalen Kommentar. Exportstand,
+Seitenzahl, Prüfstatus und ausführliche Objektdetails werden nicht ausgegeben.
+Die eingefrorene Editor-Bühne bleibt identisch, sodass Leitungen und Karten
+geometrisch zusammenpassen. Ein sehr langer Kommentar darf auf eine zweite
+Druckseite umbrechen.
 
 ## Aktualisierter Architekturstatus (14.08.2026)
 
@@ -335,8 +334,8 @@ später wieder direkt mit fachlicher Messlogik vermischt wird.
 
 Die fortlaufende Vergabe von Zusatz-Zählern und Erzeugungskennungen liegt jetzt
 in `js/messkonzept/identifiers.js`. Das Modul erhält Zustand und Topologie über
-Adapter und kennt weder DOM noch Kartenmarkup. Dadurch greifen Editor, einfache
-Ansicht, Detailansicht und PDF auf dieselbe Nummernquelle zurück. Mieterstrom-
+Adapter und kennt weder DOM noch Kartenmarkup. Dadurch greifen Editor, die feste
+einfache Ansicht und PDF auf dieselbe Nummernquelle zurück. Mieterstrom-
 zähler bilden dabei bewusst eine eigene sichtbare Folge `ZN1`, `ZN2`, … und
 erhöhen nicht die reguläre Netz-Zählerfolge `Z1`, `Z2`, …. Ein Browser-
 Regressionstest prüft Parallel-Grundzähler, beide Zusatz-Zählerfolgen und die

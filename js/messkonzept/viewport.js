@@ -128,9 +128,15 @@
             if (!canvas || !documentRef || panInitialized) return;
             panInitialized = true;
 
-            // Leertaste + linke Maustaste ist die übliche Diagramm-Geste.
-            // Die mittlere Maustaste bleibt als optionales Profi-Kürzel.
+            // Die Zeichenfläche lässt sich direkt mit der linken Maustaste
+            // verschieben. Interaktive Objekte bleiben davon ausgenommen,
+            // damit Auswahl und HTML5-Drag-and-Drop nicht blockiert werden.
+            // Leertaste + linke Maustaste und die mittlere Maustaste bleiben
+            // als kompatible Alternativen erhalten.
             const isTextField = target => target?.matches?.('input, textarea, select, [contenteditable="true"]');
+            const isInteractiveCanvasTarget = target => target?.closest?.(
+                '.mk-asset-card, .mk-meter-node, .mk-generation-meter, .mk-rail-meter-node, .mk-inline-meter, .mk-inline-meter-wrap, .mk-meter-annotation-card, [data-mk-select-meter], [data-mk-select-asset], [data-mk-select-hak], [data-mk-remove-asset], [data-mk-remove-meter], button, input, textarea, select, [contenteditable="true"]'
+            );
             documentRef.addEventListener('keydown', event => {
                 if (event.code !== 'Space' || event.repeat || isTextField(event.target)) return;
                 panSpaceHeld = true;
@@ -150,14 +156,16 @@
             canvas.addEventListener('pointerdown', event => {
                 const isMiddlePan = event.button === 1;
                 const isSpacePan = event.button === 0 && panSpaceHeld;
-                if (!isMiddlePan && !isSpacePan) return;
+                const isPrimaryCanvasPan = event.button === 0 && !panSpaceHeld && !isInteractiveCanvasTarget(event.target);
+                if (!isMiddlePan && !isSpacePan && !isPrimaryCanvasPan) return;
                 canvasPan = {
                     pointerId: event.pointerId,
                     startX: event.clientX,
                     startY: event.clientY,
                     scrollLeft: canvas.scrollLeft,
                     scrollTop: canvas.scrollTop,
-                    button: event.button
+                    button: event.button,
+                    requiresSpace: isSpacePan
                 };
                 canvas.classList.add('is-panning');
                 canvas.setPointerCapture?.(event.pointerId);
@@ -167,7 +175,7 @@
                 if (!canvasPan || event.pointerId !== canvasPan.pointerId) return;
                 const buttonHeld = canvasPan.button === 1
                     ? (event.buttons & 4) === 4
-                    : (event.buttons & 1) === 1 && panSpaceHeld;
+                    : (event.buttons & 1) === 1 && (!canvasPan.requiresSpace || panSpaceHeld);
                 if (!buttonHeld) {
                     endCanvasPan(event);
                     return;

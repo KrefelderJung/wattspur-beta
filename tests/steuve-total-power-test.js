@@ -37,7 +37,7 @@ assert(overThreshold.effectivePowerKw?.[0]?.value === 4.3, 'Die Prüfregel muss 
 
 // Anlagen hinter demselben Zähler bilden eine gemeinsame 14a-Leistungsgruppe.
 // Das ist der zentrale Regressionsfall: 2,6 kW Wärmepumpe plus 2,6 kW
-// Raumkühlung überschreiten zusammen die 4,2-kW-Grenze.
+// Klimaanlagen überschreiten zusammen die 4,2-kW-Grenze.
 const groupedState = model.createState();
 const groupMeter = model.createAsset(groupedState, 'meter', 'single-main');
 groupMeter.meterScope = 'asset';

@@ -374,8 +374,13 @@ html[data-tool="lastgang"] .landing-main {
 
 .landing-primary {
     background: var(--primary-color);
+    color: #ffffff;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 68%, var(--text-main));
+}
+
+[data-theme="dark"] .landing-primary {
     color: #082f49;
-    border: 1px solid var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .landing-secondary {
@@ -877,7 +882,7 @@ html[data-tool="lastgang"] .landing-main {
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: 20;
+    z-index: 2100;
     background: color-mix(in srgb, var(--surface-color) 94%, transparent);
     backdrop-filter: blur(8px);
 }
@@ -947,6 +952,20 @@ html[data-tool="lastgang"] .landing-main {
     margin-top: 2rem;
     color: var(--text-muted);
     font-size: 0.8rem;
+}
+
+.legal-backlink {
+    margin: 0 0 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.legal-note {
+    margin-top: 2rem;
+    padding: 0.9rem 1rem;
+    border-left: 3px solid var(--primary-color);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--primary-color) 10%, transparent);
 }
 
 .drop-zone {
@@ -1891,24 +1910,35 @@ html[data-tool="lastgang"] .landing-main {
 }
 
 .mk-start-info-panel {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    z-index: 20;
-    width: min(29rem, calc(100vw - 2rem));
-    padding: 0.9rem 1rem;
+    position: fixed;
+    top: 50%;
+    right: auto;
+    left: 50%;
+    z-index: 2100;
+    width: min(42rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    max-height: min(82vh, 44rem);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 1.15rem 1.25rem 1.2rem;
     color: var(--text-main);
     border: 1px solid color-mix(in srgb, var(--mk-group-icon-fg, var(--primary-color)) 60%, var(--border-color));
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--surface-color) 96%, var(--bg-color));
-    box-shadow: 0 14px 32px color-mix(in srgb, #000 28%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 9%, transparent);
-    font-size: 0.82rem;
-    line-height: 1.4;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(145deg, color-mix(in srgb, var(--surface-color) 98%, var(--bg-color)), color-mix(in srgb, var(--surface-hover) 72%, var(--surface-color)));
+    box-shadow: 0 18px 44px color-mix(in srgb, #000 34%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    transform: translate(-50%, -50%);
 }
 
 .mk-start-info-intro {
-    margin: 0 0 0.7rem;
+    margin: 0 0 0.95rem;
+    padding-bottom: 0.9rem;
     color: var(--text-main);
+    border-bottom: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    font-size: 0.98rem;
+    font-weight: 550;
+    line-height: 1.55;
 }
 
 .mk-start-info-columns {
@@ -1918,16 +1948,66 @@ html[data-tool="lastgang"] .landing-main {
 }
 
 .mk-start-info-columns strong {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     margin-bottom: 0.25rem;
     color: var(--text-main);
     font-size: 0.78rem;
     letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.mk-start-info-columns > div {
+    min-width: 0;
+    padding: 0.8rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--mk-group-icon-fg, var(--primary-color)) 30%, var(--border-color));
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--surface-color) 80%, var(--bg-color));
+}
+
+.mk-start-info-columns > div:first-child strong::before,
+.mk-start-info-columns > div:last-child strong::before {
+    display: inline-grid;
+    place-items: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    flex: 0 0 1.2rem;
+    border-radius: 50%;
+    color: var(--surface-color);
+    background: var(--mk-group-icon-fg, var(--primary-color));
+    font-size: 0.72rem;
+    font-weight: 900;
+}
+
+.mk-start-info-columns > div:first-child strong::before {
+    content: '✓';
+}
+
+.mk-start-info-columns > div:last-child strong::before {
+    content: '!';
 }
 
 .mk-start-info-columns ul {
     margin: 0;
-    padding-left: 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.mk-start-info-columns li {
+    position: relative;
+    padding-left: 0.95rem;
+}
+
+.mk-start-info-columns li::before {
+    position: absolute;
+    top: 0.58em;
+    left: 0.15rem;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--mk-group-icon-fg, var(--primary-color));
+    content: '';
 }
 
 .mk-start-info-columns li + li {
@@ -1994,35 +2074,20 @@ html[data-tool="lastgang"] .landing-main {
 
     .mk-start-info-panel {
         position: fixed;
-        top: 5.5rem;
-        right: 0.75rem;
-        left: 0.75rem;
-        width: auto;
+        top: 50%;
+        right: auto;
+        left: 50%;
+        width: min(42rem, calc(100vw - 1.25rem));
+        max-width: calc(100vw - 1.25rem);
         max-height: min(70vh, 34rem);
         overflow: auto;
+        transform: translate(-50%, -50%);
     }
 
     .mk-start-info-columns {
         grid-template-columns: 1fr;
         gap: 0.65rem;
     }
-}
-
-/* Mieterstrominfos werden als eigenständige Orientierung eingeblendet. Die
-   feste, mittige Position verhindert, dass der lange Inhalt die Startseite
-   nach unten drückt oder den Nutzer zu einem zweiten Scrollweg zwingt. */
-.mk-start-group--mieterstrom .mk-start-info-panel {
-    position: fixed;
-    top: 50%;
-    right: auto;
-    left: 50%;
-    width: min(42rem, calc(100vw - 2rem));
-    max-width: calc(100vw - 2rem);
-    max-height: min(82vh, 44rem);
-    overflow-y: auto;
-    box-sizing: border-box;
-    transform: translate(-50%, -50%);
-    z-index: 2100;
 }
 
 .mk-start-group-icon {
@@ -2115,10 +2180,35 @@ html[data-tool="lastgang"] .landing-main {
     transform: translateY(-1px);
 }
 
-.mk-start-card-title {
-    font-weight: 750;
-    font-size: 0.98rem;
-    line-height: 1.2;
+.mk-start-card-model {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.28rem 0.42rem;
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 620;
+    line-height: 1.3;
+}
+
+.mk-start-card-model-code {
+    flex: 0 0 auto;
+    color: var(--primary-color);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.mk-start-card-model-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.mk-start-card-summary {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 520;
+    line-height: 1.35;
 }
 
 .mk-start-card-flow {
@@ -2195,6 +2285,35 @@ html[data-tool="lastgang"] .landing-main {
     border-color: color-mix(in srgb, var(--mk-storage-fg) 46%, var(--border-color));
     background: linear-gradient(110deg, var(--mk-consumer-bg) 0 33%, var(--mk-generation-bg) 33% 66%, var(--mk-storage-bg) 66% 100%);
     white-space: normal;
+}
+
+/* Tablet-Gesten: Das Original bleibt an seinem Platz, während eine kleine
+   Kopie dem Finger folgt. Die Kopie ist rein visuell und nimmt keine
+   Geometrie- oder Drop-Entscheidung vor. */
+.mk-pointer-drag-ghost {
+    position: fixed !important;
+    z-index: 3000 !important;
+    width: max-content;
+    max-width: min(15rem, 70vw);
+    margin: 0 !important;
+    opacity: 0.88;
+    pointer-events: none !important;
+    transform: translate(-50%, -50%) scale(1.03);
+    filter: drop-shadow(0 0.55rem 1rem color-mix(in srgb, #000 35%, transparent));
+}
+
+.mk-pointer-drag-source-active {
+    opacity: 0.38;
+}
+
+/* Auf Touch-/Stiftgeräten darf der Browser die Geste nicht als Seiten- oder
+   Doppeltipp-Zoom interpretieren. Nur die tatsächlich ziehbaren Quellen
+   erhalten diese Sperre, nicht die gesamte Zeichenfläche. */
+@media (pointer: coarse) {
+    .mk-palette-item,
+    .mk-asset-card[data-mk-drag-asset] {
+        touch-action: none;
+    }
 }
 
 .mk-builder-shell {
@@ -2596,11 +2715,12 @@ html[data-tool="lastgang"] .landing-main {
 
 .mk-toolbar-controls {
     display: grid;
-    grid-template-columns: max-content max-content minmax(0, 1fr);
-    grid-template-areas: "view zoom ." "mode mode mode";
+    grid-template-columns: minmax(0, 1fr) max-content;
+    grid-template-areas: "mode zoom";
     align-items: end;
     gap: 0.7rem;
     min-width: 0;
+    container: mk-toolbar / inline-size;
 }
 
 .mk-control-group {
@@ -2610,9 +2730,8 @@ html[data-tool="lastgang"] .landing-main {
     gap: 0.2rem;
 }
 
-.mk-control-group:nth-child(1) { grid-area: view; }
-.mk-control-group:nth-child(2) { grid-area: zoom; }
-.mk-control-group:nth-child(3) { grid-area: mode; }
+.mk-control-group:nth-child(1) { grid-area: zoom; }
+.mk-control-group:nth-child(2) { grid-area: mode; }
 
 .mk-control-label {
     padding-left: 0.25rem;
@@ -2622,17 +2741,6 @@ html[data-tool="lastgang"] .landing-main {
     letter-spacing: 0.05em;
     line-height: 1;
     text-transform: uppercase;
-}
-
-.mk-view-switch {
-    display: flex;
-    align-items: center;
-    gap: 0.2rem;
-    padding: 0.2rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--bg-color);
-    overflow: hidden;
 }
 
 .mk-canvas-zoom-controls {
@@ -2684,6 +2792,37 @@ html[data-tool="lastgang"] .landing-main {
     background: var(--bg-color);
     max-width: 100%;
     overflow: hidden;
+}
+
+/* Der verfügbare Platz kann durch Palette, Seitenleiste und Browserbreite
+   kleiner werden als die beiden Bediengruppen zusammen. Dann werden sie
+   bewusst untereinander gesetzt, statt sich gegenseitig zu überdecken. */
+@container mk-toolbar (max-width: 44rem) {
+    .mk-toolbar-controls {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "mode" "zoom";
+        gap: 0.65rem;
+    }
+
+    .mk-control-group {
+        width: 100%;
+    }
+
+    .mk-topology-switch,
+    .mk-canvas-zoom-controls {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .mk-topology-switch {
+        overflow-x: auto;
+    }
+
+    .mk-topology-switch > .mk-topology-btn,
+    .mk-topology-switch .mk-meter-count-switch {
+        min-width: 0;
+    }
 }
 
 .mk-topology-btn {
@@ -2781,6 +2920,178 @@ html[data-tool="lastgang"] .landing-main {
     height: max(100%, var(--mk-connector-height-px, 0px));
     overflow: visible;
     pointer-events: none;
+}
+
+/* Verschiebbare Zählerangaben. Die Karten liegen über der Zeichenfläche,
+   während die Verbindungslinien in einer eigenen SVG-Ebene bleiben. So
+   beeinflussen die Angaben weder die Fachlogik noch die Topologie-Geometrie. */
+.mk-meter-annotation-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.mk-meter-annotation-connectors {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.mk-meter-annotation-connector {
+    fill: none;
+    stroke: color-mix(in srgb, var(--primary-color) 72%, transparent);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-dasharray: 4 4;
+    vector-effect: non-scaling-stroke;
+}
+
+.mk-meter-annotation-cards {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.mk-meter-annotation-card {
+    position: absolute;
+    box-sizing: border-box;
+    width: fit-content;
+    min-width: 0;
+    max-width: min(320px, 36vw);
+    padding: 0.35rem 0.5rem;
+    border: 1px dashed color-mix(in srgb, var(--primary-color) 70%, var(--border-color));
+    border-radius: 0.45rem;
+    background: transparent;
+    color: var(--text-main);
+    font-size: 0.68rem;
+    line-height: 1.28;
+    box-shadow: none;
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.mk-annotation-dismiss {
+    position: absolute;
+    top: 0.16rem;
+    right: 0.2rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--border-color) 85%, var(--text-main));
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--bg-color) 72%, transparent);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.8rem;
+    line-height: 0.95rem;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.mk-annotation-dismiss:hover,
+.mk-annotation-dismiss:focus-visible {
+    border-color: var(--primary-color);
+    color: var(--text-main);
+    outline: none;
+}
+
+.mk-annotation-confirm {
+    position: absolute;
+    top: 0.16rem;
+    right: 1.45rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    padding: 0;
+    border: 1px solid #34d399;
+    border-radius: 50%;
+    background: color-mix(in srgb, #34d399 18%, var(--bg-color));
+    color: #34d399;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 900;
+    line-height: 0.95rem;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.mk-annotation-confirm:hover,
+.mk-annotation-confirm:focus-visible {
+    border-color: #6ee7b7;
+    background: color-mix(in srgb, #34d399 30%, var(--bg-color));
+    color: #6ee7b7;
+    outline: none;
+}
+
+.mk-meter-annotation-card:has(.mk-annotation-dismiss) .mk-meter-annotation-values {
+    padding-right: 1.15rem;
+}
+
+.mk-meter-annotation-card.is-editing .mk-meter-annotation-values {
+    padding-right: 2.35rem;
+}
+
+.mk-annotation-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: fit-content;
+    margin-top: 0.35rem;
+    color: var(--text-main);
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.mk-annotation-toggle input {
+    accent-color: var(--primary-color);
+}
+
+.mk-meter-annotation-card:hover,
+.mk-meter-annotation-card:focus-visible {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.mk-meter-annotation-card.is-dragging {
+    cursor: grabbing;
+    box-shadow: 0 5px 14px color-mix(in srgb, #000 30%, transparent);
+}
+
+.mk-meter-annotation-values span {
+    display: block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.mk-meter-annotation-value {
+    cursor: text;
+    user-select: text;
+}
+
+.mk-meter-annotation-inline-editor {
+    display: block;
+    width: 100%;
+    min-width: 8rem;
+    box-sizing: border-box;
+    padding: 0.18rem 0.25rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 0.25rem;
+    color: var(--text-main);
+    background: color-mix(in srgb, var(--bg-color) 86%, var(--primary-color));
+    font: inherit;
+    line-height: 1.28;
+    resize: vertical;
+}
+
+.mk-meter-annotation-inline-editor:focus {
+    outline: 2px solid color-mix(in srgb, var(--primary-color) 65%, transparent);
+    outline-offset: 1px;
 }
 
 .mk-canvas.is-panning {
@@ -3281,21 +3592,20 @@ html[data-tool="lastgang"] .landing-main {
     font-size: 0.78rem;
 }
 
-.mk-object-editor-head {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 0.75rem;
-}
-
-.mk-object-editor-head > span:last-child {
-    display: grid;
-    gap: 0.12rem;
-}
-
-.mk-object-editor-head small {
-    color: var(--text-muted);
-    font-size: 0.7rem;
+.mk-meter-form textarea,
+.mk-asset-form textarea {
+    width: 100%;
+    min-height: 4.2rem;
+    box-sizing: border-box;
+    resize: vertical;
+    padding: 0.3rem 0.4rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    background: var(--bg-color);
+    font: inherit;
+    font-size: 0.78rem;
+    line-height: 1.35;
 }
 
 .mk-object-editor-form {
@@ -3321,6 +3631,8 @@ html[data-tool="lastgang"] .landing-main {
 }
 
 .mk-meter-node {
+    position: relative;
+    z-index: 4;
     display: grid;
     place-items: center;
     width: 32px;
@@ -3395,8 +3707,70 @@ html[data-tool="lastgang"] .landing-main {
     font-size: 1.05rem;
 }
 
+.mk-modal-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex: 0 0 auto;
+}
+
+.mk-modal-confirm {
+    display: inline-grid;
+    place-items: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    border: 1px solid color-mix(in srgb, var(--success-color) 72%, var(--border-color));
+    border-radius: 50%;
+    color: var(--success-color);
+    background: color-mix(in srgb, var(--success-color) 13%, var(--surface-color));
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.mk-modal-confirm:hover,
+.mk-modal-confirm:focus-visible {
+    color: var(--surface-color);
+    background: var(--success-color);
+    border-color: var(--success-color);
+}
+
 .mk-object-dialog-content {
     padding: 1rem;
+}
+
+/* Der Objekt-Dialog bleibt bewusst kompakt: Der Kontext steht einmal in der
+   Kopfzeile, die Formulare starten direkt darunter. */
+#mk-object-modal .mk-object-dialog {
+    width: min(100%, 480px);
+}
+
+#mk-object-modal .mk-object-dialog-header {
+    padding: 0.75rem 1rem;
+}
+
+#mk-object-modal .mk-object-dialog-content {
+    padding: 0.9rem 1rem 1rem;
+}
+
+#mk-object-modal .mk-asset-form {
+    padding: 0;
+}
+
+#mk-object-modal .mk-meter-form {
+    margin-top: 0;
+    gap: 0.55rem;
+}
+
+#mk-object-modal .mk-meter-form label,
+#mk-object-modal .mk-asset-form label,
+#mk-object-modal .mk-asset-form-grid label {
+    font-size: 0.76rem;
+}
+
+#mk-object-modal input[data-mk-meter-field="meterNumber"] {
+    max-width: 16rem;
 }
 
 .mk-object-dialog-footer {
@@ -3461,19 +3835,23 @@ html[data-tool="lastgang"] .landing-main {
 }
 
 .mk-modal-close {
+    display: inline-grid;
+    place-items: center;
     width: 1.8rem;
     height: 1.8rem;
-    border: 0;
-    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
     color: var(--text-muted);
-    background: transparent;
+    background: color-mix(in srgb, var(--surface-hover) 42%, transparent);
     cursor: pointer;
     font-size: 1.25rem;
+    line-height: 1;
 }
 
 .mk-modal-close:hover,
 .mk-modal-close:focus-visible {
     color: var(--text-main);
+    border-color: var(--primary-color);
     background: var(--surface-hover);
 }
 
@@ -3529,8 +3907,29 @@ body.mk-modal-open {
 }
 
 .mk-meter-layout[data-mk-base-meter-target] {
+    position: relative;
+    z-index: 4;
     border-radius: 0.65rem;
     transition: outline 140ms ease, background 140ms ease;
+}
+
+/* Alle semantischen Drop-Ziele erhalten dieselbe unsichtbare Reservefläche.
+   Sie wird nur während eines echten Ziehvorgangs interaktiv, damit normale
+   Klicks auf Zähler und Anlagen weiterhin deren Dialog öffnen. Die Reserve
+   verändert keine Maße und damit auch keine Leitungsgeometrie. */
+.mk-drop-target-hitbox,
+.mk-meter-drop-hitbox {
+    position: absolute;
+    z-index: 0;
+    inset: -0.65rem;
+    border-radius: 0.85rem;
+    background: transparent;
+    pointer-events: none;
+}
+
+html.mk-dragging .mk-drop-target-hitbox,
+html.mk-dragging .mk-meter-drop-hitbox {
+    pointer-events: auto;
 }
 
 .mk-zone-assets {
@@ -3555,6 +3954,9 @@ body.mk-modal-open {
 }
 
 .mk-meter-rail.meter-group-rail {
+    position: relative;
+    z-index: 4;
+    isolation: isolate;
     /* SK-Z -> ZK: eigener Sicherheitsabstand. Der Zusatzzaehler darf mit
        seinem Loeschsymbol nicht in die obere Anlagenreihe ragen. */
     margin-top: var(--mk-meter-rail-top-gap-px, 16px);
@@ -3580,11 +3982,13 @@ body.mk-modal-open {
    Hoehe und ihre Abgaenge laufen einheitlich vom Bus nach unten. */
 .mk-rail-meter-node {
     position: relative;
+    z-index: 4;
     width: 32px;
     height: 32px;
     display: grid;
     place-items: center;
     flex: 0 0 32px;
+    pointer-events: auto;
 }
 
 .mk-rail-meter-node .mk-generation-meter {
@@ -3799,6 +4203,7 @@ body.mk-modal-open {
     background: var(--primary-color);
     transform: translateX(-50%);
     display: none;
+    pointer-events: none;
 }
 
 .mk-zone-assets::before {
@@ -3812,6 +4217,7 @@ body.mk-modal-open {
     background: var(--primary-color);
     box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.08);
     display: none;
+    pointer-events: none;
 }
 
 .mk-zone-assets.simple-mode::before {
@@ -3831,6 +4237,7 @@ body.mk-modal-open {
     background: var(--primary-color);
     transform: translateX(-50%);
     display: none;
+    pointer-events: none;
 }
 
 .mk-zone-junction {
@@ -3967,24 +4374,15 @@ body.mk-modal-open {
 
 .mk-inline-meter-wrap {
     position: relative;
+    z-index: 4;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex: 0 0 32px;
 }
 
-/* Die visuelle Zählerkarte bleibt kompakt; beim Drag & Drop darf der
-   Trefferbereich trotzdem etwas größer sein, damit Z3/Z4 auf Touchgeräten
-   und beim Ziehen knapp neben dem Symbol sicher erkannt werden. */
-.mk-meter-drop-hitbox {
-    position: absolute;
-    z-index: 0;
-    inset: -0.65rem;
-    border-radius: 0.85rem;
-}
-
 .mk-inline-meter-wrap .mk-generation-meter {
-    z-index: 1;
+    z-index: 4;
 }
 
 .mk-remove-meter {
@@ -4206,6 +4604,33 @@ body.mk-modal-open {
     cursor: grabbing;
 }
 
+/* Einheitlicher Cursor-Standard im Editor:
+   Auswahlziele wirken im Ruhezustand anklickbar. Erst beim Drücken und
+   tatsächlichen Ziehen wechselt der Cursor zum Greifsymbol. Die Palette und
+   die verschiebbaren Angaben behalten ihre eigene Drag-Anmutung. */
+[data-mk-select-hak],
+[data-mk-select-meter],
+[data-mk-select-asset],
+.mk-rail-meter-node,
+.mk-inline-meter-wrap {
+    cursor: pointer;
+}
+
+[data-mk-select-hak]:active,
+[data-mk-select-meter]:active,
+[data-mk-select-asset]:active,
+.mk-rail-meter-node:active,
+.mk-inline-meter-wrap:active {
+    cursor: grabbing;
+}
+
+.mk-start-info-button,
+.mk-decision-info-button,
+.mk-palette-info-button,
+.mk-validation-item > summary {
+    cursor: pointer;
+}
+
 .mk-asset-head {
     display: flex;
     align-items: center;
@@ -4269,18 +4694,6 @@ body.mk-modal-open {
     border-color: var(--mk-storage-fg);
     background: var(--mk-storage-bg);
     color: var(--mk-storage-fg);
-}
-
-.mk-icon-object-sequence.generation {
-    border-color: var(--mk-generation-fg);
-    background: var(--mk-generation-bg);
-    color: var(--mk-generation-fg);
-}
-
-.mk-icon-object-sequence.nsh {
-    border-color: var(--mk-nsh-fg);
-    background: var(--mk-nsh-bg);
-    color: var(--mk-nsh-fg);
 }
 
 .mk-icon-object-sequence.wallbox {
@@ -4425,11 +4838,12 @@ body.mk-modal-open {
 }
 
 .mk-validation-item > summary {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 0.75rem minmax(0, 1fr);
+    align-items: start;
     min-width: 0;
-    gap: 0.35rem;
+    column-gap: 0.45rem;
+    row-gap: 0.25rem;
     padding: 0.48rem 0.55rem;
     color: var(--text-main);
     cursor: pointer;
@@ -4442,7 +4856,10 @@ body.mk-modal-open {
 
 .mk-validation-item > summary::before {
     content: '';
-    flex: 0 0 0.75rem;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    justify-self: center;
     width: 0.75rem;
     height: 0.75rem;
     line-height: 1.25;
@@ -4452,6 +4869,23 @@ body.mk-modal-open {
     color: var(--text-muted);
     transform: rotate(45deg) scale(0.55);
     transition: transform 140ms ease, color 140ms ease;
+}
+
+.mk-validation-summary-main {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 0.35rem;
+}
+
+.mk-validation-summary-assets {
+    display: flex;
+    grid-column: 2;
+    grid-row: 2;
+    flex-wrap: wrap;
+    align-items: center;
+    min-width: 0;
+    gap: 0.25rem;
 }
 
 .mk-validation-item[open] > summary::before {
@@ -4464,26 +4898,37 @@ body.mk-modal-open {
     outline: none;
 }
 
-.mk-validation-tag {
+.mk-validation-status-marker {
     display: inline-flex;
     align-items: center;
     flex: 0 0 auto;
+    gap: 0.35rem;
     margin-left: 0;
-    padding: 0.22rem 0.42rem;
-    border: 1px solid color-mix(in srgb, currentColor 48%, transparent);
-    border-radius: 999px;
-    font-size: 0.58rem;
+    color: var(--text-main);
+    font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.03em;
     line-height: 1.15;
     white-space: nowrap;
 }
 
-.mk-validation-item.ok .mk-validation-tag { color: #064e3b; background: #6ee7b7; }
-.mk-validation-item.info .mk-validation-tag { color: var(--mk-meter-fg); background: var(--mk-meter-bg); }
-.mk-validation-item.warning .mk-validation-tag { color: #9a3412; background: #fed7aa; }
-.mk-validation-item.error .mk-validation-tag { color: #7f1d1d; background: #fecaca; }
-.mk-validation-item.neutral .mk-validation-tag { color: var(--text-muted); background: var(--surface-hover); }
+.mk-validation-status-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    font-size: 0.68rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.mk-validation-item.ok .mk-validation-status-icon { color: #34d399; }
+.mk-validation-item.info .mk-validation-status-icon { color: #38bdf8; }
+.mk-validation-item.warning .mk-validation-status-icon { color: #fbbf24; }
+.mk-validation-item.error .mk-validation-status-icon { color: #fb7185; }
+.mk-validation-item.neutral .mk-validation-status-icon { color: var(--text-muted); }
 
 .mk-validation-asset-tag {
     display: inline-flex;
@@ -4565,9 +5010,13 @@ body.mk-modal-open {
     background: var(--mk-validation-asset-bg, transparent);
 }
 
-.mk-validation-item > summary:hover .mk-validation-tag,
-.mk-validation-item > summary:focus-visible .mk-validation-tag {
-    filter: brightness(1.04);
+.mk-validation-item > summary:hover .mk-validation-status-marker,
+.mk-validation-item > summary:focus-visible .mk-validation-status-marker {
+    color: var(--text-main);
+}
+
+[data-theme="light"] .mk-validation-status-marker {
+    color: #172033;
 }
 
 .mk-validation-body {
@@ -4605,7 +5054,7 @@ body.mk-modal-open {
 
 .mk-export-button {
     width: 100%;
-    border: 0;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 68%, var(--text-main));
     cursor: pointer;
 }
 
@@ -4626,6 +5075,19 @@ body.mk-modal-open {
     background: color-mix(in srgb, var(--primary-color) 12%, var(--surface-hover));
 }
 
+/* Im hellen Modus braucht der gefüllte Exportbutton eine helle Schrift.
+   Die Kontur bleibt in beiden Themen sichtbar und trennt den Button klar
+   von der Kartenfläche. */
+.mk-export-button:not(.mk-export-button--sketch) {
+    color: #ffffff;
+    border-color: color-mix(in srgb, var(--primary-color) 68%, var(--text-main));
+}
+
+[data-theme="dark"] .mk-export-button:not(.mk-export-button--sketch) {
+    color: #082f49;
+    border-color: var(--primary-color);
+}
+
 @media (max-width: 1100px) {
     .mk-start-groups {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4641,6 +5103,29 @@ body.mk-modal-open {
 
     .mk-summary-panel .mk-validation-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Fallback für Browser ohne Container-Queries: Die Bediengruppen
+       erhalten auch bei schmalem Browserfenster eine eigene Zeile. */
+    .mk-toolbar-controls {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "mode" "zoom";
+        gap: 0.65rem;
+    }
+
+    .mk-control-group {
+        width: 100%;
+    }
+
+    .mk-topology-switch,
+    .mk-canvas-zoom-controls {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .mk-topology-switch {
+        overflow-x: auto;
     }
 }
 
@@ -4745,12 +5230,12 @@ body.mk-modal-open {
     }
 
     .mk-builder-toolbar {
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr);
         align-items: start;
+        gap: 0.75rem;
     }
 
     .mk-toolbar-controls,
-    .mk-view-switch,
     .mk-canvas-zoom-controls {
         width: 100%;
     }
@@ -4758,7 +5243,7 @@ body.mk-modal-open {
     .mk-toolbar-controls {
         align-items: stretch;
         grid-template-columns: minmax(0, 1fr);
-        grid-template-areas: "view" "zoom" "mode";
+        grid-template-areas: "mode" "zoom";
         gap: 0.65rem;
     }
 
@@ -6868,9 +7353,9 @@ body.mk-modal-open {
     }
 }
 
-/* Projektangaben, Abstimmungsnotizen und zusätzliche Zähler */
+/* Projektangaben und Kommentar */
 .mk-project-meta {
-    margin-bottom: 1rem;
+    margin: 1rem;
     padding: 0.5rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -6914,11 +7399,6 @@ body.mk-modal-open {
     font-weight: 800;
     line-height: 1;
     transition: transform 140ms ease, box-shadow 140ms ease;
-}
-
-.mk-project-meta > summary::after,
-.mk-project-meta[open] > summary::after {
-    display: none;
 }
 
 .mk-project-meta[open] > summary {
@@ -6988,85 +7468,32 @@ body.mk-modal-open {
 }
 
 .mk-project-meta-group--project .mk-project-meta-group-fields {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr) minmax(18rem, 3fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .mk-project-meta-group--location .mk-project-meta-group-fields {
-    grid-template-columns: minmax(0, 5fr) minmax(8rem, 2fr) minmax(8rem, 2fr) minmax(0, 3fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.mk-project-meta-group-fields > label,
-.mk-project-meta-group-fields > .mk-plan-status-field {
+.mk-project-meta-group-fields > label {
     grid-column: span 1;
-}
-
-.mk-plan-status-field {
-    display: grid;
-    grid-column: span 1;
-    gap: 0.25rem;
-    min-width: 0;
-    color: var(--text-muted);
-    font-size: 0.68rem;
-    font-weight: 700;
-}
-
-.mk-plan-status-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.2rem;
-    min-width: 0;
-    padding: 0.2rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: var(--bg-color);
-}
-
-.mk-plan-status-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 0;
-    min-height: 2.5rem;
-    padding: 0.35rem 0.4rem;
-    border: 0;
-    border-radius: calc(var(--radius-sm) - 2px);
-    color: var(--text-muted);
-    background: transparent;
-    font: inherit;
-    font-size: 0.72rem;
-    line-height: 1.15;
-    text-align: center;
-    white-space: normal;
-    word-break: normal;
-    overflow-wrap: normal;
-    cursor: pointer;
-}
-
-.mk-plan-status-button:hover,
-.mk-plan-status-button:focus-visible {
-    color: var(--text-main);
-    background: rgba(56, 189, 248, 0.12);
-}
-
-.mk-plan-status-button.is-active {
-    color: #082f49;
-    background: var(--primary-color);
 }
 
 .mk-project-meta-group-fields label {
     display: grid;
-    gap: 0.25rem;
+    gap: 0.35rem;
     min-width: 0;
     color: var(--text-muted);
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 700;
+    line-height: 1.2;
 }
 
 .mk-project-meta-group-fields input {
     width: 100%;
-    min-height: 2rem;
+    min-height: 2.25rem;
     box-sizing: border-box;
-    padding: 0.35rem 0.5rem;
+    padding: 0.42rem 0.6rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     color: var(--text-main);
@@ -7075,8 +7502,13 @@ body.mk-modal-open {
     font-size: 0.78rem;
 }
 
+.mk-project-meta-group-fields input::placeholder {
+    color: color-mix(in srgb, var(--text-muted) 86%, transparent);
+    opacity: 1;
+}
+
 .mk-project-meta-group-fields input:focus,
-.mk-notes-panel textarea:focus {
+.mk-project-meta-notes textarea:focus {
     outline: 2px solid color-mix(in srgb, var(--primary-color) 65%, transparent);
     outline-offset: 1px;
 }
@@ -7116,81 +7548,37 @@ body.mk-modal-open {
     box-shadow: none;
 }
 
-.mk-notes-panel {
-    border-top: 1px solid var(--border-color);
-    background: rgba(15, 23, 42, 0.28);
+.mk-project-meta-notes {
+    margin-top: 0.65rem;
+    padding: 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    border-radius: var(--radius-sm);
+    background: rgba(15, 23, 42, 0.26);
 }
 
-.mk-notes-panel summary {
+.mk-project-meta-notes-heading {
     display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.75rem;
-    margin: 0.8rem 1rem;
-    padding: 0.65rem 0.85rem;
-    border: 1px solid color-mix(in srgb, var(--primary-color) 55%, var(--border-color));
-    border-radius: var(--radius-md);
-    color: var(--text-main);
-    background: color-mix(in srgb, var(--primary-color) 18%, var(--surface-color));
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 700;
-    list-style-position: inside;
-    transition: color 140ms ease, border-color 140ms ease, background 140ms ease, transform 140ms ease;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.65rem;
+    margin-bottom: 0.35rem;
 }
 
-.mk-notes-panel summary::-webkit-details-marker {
-    display: none;
-}
-
-.mk-notes-panel summary:hover,
-.mk-notes-panel summary:focus-visible {
-    border-color: var(--primary-color);
-    background: color-mix(in srgb, var(--primary-color) 26%, var(--surface-color));
-    transform: translateY(-1px);
-}
-
-.mk-notes-summary-main {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-}
-
-.mk-notes-summary-icon {
-    display: grid;
-    width: 1.45rem;
-    height: 1.45rem;
-    place-items: center;
-    border-radius: 50%;
-    color: #082f49;
-    background: var(--primary-color);
-    font-size: 1.1rem;
-    font-weight: 800;
-    line-height: 1;
-    transition: transform 140ms ease;
-}
-
-[data-theme="light"] .mk-notes-summary-icon {
-    color: #ffffff;
-}
-
-.mk-notes-panel[open] .mk-notes-summary-icon {
-    transform: rotate(45deg);
-}
-
-.mk-notes-panel > label {
-    display: block;
-    padding: 0 1.2rem 0.3rem;
+.mk-project-meta-notes-heading label {
     color: var(--text-muted);
     font-size: 0.7rem;
     font-weight: 700;
 }
 
-.mk-notes-panel textarea {
+.mk-project-meta-notes-heading small {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+}
+
+.mk-project-meta-notes textarea {
     display: block;
-    width: calc(100% - 2.4rem);
+    width: 100%;
     min-height: 6rem;
-    margin: 0 1.2rem 0.85rem;
     box-sizing: border-box;
     padding: 0.55rem 0.65rem;
     border: 1px solid var(--border-color);
@@ -7310,7 +7698,7 @@ body.mk-modal-open {
     background: var(--bg-color);
 }
 
-[data-theme="light"] .mk-notes-panel,
+[data-theme="light"] .mk-project-meta-notes,
 [data-theme="light"] .mk-asset-detail-slide {
     background: var(--surface-hover);
 }
@@ -7338,7 +7726,7 @@ body.mk-modal-open {
     /* Bei mittleren Breiten bleiben die beiden Gruppen untereinander,
        erhalten aber ein vertrautes, platzsparendes Eingaberaster. */
     .mk-project-meta-group--project .mk-project-meta-group-fields {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(12rem, 1.2fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .mk-project-meta-group--location .mk-project-meta-group-fields {
@@ -7353,8 +7741,7 @@ body.mk-modal-open {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .mk-project-meta-group-fields > label,
-    .mk-project-meta-group-fields > .mk-plan-status-field {
+    .mk-project-meta-group-fields > label {
         grid-column: span 1;
     }
 
@@ -7362,7 +7749,7 @@ body.mk-modal-open {
         gap: 0.45rem;
     }
 
-    .mk-notes-panel summary {
+    .mk-project-meta-notes-heading {
         align-items: flex-start;
         flex-direction: column;
         gap: 0.15rem;
@@ -7371,8 +7758,8 @@ body.mk-modal-open {
 
 @media print {
     body.mk-printing .mk-print-project {
-        margin-top: 0.8rem;
-        padding: 0.6rem 0.7rem;
+        margin: 0.45rem 0 0.55rem;
+        padding: 0.45rem 0.6rem;
         border: 1px solid #cbd5e1;
         background: #f8fafc;
         page-break-inside: avoid;
@@ -7380,27 +7767,44 @@ body.mk-modal-open {
 
     body.mk-printing .mk-print-project h2,
     body.mk-printing .mk-print-notes h2 {
-        margin: 0 0 0.45rem;
+        margin: 0 0 0.3rem;
         color: #0f172a;
-        font-size: 12pt;
+        font-size: 10pt;
     }
 
-    body.mk-printing .mk-print-project dl {
+    body.mk-printing .mk-print-project-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.35rem 0.8rem;
+        gap: 0.22rem;
         margin: 0;
+    }
+
+    body.mk-printing .mk-print-project-row {
+        display: grid;
+        grid-template-columns: 2.45fr 1.45fr 1fr;
+        gap: 0.65rem;
+        min-width: 0;
+    }
+
+    body.mk-printing .mk-print-project-row:last-child {
+        grid-template-columns: 1.45fr 0.65fr 0.8fr 1fr;
+    }
+
+    body.mk-printing .mk-print-project-field {
+        min-width: 0;
     }
 
     body.mk-printing .mk-print-project dt {
         color: #64748b;
-        font-size: 8pt;
+        font-size: 7pt;
+        line-height: 1.1;
     }
 
     body.mk-printing .mk-print-project dd {
-        margin: 0.08rem 0 0;
+        margin: 0.04rem 0 0;
         color: #0f172a;
         font-weight: 700;
+        font-size: 8.5pt;
+        line-height: 1.15;
         overflow-wrap: anywhere;
     }
 
@@ -7409,7 +7813,8 @@ body.mk-modal-open {
         padding: 0.6rem 0.7rem;
         border: 1px solid #cbd5e1;
         background: #ffffff;
-        page-break-inside: avoid;
+        page-break-inside: auto;
+        break-inside: auto;
     }
 
     body.mk-printing .mk-print-notes p {
@@ -7431,12 +7836,19 @@ body.mk-printing .mk-print-sheet {
 }
 
 @media print {
+    /* Der reservierte obere Seitenrand schafft Platz für den wiederholten
+       Druckkopf. counter(page) wird vom Browser pro Druckseite erhöht. */
+    @page {
+        margin: 1.15cm 1.1cm 1.0cm;
+    }
+
     body.mk-printing > *:not(.mk-print-sheet) {
         display: none !important;
     }
 
     body.mk-printing .mk-print-sheet {
         display: block !important;
+        box-sizing: border-box;
         width: 100%;
         color: #111827;
         background: #ffffff;
@@ -7445,11 +7857,16 @@ body.mk-printing .mk-print-sheet {
     }
 
     body.mk-printing .mk-print-header {
+        position: static;
+        box-sizing: border-box;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 1rem;
-        padding-bottom: 0.6rem;
+        min-height: 0;
+        margin: 0 0 0.45rem;
+        padding: 0 0 0.35rem;
+        background: #ffffff;
         border-bottom: 2px solid #0ea5e9;
     }
 
@@ -7487,26 +7904,32 @@ body.mk-printing .mk-print-sheet {
         text-transform: uppercase;
     }
 
-    body.mk-printing .mk-print-meta {
-        display: grid;
-        gap: 0.1rem;
-        color: #475569;
-        text-align: right;
-    }
-
     body.mk-printing .mk-print-notice {
-        margin: 0.8rem 0;
-        padding: 0.55rem 0.7rem;
+        margin: 0.45rem 0;
+        padding: 0.38rem 0.55rem;
         border-left: 3px solid #f59e0b;
         background: #fffbeb;
         color: #713f12;
+        font-size: 8.5pt;
+        line-height: 1.25;
     }
 
     body.mk-printing .mk-print-topology,
     body.mk-printing .mk-print-status,
-    body.mk-printing .mk-print-details {
-        margin-top: 0.9rem;
+    body.mk-printing .mk-print-details,
+    body.mk-printing .mk-print-notes {
+        margin-top: 0.55rem;
         page-break-inside: avoid;
+    }
+
+    body.mk-printing .mk-print-status,
+    body.mk-printing .mk-print-details {
+        display: none !important;
+    }
+
+    body.mk-printing .mk-print-notes {
+        page-break-inside: auto;
+        break-inside: auto;
     }
 
     body.mk-printing .mk-print-topology h2,
@@ -7524,7 +7947,8 @@ body.mk-printing .mk-print-sheet {
         box-sizing: border-box;
         max-width: 100%;
         overflow: hidden;
-        padding: 0.8rem;
+        max-height: 14cm;
+        padding: 0.35rem;
         border: 1px solid #cbd5e1;
         background: #f8fafc;
     }
@@ -7541,6 +7965,52 @@ body.mk-printing .mk-print-sheet {
         min-width: 0;
         max-width: none;
         overflow: visible;
+    }
+
+    /* Zählerangaben werden im PDF als ruhige, druckfreundliche Karten mit
+       gestrichelter Bezugslinie übernommen. Die Angaben bleiben dabei ohne
+       zusätzliche Feldüberschriften und passen sich der Skizze an. */
+    body.mk-printing .mk-meter-annotation-layer {
+        display: block;
+        pointer-events: none;
+    }
+
+    body.mk-printing .mk-meter-annotation-card {
+        width: fit-content;
+        min-width: 0;
+        max-width: 260px;
+        padding: 3px 5px;
+        border: 1px dashed #64748b;
+        border-radius: 4px;
+        background: transparent;
+        color: #0f172a;
+        font-size: 7pt;
+        line-height: 1.2;
+        box-shadow: none;
+    }
+
+    body.mk-printing .mk-annotation-dismiss {
+        display: none;
+    }
+
+    body.mk-printing .mk-meter-annotation-connector {
+        stroke: #64748b;
+        stroke-width: 1;
+        stroke-dasharray: 3 3;
+    }
+
+    /*
+     * PDF-Leitungen kommen aus der bereits gerouteten SVG-Ebene. Die alten
+     * HTML/CSS-Hilfsleitungen werden nur in der Druckkopie ausgeblendet,
+     * damit die Editor-Darstellung und das Drag-and-Drop unverändert bleiben.
+     * HAK- und Parallelstrukturleitungen sind bewusst nicht enthalten, weil
+     * sie keine doppelten Anlagenwege darstellen.
+     */
+    body.mk-printing .mk-print-canvas-stage.mk-print-geometry-svg-only .mk-zone-assets::before,
+    body.mk-printing .mk-print-canvas-stage.mk-print-geometry-svg-only .mk-zone-assets::after,
+    body.mk-printing .mk-print-canvas-stage.mk-print-geometry-svg-only .mk-zone-assets .mk-asset-branch::before,
+    body.mk-printing .mk-print-canvas-stage.mk-print-geometry-svg-only .mk-zone-wrap-strand {
+        display: none !important;
     }
 
     body.mk-printing .mk-print-topology .mk-drop-zone {
@@ -7572,12 +8042,10 @@ body.mk-printing .mk-print-sheet {
         list-style: none;
     }
 
-    /* Der Textbereich beginnt bewusst auf einer neuen Seite. So bleiben
-       Projektangaben und Prüfstatus auf Seite 1 kompakt und die Skizze
-       erhält die volle verfügbare Breite für ihre Leitungsgeometrie. */
     body.mk-printing .mk-print-topology {
-        page-break-before: always;
-        break-before: page;
+        margin-top: 0.55rem;
+        page-break-before: auto;
+        break-before: auto;
     }
 
     body.mk-printing .mk-print-status li {
@@ -7647,7 +8115,19 @@ body.mk-printing .mk-print-sheet {
     }
 
     body.mk-printing .mk-print-table--key-value {
-        table-layout: auto;
+        table-layout: fixed;
+    }
+
+    /* Die Netzanschluss-Tabelle verwendet dieselbe feste Label-Spalte wie
+       die Objekt- und Zählertabellen. So bricht „Spannungsebene“ nicht in
+       eine unruhige Restbreite um. */
+    body.mk-printing .mk-print-table--key-value tbody th {
+        width: 18%;
+        white-space: nowrap;
+    }
+
+    body.mk-printing .mk-print-table--key-value tbody td {
+        width: 82%;
     }
 
     body.mk-printing .mk-meter-detail-value {
@@ -7658,7 +8138,7 @@ body.mk-printing .mk-print-sheet {
     body.mk-printing .mk-meter-detail-value b { color: #0f172a; }
 
     body.mk-printing .mk-print-footer {
-        margin-top: 1rem;
+        margin-top: 0.55rem;
         padding-top: 0.45rem;
         border-top: 1px solid #cbd5e1;
         color: #64748b;

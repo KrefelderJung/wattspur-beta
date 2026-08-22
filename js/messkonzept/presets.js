@@ -102,6 +102,8 @@
         Object.freeze({
             id: 'single-household-pv',
             group: 'single',
+            modelCode: 'MK A2',
+            modelName: 'Überschusseinspeisung',
             title: 'Haushalt + PV',
             summary: 'Ein gemeinsamer Zähler für Haushalt und PV.',
             flow: ['Haushalt', 'PV'],
@@ -111,6 +113,8 @@
         Object.freeze({
             id: 'single-household-pv-storage',
             group: 'single',
+            modelCode: 'MK C1',
+            modelName: 'Überschusseinspeisung mit gemeinsamer Messung',
             title: 'Haushalt + PV + Speicher',
             summary: 'Ein gemeinsamer Zähler für Haushalt, PV und Speicher.',
             flow: ['Haushalt', 'PV', 'Speicher'],
@@ -120,6 +124,8 @@
         Object.freeze({
             id: 'single-household-pv-storage-wallbox',
             group: 'single',
+            modelCode: 'MK C1',
+            modelName: 'Überschusseinspeisung mit gemeinsamer Messung',
             title: 'Haushalt + PV + Speicher + Wallbox',
             summary: 'Ein gemeinsamer Zähler für den häufigen Komplettfall.',
             flow: ['Haushalt', 'PV', 'Speicher', 'Wallbox'],
@@ -130,6 +136,8 @@
         Object.freeze({
             id: 'single-household-pv-storage-heatpump',
             group: 'single',
+            modelCode: 'MK C1',
+            modelName: 'Überschusseinspeisung mit gemeinsamer Messung',
             title: 'Haushalt + PV + Speicher + Wärmepumpe',
             summary: 'Ein gemeinsamer Zähler für Haushalt, PV, Speicher und Wärmepumpe.',
             flow: ['Haushalt', 'PV', 'Speicher', 'Wärmepumpe'],
@@ -140,8 +148,10 @@
         Object.freeze({
             id: 'parallel-heatpump',
             group: 'parallel',
+            modelCode: 'MK Z1b',
+            modelName: 'Steuerbare Verbrauchseinrichtung ohne weitere Verbraucher',
             title: 'Separater Wärmepumpenzähler',
-            summary: 'Z1 Haushalt · Z2 Wärmepumpe',
+            summary: 'Haushalt und Wärmepumpe werden getrennt gemessen.',
             flow: ['Haushalt', 'Wärmepumpe'],
             kind: 'parallel',
             steuveType: 'Wärmepumpe',
@@ -150,8 +160,10 @@
         Object.freeze({
             id: 'parallel-wallbox',
             group: 'parallel',
+            modelCode: 'MK Z1b',
+            modelName: 'Steuerbare Verbrauchseinrichtung ohne weitere Verbraucher',
             title: 'Separater Wallboxzähler',
-            summary: 'Z1 Haushalt · Z2 Wallbox',
+            summary: 'Haushalt und Wallbox werden getrennt gemessen.',
             flow: ['Haushalt', 'Wallbox'],
             kind: 'parallel',
             steuveType: 'Wallbox',
@@ -160,6 +172,8 @@
         Object.freeze({
             id: 'cascade-heatpump',
             group: 'cascade',
+            modelCode: 'MK C3',
+            modelName: 'Überschusseinspeisung mit Kaskadenmessung',
             title: 'Wärmepumpen-Kaskade',
             summary: 'Oben Wärmepumpe · dahinter Haushalt, PV und Speicher.',
             flow: ['Wärmepumpe', 'Haushalt', 'PV', 'Speicher'],
@@ -169,6 +183,8 @@
         Object.freeze({
             id: 'cascade-wallbox',
             group: 'cascade',
+            modelCode: 'MK C3',
+            modelName: 'Überschusseinspeisung mit Kaskadenmessung',
             title: 'Wallbox-Kaskade',
             summary: 'Oben Wallbox · dahinter Haushalt, PV und Speicher.',
             flow: ['Wallbox', 'Haushalt', 'PV', 'Speicher'],
@@ -178,8 +194,11 @@
         Object.freeze({
             id: 'mieterstrom-d1',
             group: 'mieterstrom',
-            title: 'MK D1: Mieterstromgemeinschaft',
+            modelCode: 'MK D1',
+            modelName: 'Selbstversorgergemeinschaft',
+            title: 'Mieterstromgemeinschaft',
             summary: 'Alle Anschlussnutzer werden von der Erzeugungsanlage versorgt.',
+            showSummary: true,
             flow: ['PV', 'Mieterstromnutzer'],
             kind: 'mieterstrom',
             energyCarrier: 'PV',

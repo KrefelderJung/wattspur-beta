@@ -3,10 +3,8 @@
 /*
  * PDF-Export-Varianten-Test
  *
- * Die kompakte Skizzenfassung muss dieselben projektbezogenen Informationen
- * enthalten wie der Gesamtexport. Sie lässt nur die ausführlichen
- * Objektdetails weg. So bleibt die kurze Weitergabe lesbar, ohne den
- * dokumentierten Projektstand zu verlieren.
+ * Der PDF-Export ist bewusst auf eine einzige, kompakte Ausgabe reduziert.
+ * Er enthält Hinweis, Messskizze, Projektangaben und optionalen Kommentar.
  */
 
 const fs = require('fs');
@@ -26,7 +24,7 @@ function assert(condition, message) {
 const exporter = context.window.WattspurMesskonzeptExport.createExporter({
     getState: () => ({
         mode: 'single',
-        project: { name: 'Testprojekt', planStatus: 'Aktuell' },
+        project: { name: 'Testprojekt', measurementConcept: 'MK D1' },
         notes: 'Rücksprache mit dem Installateur',
         assets: [{ id: 'ea-1', type: 'generation', name: 'PV-Detail' }]
     }),
@@ -38,16 +36,15 @@ const exporter = context.window.WattspurMesskonzeptExport.createExporter({
 });
 
 const stand = { iso: '2026-08-17T12:34:00.000Z', label: '17.08.2026, 14:34' };
-const full = exporter.renderPrintSheet(stand, { scope: 'full' });
-const sketch = exporter.renderPrintSheet(stand, { scope: 'sketch' });
+const sheet = exporter.renderPrintSheet(stand);
 
-['data-mk-export-scope="full"', 'Projektangaben', 'Messskizze', 'Abstimmungsnotizen', 'Prüfstatus', 'Objektdetails', 'Exportstand', 'PV-Detail'].forEach(marker => {
-    assert(full.includes(marker), `Gesamtexport muss „${marker}“ enthalten`);
+['data-mk-export-scope="one-page"', 'Wichtiger Hinweis', 'Projektangaben', 'Messskizze', 'Kommentar', 'Rücksprache mit dem Installateur'].forEach(marker => {
+    assert(sheet.includes(marker), `One-Pager muss „${marker}“ enthalten`);
 });
-['data-mk-export-scope="sketch"', 'Projektangaben', 'Messskizze', 'Abstimmungsnotizen', 'Prüfstatus', 'Exportstand'].forEach(marker => {
-    assert(sketch.includes(marker), `Skizzenexport muss „${marker}“ enthalten`);
+['Exportstand', 'Seite 0', 'Abstimmungsnotizen', 'Prüfstatus', 'Objektdetails', 'PV-Detail'].forEach(marker => {
+    assert(!sheet.includes(marker), `One-Pager darf „${marker}“ nicht enthalten`);
 });
-assert(!sketch.includes('Objektdetails') && !sketch.includes('PV-Detail'), 'Skizzenexport darf keine ausführlichen Objektdetails enthalten');
-assert(source.includes("options.scope === 'sketch'") && source.includes('mk-print-sheet--${scope}'), 'Exportvarianten müssen im Exportmodul über einen klaren Scope unterschieden werden');
+assert(source.includes('mk-print-sheet--one-page') && !source.includes('options.scope ==='), 'PDF darf keine getrennten Exportvarianten mehr rendern');
+assert((sheet.match(/class="mk-print-header"/g) || []).length === 1, 'One-Pager muss genau eine Kopfzeile enthalten');
 
 console.log('PDF-Export-Varianten-Test: OK');

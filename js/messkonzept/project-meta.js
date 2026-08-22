@@ -24,14 +24,6 @@
                 }
             });
 
-            const planStatus = project.planStatus || 'Aktuell';
-            if (!project.planStatus) project.planStatus = planStatus;
-            elements.planStatusButtons?.forEach(button => {
-                const active = button.dataset.mkPlanStatus === planStatus;
-                button.classList.toggle('is-active', active);
-                button.setAttribute('aria-pressed', String(active));
-            });
-
             const notesField = elements.notesField;
             if (notesField && notesField.value !== state.notes) notesField.value = state.notes || '';
         }

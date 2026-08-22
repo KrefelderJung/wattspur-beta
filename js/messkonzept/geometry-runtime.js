@@ -15,6 +15,7 @@
         const updateMeterGroupOffsets = options.updateMeterGroupOffsets || (() => {});
         const updateParallelBus = options.updateParallelBus || (() => {});
         const updateDynamicConnections = options.updateDynamicConnections || (() => {});
+        const updateMeterAnnotations = options.updateMeterAnnotations || (() => {});
         const centerParallelViewport = options.centerParallelViewport || (() => {});
         let geometryFrame = 0;
 
@@ -27,6 +28,7 @@
             updateSimpleAssetStrands();
             updateParallelBus();
             updateDynamicConnections();
+            updateMeterAnnotations();
             centerParallelViewport();
         }
 

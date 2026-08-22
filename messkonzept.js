@@ -222,11 +222,14 @@ const MK_EDITOR = window.WattspurMesskonzeptEditor.createEditorController({
         getMeterDetails: index => mkGetMeterDetails(index),
         updateHakField: (field, value) => {
             if (field === 'voltageLevel') MK_MODEL.setHakVoltageLevel(mkConfiguratorState, value);
+            if (field === 'annotationVisible') mkConfiguratorState.hak.annotationVisible = Boolean(value);
+            if (field === 'remark') mkConfiguratorState.hak.remark = String(value ?? '');
         },
         refreshObjectModal: selection => MK_CANVAS_RENDERER.openObjectModal(selection),
         syncGenerationName: asset => mkSyncGenerationName(asset),
         getStorageOperation: asset => MK_MODEL.getStorageOperation(asset),
         renderSteuveModuleFields: asset => mkRenderSteuveModuleFields(asset),
+        refreshMeterAnnotations: () => MK_ANNOTATIONS?.update(),
         refreshInlineStatus: () => MK_VALIDATION_STATUS.refresh(),
         render: () => MK_RENDER_CYCLE.render()
     }
@@ -306,6 +309,16 @@ const MK_DRAG_DROP = window.WattspurMesskonzeptDragDrop.createDragDropController
     }
 });
 
+// Touch- und Stiftgesten auf Tablets werden separat von der bestehenden
+// HTML5-DnD-Verkabelung geführt. Beide Wege verwenden danach dieselben
+// fachlichen Drop-Adapter aus MK_DRAG_DROP.
+const MK_POINTER_DRAG = window.WattspurMesskonzeptPointerDrag.createPointerDragController({
+    getDocument: () => document,
+    getWindow: () => window,
+    getCanvas: () => mkElements.canvas,
+    dragDrop: MK_DRAG_DROP
+});
+
 const MK_INTERACTION = window.WattspurMesskonzeptInteraction.createInteractionController({
     getElements: () => mkElements,
     callbacks: {
@@ -319,7 +332,6 @@ const MK_INTERACTION = window.WattspurMesskonzeptInteraction.createInteractionCo
         downloadPdf: options => mkDownloadPdf(options),
         changeMode: mode => MK_COMMANDS.changeMode(mode),
         changeCascadeLevels: level => MK_COMMANDS.changeCascadeLevels(level),
-        changeViewMode: view => MK_COMMANDS.changeViewMode(view),
         changeCanvasZoom: action => mkChangeCanvasZoom(action),
         closeModal: () => mkCloseObjectModal(),
         openObjectModal: selection => mkOpenObjectModal(selection),
@@ -338,7 +350,9 @@ const MK_INTERACTION = window.WattspurMesskonzeptInteraction.createInteractionCo
         handleCanvasDrop: event => mkHandleCanvasDrop(event),
         handleCanvasDragStart: event => mkHandleCanvasDragStart(event),
         handleCanvasDragEnd: event => mkHandleCanvasDragEnd(event),
-        handleCanvasClick: event => mkHandleCanvasClick(event)
+        handleCanvasClick: event => mkHandleCanvasClick(event),
+        initializePointerDrag: () => MK_POINTER_DRAG.initialize(),
+        consumePointerClickSuppression: () => MK_POINTER_DRAG.consumeClickSuppression()
     }
 });
 
@@ -356,6 +370,25 @@ const MK_CONNECTIONS = window.WattspurMesskonzeptConnections.createConnections({
     layoutGeometry: MK_LAYOUT_GEOMETRY
 });
 
+// Ausgefüllte Zählerangaben werden als verschiebbare, druckbare Karten an
+// den jeweiligen Zähler gehängt. Die Schicht arbeitet ausschließlich mit
+// Anzeigezustand und verändert weder Topologie noch Leitungsgeometrie.
+const MK_ANNOTATIONS = window.WattspurMesskonzeptAnnotations.createAnnotationController({
+    getState: () => mkConfiguratorState,
+    getElements: () => mkElements,
+    getDocument: () => document,
+    getMeterDetails: index => mkGetMeterDetails(index),
+    getAdditionalMeters: () => mkGetAdditionalMeters(),
+    getMeterDetailIndex: meter => mkGetMeterDetailIndex(meter),
+    getMeterLabel: meter => mkGetMeterLabel(meter),
+    getStageScale: stage => MK_GEOMETRY.getStageScale(stage),
+    escapeHtml: mkEscapeHtml,
+    meterDetailFields: MK_METER_DETAIL_FIELDS,
+    captureHistoryState: () => mkCaptureHistoryState(),
+    recordHistory: previousState => mkRecordHistory(previousState),
+    refreshInlineStatus: () => MK_VALIDATION_STATUS.refresh()
+});
+
 // Der Geometrie-Nachlauf ist eine eigene Laufzeit-Schicht. Sie kennt nur die
 // Reihenfolge der visuellen Aktualisierungen und bleibt damit unabhängig von
 // Messobjekten, Drop-Regeln und DOM-Komposition.
@@ -365,6 +398,7 @@ const MK_GEOMETRY_RUNTIME = window.WattspurMesskonzeptGeometryRuntime.createGeom
     updateMeterGroupOffsets: () => MK_LAYOUT.updateMeterGroupOffsets(),
     updateParallelBus: () => MK_LAYOUT.updateParallelBus(),
     updateDynamicConnections: () => MK_CONNECTIONS.updateDynamicConnections(),
+    updateMeterAnnotations: () => MK_ANNOTATIONS.update(),
     centerParallelViewport: () => MK_VIEWPORT.centerParallelViewport()
 });
 
@@ -468,10 +502,6 @@ function mkReset() {
 
 function mkSyncProjectFields() {
     return MK_PROJECT_META.sync();
-}
-
-function mkChangeViewMode(viewMode) {
-    return MK_COMMANDS.changeViewMode(viewMode);
 }
 
 function mkChangeMode(mode) {
@@ -922,9 +952,12 @@ function mkInitialize(elements = MK_BOOTSTRAP.collectElements()) {
     mkObserveConnectorGeometry();
     MK_START_FLOW.initialize();
     mkReset();
-    if (window.location.hash === '#messkonzept') {
-        MK_START_FLOW.showScreen();
-    }
+        const cleanPath = window.location.pathname.replace(/\/+$/, '');
+        if (window.location.hash === '#messkonzept'
+            || document.documentElement.dataset.tool === 'messkonzept'
+            || cleanPath === '/messkonzeptkonfigurator') {
+            MK_START_FLOW.showScreen();
+        }
 }
 
 MK_BOOTSTRAP.start(mkInitialize);

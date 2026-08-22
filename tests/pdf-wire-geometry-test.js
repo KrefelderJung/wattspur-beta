@@ -11,6 +11,7 @@ const vm = require('vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const exportSource = fs.readFileSync(path.join(ROOT, 'js/messkonzept/export.js'), 'utf8');
+const connectionsSource = fs.readFileSync(path.join(ROOT, 'js/messkonzept/connections.js'), 'utf8');
 const stylesSource = fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8');
 const indexSource = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const workerSource = fs.readFileSync(path.join(ROOT, 'service-worker.js'), 'utf8');
@@ -77,14 +78,21 @@ const sourceAssertions = [
     ["clone.style.setProperty('transform', `scale(${scale})`)", 'Export muss eine zu breite Skizze proportional verkleinern'],
     ['maxPrintWidth = 650', 'Export muss eine definierte Druckbreite für die Anpassung verwenden'],
     ["clone.style.setProperty('min-width'", 'Export muss die Bühnenbreite einfrieren'],
+    ['mk-print-geometry-svg-only', 'PDF-Kopie muss die SVG-Leitungsebene als einzige lange Leitungsquelle markieren'],
+    ['.mk-connection-line', 'PDF-Kopie muss alte HTML-Leitungsreste aus dem Druckklon entfernen'],
     ['getTopologyMarkup()', 'Druckansicht muss die geprüfte Skizzen-Snapshot-Funktion verwenden']
 ];
 sourceAssertions.forEach(([needle, message]) => assert(exportSource.includes(needle), message));
+assert(connectionsSource.includes('function dedupeWireMarkup'), 'Leitungsebene muss doppelte SVG-Pfade deduplizieren');
+assert(connectionsSource.includes('new Set()'), 'Leitungs-Deduplizierung muss bereits gerenderte Pfade merken');
+assert(connectionsSource.includes('dedupeWireMarkup(wires)'), 'Deduplizierung muss vor dem Einsetzen in die SVG-Ebene erfolgen');
 assert(stylesSource.includes('.mk-print-canvas-frame'), 'Druck-CSS muss den äußeren Skizzenrahmen stylen');
 assert(stylesSource.includes('.mk-print-canvas-stage'), 'Druck-CSS muss die eingefrorene Bühne stylen');
+assert(stylesSource.includes('.mk-print-geometry-svg-only'), 'Druck-CSS muss die SVG-only-Kopie erkennen');
+assert(/\.mk-print-geometry-svg-only[\s\S]*?display:\s*none\s*!important/.test(stylesSource), 'Druck-CSS muss alte HTML-Leitungsreste nur im PDF ausblenden');
 assert(/\.mk-print-topology \.mk-drop-zone\s*\{[\s\S]*?padding:\s*0;/.test(stylesSource), 'Druck-CSS darf die gemessenen Drop-Zonen nicht mit eigenem Innenabstand verschieben');
 assert(!/\.mk-print-topology\s*>\s*div\s*\{/.test(stylesSource), 'Druck-Padding darf nicht direkt auf die SVG-Bühne gelegt werden');
-assert(/export\.js\?v=5/.test(indexSource), 'Exportmodul muss mit neuem Cache-Buster geladen werden');
-assert(/APP_VERSION\s*=\s*['"]2026\.08.19-beta\.336['"]/.test(workerSource), 'Service Worker muss den neuen Exportstand cachen');
+assert(/export\.js\?v=9/.test(indexSource), 'Exportmodul muss mit neuem Cache-Buster geladen werden');
+assert(/APP_VERSION\s*=\s*['"]2026\.08.22-beta\.357['"]/.test(workerSource), 'Service Worker muss den neuen Exportstand cachen');
 
 console.log('PDF-Leitungsgeometrie-Test: OK');

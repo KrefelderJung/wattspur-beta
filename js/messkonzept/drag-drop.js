@@ -11,6 +11,7 @@
 
     function createDragDropController(options = {}) {
         const getState = options.getState || (() => ({}));
+        const getDocument = options.getDocument || (() => global.document);
         const getActiveDrag = options.getActiveDrag || (() => null);
         const setActiveDrag = options.setActiveDrag || (() => {});
         const getAssetMeta = options.getAssetMeta || (() => ({}));
@@ -20,6 +21,10 @@
             const callback = api[name];
             return typeof callback === 'function' ? callback(...args) : undefined;
         };
+
+        function setDragSurfaceActive(active) {
+            getDocument()?.documentElement?.classList.toggle('mk-dragging', Boolean(active));
+        }
 
         /*
          * Ein HTML5-Drop kann auf einem verschachtelten Element, dem
@@ -73,6 +78,7 @@
 
         function handlePaletteDragStart(event, button) {
             setActiveDrag({ source: 'palette', type: button.dataset.mkType });
+            setDragSurfaceActive(true);
             event.dataTransfer.effectAllowed = 'copy';
             event.dataTransfer.setData('application/json', JSON.stringify({
                 source: 'palette',
@@ -85,6 +91,7 @@
 
         function handlePaletteDragEnd() {
             setActiveDrag(null);
+            setDragSurfaceActive(false);
         }
 
         function handleCanvasDragOver(event) {
@@ -174,6 +181,7 @@
             meterGroupTarget?.classList.remove('mk-meter-group-target-active');
             positionTarget?.classList.remove('mk-position-drop-target-active');
             zone.classList.remove('dragover');
+            setDragSurfaceActive(false);
             handleDrop(
                 event,
                 zone?.dataset.mkZone || baseMeterTarget?.dataset.mkZone || '',
@@ -188,12 +196,81 @@
             const handle = event.target.closest('[data-mk-drag-asset]');
             if (!handle) return;
             setActiveDrag({ source: 'asset', id: handle.dataset.mkDragAsset });
+            setDragSurfaceActive(true);
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('application/json', JSON.stringify({ source: 'asset', id: handle.dataset.mkDragAsset }));
         }
 
         function handleCanvasDragEnd() {
             setActiveDrag(null);
+            setDragSurfaceActive(false);
+        }
+
+        /*
+         * Tablet-Gesten verwenden dieselben Drop-Regeln wie HTML5-DnD. Diese
+         * Adapter erzeugen nur ein kleines, kompatibles Transfer-Objekt und
+         * leiten die Zielsuche an die bestehenden Dragover-/Drop-Funktionen
+         * weiter. Die Messlogik in handleDrop bleibt dadurch die einzige
+         * Stelle, die Zustände verändert.
+         */
+        function getPointerTransfer(sourceElement) {
+            const paletteButton = sourceElement?.closest?.('.mk-palette-item');
+            if (paletteButton) {
+                const transfer = {
+                    source: 'palette',
+                    type: paletteButton.dataset.mkType || '',
+                    steuveType: paletteButton.dataset.mkSteuveType || '',
+                    energyCarrier: paletteButton.dataset.mkEnergyCarrier || '',
+                    mieterstromObject: paletteButton.dataset.mkMieterstromObject || ''
+                };
+                setActiveDrag(transfer);
+                setDragSurfaceActive(true);
+                return transfer;
+            }
+            const assetCard = sourceElement?.closest?.('[data-mk-drag-asset]');
+            if (!assetCard) return null;
+            const transfer = { source: 'asset', id: assetCard.dataset.mkDragAsset || '' };
+            if (!transfer.id) return null;
+            setActiveDrag(transfer);
+            setDragSurfaceActive(true);
+            return transfer;
+        }
+
+        function createPointerTransferEvent(target, transfer, relatedTarget = null) {
+            return {
+                target,
+                relatedTarget,
+                dataTransfer: {
+                    dropEffect: 'move',
+                    getData: type => type === 'application/json' ? JSON.stringify(transfer) : ''
+                },
+                composedPath: () => [target],
+                preventDefault() {}
+            };
+        }
+
+        function handlePointerDragOver(target, transfer) {
+            if (!target || !transfer) return;
+            setActiveDrag(transfer);
+            handleCanvasDragOver(createPointerTransferEvent(target, transfer));
+        }
+
+        function handlePointerDragLeave(target, relatedTarget = null) {
+            if (!target) return;
+            handleCanvasDragLeave(createPointerTransferEvent(target, getActiveDrag() || {}, relatedTarget));
+        }
+
+        function handlePointerDrop(target, transfer) {
+            if (target && transfer) handleCanvasDrop(createPointerTransferEvent(target, transfer));
+            handlePointerDragCancel();
+        }
+
+        function handlePointerDragCancel() {
+            const documentRef = getDocument();
+            documentRef?.querySelectorAll?.('.mk-meter-drop-target-active, .mk-meter-group-target-active, .mk-position-drop-target-active, [data-mk-zone].dragover')
+                ?.forEach(element => element.classList.remove('mk-meter-drop-target-active', 'mk-meter-group-target-active', 'mk-position-drop-target-active', 'dragover'));
+            setActiveDrag(null);
+            setDragSurfaceActive(false);
         }
 
         function handleDrop(event, zone, targetAssetId = '', meterGroupTargetId = '', positionTargetId = '', baseMeterIndex = '') {
@@ -496,7 +573,11 @@
             }
             const meter = event.target.closest('[data-mk-select-meter]');
             if (meter) {
-                call('openObjectModal', { kind: 'meter', index: Number(meter.dataset.mkSelectMeter) || 0 });
+                call('openObjectModal', {
+                    kind: 'meter',
+                    id: meter.dataset.mkMeterId || '',
+                    index: Number(meter.dataset.mkSelectMeter) || 0
+                });
                 return;
             }
             const asset = event.target.closest('[data-mk-select-asset]');
@@ -513,6 +594,11 @@
             handleCanvasDrop,
             handleCanvasDragStart,
             handleCanvasDragEnd,
+            getPointerTransfer,
+            handlePointerDragOver,
+            handlePointerDragLeave,
+            handlePointerDrop,
+            handlePointerDragCancel,
             parseTransfer
         });
     }

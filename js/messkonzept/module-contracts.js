@@ -27,7 +27,9 @@
         'WattspurMesskonzeptCommands',
         'WattspurMesskonzeptProjectMeta',
         'WattspurMesskonzeptCanvasRenderer',
+        'WattspurMesskonzeptAnnotations',
         'WattspurMesskonzeptDragDrop',
+        'WattspurMesskonzeptPointerDrag',
         'WattspurMesskonzeptInteraction',
         'WattspurMesskonzeptBootstrap'
     ]);

@@ -11,6 +11,7 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`index.html`** | `/` | Das visuelle HTML5-Grundgerüst der Anwendung (Struktur für Upload, Dashboard, Editor, AgNes, Modals). |
 | **`lastgang-analyse.html`** | `/` | Indexierbare SEO-Einstiegsseite für die Lastganganalyse mit stabilem Hash-Einstieg in die lokale Anwendung. |
 | **`messkonzept-konfigurator.html`** | `/` | Indexierbare SEO-Einstiegsseite für den Messkonzept-Konfigurator mit stabilem Hash-Einstieg in die lokale Anwendung. |
+| **`lizenz.html`** | `/` | Lesbare Lizenzseite mit gemeinsamer Wattspur-Navigation und sichtbarem Rückweg zur Startseite. |
 | **`styles.css`** | `/` | Modernes CSS3-Designsystem (Darkmode, Glasmorphismus, Layout-Grid, Ampel-Badges, Buttons, Tabellen). |
 | **`manifest.json`** | `/` | Web App Manifest (PWA) für die Installation als eigenständige App auf Desktop und Smartphone. |
 | **`robots.txt` / `sitemap.xml`** | `/` | Legen Indexierungsregeln und die öffentlichen Kernseiten für Suchmaschinen fest. |
@@ -133,7 +134,7 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | :--- | :--- |
 | **`model.js`** | DOM-freies Zustandsmodell für Messobjekte, Projektangaben, Spannungsebene des Netzanschlusses, Historie und Moduswechsel. |
 | **`rules.js`** | Versionierter, DOM-freier Regelkatalog für Zähler, Anlagen, Speicher, NSH und Parallelmessung. |
-| **`validation-status.js`** | Verbindet den versionierten Regelkatalog mit der kompakten Anzeige „Infos und Hinweise“, nummerierten runden Info-/Hinweis-Tags und semantisch gefärbten Anlagen-Tags. |
+| **`validation-status.js`** | Verbindet den versionierten Regelkatalog mit der kompakten Anzeige „Infos und Hinweise“, neutralen nummerierten Status-Markern und semantisch gefärbten Anlagen-Tags. |
 | **`identifiers.js`** | Vergibt getrennte Zählerfolgen (`Z…` für Netz-Zähler, `ZN…` für Mieterstromzähler) sowie getrennte Erzeugungsnummernkreise für PV/Steckersolar, BHKW und Wind ohne DOM- oder Renderlogik. |
 | **`meter-policy.js`** | Kapselt die fachlichen Regeln für Kaskadenstufen, Einzelzähler und Drop-Ziele. |
 | **`asset-display.js`** | Kapselt Labels, fachliche Objekt-Hinweise und die Icons des Messkonzept-Editors. |
@@ -146,12 +147,14 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`viewport.js`** | Kapselt Zoom, Pan, ResizeObserver und die Topografie-Bedienung. |
 | **`history.js`** | Kapselt Undo/Redo und die dazugehörige Schaltflächen-Synchronisation. |
 | **`commands.js`** | Bündelt Zustandsänderungen wie Reset, Moduswechsel, Kaskadenstufen, Anlagenanlage und Verschieben. |
-| **`project-meta.js`** | Synchronisiert Projektname, Referenz, Skizzenstand, Standort und Kommentar mit dem Zustand. |
+| **`project-meta.js`** | Synchronisiert Projektname, Referenz, Messkonzept, Standort und den festen Kommentarabschnitt der Projektangaben mit dem Zustand. |
 | **`canvas-renderer.js`** | Komponiert Canvas, klickbaren HAK bzw. Trafo, Zählerstruktur und Objekt-Modal aus injizierten Render- und Zustandsfunktionen. |
+| **`annotations.js`** | Rendert ausgefüllte Zählerangaben als verschiebbare Karten mit gestrichelter Bezugslinie, bearbeitet Werte direkt per Doppelklick und übernimmt die Karten in die PDF-Kopie. |
 | **`editor.js`** | Verarbeitet Eingaben im Objekt-Dialog und meldet Asset- sowie Zählerdetailänderungen über injizierte Callbacks. |
 | **`start-flow.js`** | Kapselt Werkzeugwechsel, Startauswahl, freie Skizze und Laden der Messkonzept-Vorlagen. |
 | **`render-cycle.js`** | Orchestriert einen vollständigen UI-Renderlauf über injizierte Adapter, ohne Messlogik oder DOM-Suche zu kennen. |
 | **`drag-drop.js`** | Fachliche Drag-and-Drop- und Löschlogik über injizierte Befehls-Callbacks. |
+| **`pointer-drag.js`** | Ergänzt Finger- und Stiftgesten auf Tablets und übergibt sie an die bestehende Drop-Logik. |
 | **`interaction.js`** | DOM-Verkabelung für Dialoge, Felder, Buttons und Tastaturinteraktion. |
 | **`bootstrap.js`** | Sammelt statische DOM-Anker und verbindet Resize-/Lebenszyklus-Ereignisse mit dem Einstiegspunkt. |
 | **`export.js`** | Erzeugt die verständliche PDF-/Druckansicht aus dem aktuellen Zustand. |
@@ -178,17 +181,39 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`tests/kwk-bafa-hinweis-test.js`** | Prüft BAFA-Link, vorsichtigen KWKG-Hinweis und Messhinweis bei fehlender Erzeugungsmessung. |
 | **`tests/nsh-steuve-gemeinsame-messung-test.js`** | Prüft die zeitliche Einordnung von Nachtspeicherheizung und neuer SteuVE je Messpunkt. |
 | **`tests/wallbox-icon-test.js`** | Sichert das sichtbare Wallbox-Kabel mit Steckergehäuse und Kontaktstiften in Palette und Messskizze ab. |
-| **`tests/icon-object-number-badges-test.js`** | Prüft die getrennten Kennziffern-Badges für Speicher, Wallboxen und Wärmepumpen sowie den Verzicht auf Doppelnummern bei Textkarten. |
+| **`tests/icon-object-number-badges-test.js`** | Prüft die getrennten Kennziffern-Badges für reine Symbolkarten sowie die Textnummern und den Verzicht auf Doppelnummern bei Textkarten. |
+| **`tests/meter-click-target-test.js`** | Prüft stabile ID-Klickziele für Basis-, Sammelschienen- und Inline-Zähler. |
+| **`docs/main-string-meter-click-anforderungen.md`** | Akzeptanzkriterien für klickbare Zusatz-Zähler auf dem Hauptstrang und in verschachtelten Schienen. |
+| **`docs/objektnummern-standard-anforderungen.md`** | Verbindlicher Standard für Textnummern, Symbolkarten-Badges und getrennte fachliche Nummernkreise. |
+| **`docs/klimaanlage-bezeichnung-anforderungen.md`** | Einheitliche, kurze Bezeichnung „Klimaanlage“ für Palette, Editor, Tags, Vorlagen und Export. |
+| **`docs/projektangaben-editorbreite-anforderungen.md`** | Anforderungen für die symmetrische Breite und Position der Projektangaben unter dem Skizzeneditor. |
+| **`docs/drop-ziel-trefferflaechen-anforderungen.md`** | Anforderungen für einheitliche, geometrieneutrale Drop-Ziel-Trefferflächen beim Ziehen. |
+| **`docs/toolbar-responsive-anforderungen.md`** | Anforderungen für eine überlappungsfreie, responsive Messkonzept-Bedienleiste. |
+| **`docs/export-button-kontrast-anforderungen.md`** | Anforderungen für lesbare PDF-Exportbuttons mit sichtbarer Kontur in beiden Themen. |
+| **`docs/messkonzept-info-panel-anforderungen.md`** | Anforderungen für mittige, lesbare Infoboxen der typischen Messkonzepte. |
+| **`docs/messkonzept-bezeichnungen-anforderungen.md`** | Anforderungen und bestätigte Zuordnungen für fachliche Messkonzeptbezeichnungen an Startvorlagen. |
 | **`tests/erzeugungsanlagen-nummerierung-test.js`** | Prüft getrennte Nummernkreise für PV/Steckersolar, BHKW und Wind sowie die Umnummerierung beim Anlagenartwechsel. |
 | **`tests/palette-border-standard-test.js`** | Prüft den gemeinsamen Randstil der regulären und der Mieterstrom-Bausteine. |
 | **`tests/pdf-status-layout-test.js`** | Prüft die Reihenfolge der PDF-Textseite, den Seitenumbruch vor der Messskizze und die breit gesetzte Prüfstatusliste. |
 | **`tests/pdf-object-tables-test.js`** | Prüft gemeinsame Zähler- und Anlagentabellen, leere Zellen und den Verzicht auf wiederholte Einzelkarten im PDF. |
+| **`docs/pdf-objektbezeichnung-anforderungen.md`** | Legt fest, dass feste Anlagenarten vor der frei vergebenen Objektbezeichnung stehen. |
+| **`tests/pdf-wire-geometry-test.js`** | Prüft die maßstabsgetreue PDF-Bühne und verhindert doppelte Leitungen aus HTML/CSS und SVG. |
 | **`tests/project-meta-toggle-test.js`** | Prüft den sichtbaren, barrierearmen Aufklappbereich für Projektangaben. |
+| **`tests/drop-target-hitbox-test.js`** | Prüft einheitliche, nur beim Ziehen aktive Drop-Trefferflächen für Zähler und Anlagen. |
+| **`tests/toolbar-responsive-test.js`** | Prüft das kontrollierte Umbrechen der Messkonzept-Bediengruppen bei schmalen Spalten. |
+| **`tests/export-button-contrast-test.js`** | Prüft Kontrast und Kontur der beiden PDF-Exportbuttons. |
+| **`tests/messkonzept-info-panel-test.js`** | Prüft Positionierung, Viewport-Sicherheit und visuelle Gliederung der Messkonzept-Infoboxen. |
+| **`tests/messkonzept-bezeichnungen-test.js`** | Prüft die sechs bestätigten Messkonzeptbezeichnungen und ihre Darstellung auf den Vorlagekarten. |
+| **`tests/pointer-drag-test.js`** | Prüft die Tablet-Pointer-Gesten, Adapterverkabelung, Abbruchbereinigung und den Offline-Cache. |
 | **`tests/pruefstatus-collapsible-test.js`** | Prüft nummerierte, aufklappbare Prüfhinweise und den Textumbruch. |
 | **`tests/z5-second-asset-test.js`** | Regressionstest für einen zweiten Anschluss an einem verschachtelten Anlagenzähler. Prüft, dass der Unter-Rail erhalten bleibt und die Layout-Routine ihren Root-Anker kennt. |
 | **`docs/projekt-teststandard.md`** | Verständlicher Spickzettel für die fünf Testebenen und die Abnahmekriterien neuer Änderungen. |
 | **`docs/mieterstrom-d1-anforderungen.md`** | Anforderungen und Abnahmekriterien für die erste Mieterstromvorlage „MK D1: Mieterstromgemeinschaft“. |
-| **`docs/pdf-status-layout-anforderungen.md`** | Dokumentiert die Akzeptanzkriterien für PDF-Hinweis, Projektangaben, Prüfstatus und Messskizzen-Seite. |
+| **`docs/pdf-status-layout-anforderungen.md`** | Dokumentiert die Akzeptanzkriterien für PDF-Hinweis, Messskizze, Projektangaben und optionalen Kommentar. |
+| **`docs/pdf-dateiname-anforderungen.md`** | Dokumentiert den vorgeschlagenen PDF-Dateinamen aus Straße und Hausnummer. |
+| **`docs/pdf-wire-single-source-anforderungen.md`** | Dokumentiert die eindeutige SVG-Leitungsquelle und den Schutz vor doppelten PDF-Leitungen. |
 | **`docs/palette-border-anforderungen.md`** | Anforderungen für den einheitlichen blauen Rand aller Bausteine in der Auswahlleiste. |
+| **`docs/tablet-pointer-dnd-anforderungen.md`** | Anforderungen für Finger- und Stift-Drag-and-Drop auf Android- und iOS-Tablets. |
+| **`docs/startkarten-ueberschriften-anforderungen.md`** | Anforderungen für eine einmalige Messkonzeptüberschrift ohne doppelte Objektzeile auf Vorlagekarten. |
 
 Der Einstiegspunkt [`messkonzept.js`](../messkonzept.js) orchestriert diese Module weiterhin. Zustandsänderungen werden über `commands.js` geführt; weitere Auslagerungen sollten diese Grenze beibehalten und nicht erneut DOM-, Geometrie- und Fachlogik vermischen.

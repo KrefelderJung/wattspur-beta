@@ -20,6 +20,8 @@ und ab dem 01.01.2024 unterscheiden kann.
 
 ## Darstellung
 
+Die Oberfläche nutzt eine feste einfache Ansicht; eine separate Detailansicht wird nicht angeboten.
+
 Der Hinweis erscheint ausschließlich im zentralen Prüfstatus. Im Objekteditor
 bleibt nur das optionale Datumsfeld sichtbar. Dadurch bleiben alle fachlichen
 Meldungen an einer Stelle und die Objektkarten übersichtlich.

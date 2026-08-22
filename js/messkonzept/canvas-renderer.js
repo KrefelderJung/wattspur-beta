@@ -59,6 +59,7 @@
                     : '';
                 return `
             <div class="mk-meter-layout detail-mode" data-mk-meter-layout="${index}" ${baseMeterAttributes} ${meterGeometryStyle}>
+                <span class="mk-drop-target-hitbox" aria-hidden="true"></span>
                 <article class="mk-asset-card detail-mode mk-meter-detail-card" data-mk-select-meter="${index}" role="button" tabindex="0" aria-label="Z${index + 1} auswählen">
                     <div class="mk-asset-head">
                         <span class="mk-asset-icon meter">Z${index + 1}</span>
@@ -72,6 +73,7 @@
 
             return `
         <div class="mk-meter-layout" data-mk-meter-layout="${index}" ${baseMeterAttributes} ${meterGeometryStyle}>
+            <span class="mk-drop-target-hitbox" aria-hidden="true"></span>
             ${renderMeterNode(index)}
             <div class="mk-connection-line" aria-hidden="true"></div>
         </div>
@@ -99,7 +101,7 @@
             ${hasInverterData ? `<label>Wechselrichterleistung (${inverterUnit})<input type="text" data-mk-field="inverterPower" value="${escapeHtml(asset.inverterPower || '')}" placeholder="${inverterPlaceholder}"></label>` : ''}
             <label>Inbetriebnahme<input type="date" data-mk-field="commissioningDate" value="${escapeHtml(asset.commissioningDate)}"></label>
         </div>
-        ${hasInverterData ? `<p class="mk-technical-fields-hint" role="note">${isSteckerPv ? 'Bei Stecker-PV darf die Wechselrichterleistung höchstens 800 VA betragen. Mehrere Geräte am selben Netzanschlusspunkt werden zusammen betrachtet.' : 'Bei PV und Wind kann hier die zugeordnete Wechselrichterleistung dokumentiert werden. Mehrere Wechselrichter bitte als Gesamtleistung eintragen.'}</p>` : ''}
+        ${isSteckerPv ? '<p class="mk-technical-fields-hint" role="note">Bei Stecker-PV darf die Wechselrichterleistung höchstens 800 VA betragen. Mehrere Geräte am selben Netzanschlusspunkt werden zusammen betrachtet.</p>' : ''}
     ` : '';
             const selectedSteuveType = asset.steuveType === 'Sonstige' ? 'offen' : asset.steuveType;
             const steuveFields = asset.type === 'steuve' ? `
@@ -120,7 +122,7 @@
             <label>Max. Entladeleistung (kW)<input type="text" data-mk-field="storageDischargePower" value="${escapeHtml(asset.storageDischargePower || '')}" placeholder="z. B. 5 kW"></label>
             <label>Wechselrichterleistung (kVA)<input type="text" data-mk-field="storageInverterPower" value="${escapeHtml(asset.storageInverterPower || '')}" placeholder="optional, z. B. 5 kVA"></label>
         </div>
-        <p class="mk-technical-fields-hint" role="note">Die Leistungswerte beschreiben die technische Auslegung des Speichers. Die Netzbetriebsweise wird separat abgefragt.</p>
+        <div class="mk-asset-form-grid" data-mk-storage-module-fields="${escapeHtml(asset.id)}">${call('renderSteuveModuleFields', '', asset)}</div>
         <div class="mk-asset-form-grid mk-storage-form-grid">
             <label>Ins öffentliche Netz einspeisen<select data-mk-field="storageGridFeedIn">${renderOptions(storageGridOptions, asset.storageGridFeedIn, 'Noch nicht festgelegt')}</select></label>
             <label>Zum Laden Strom aus dem Netz beziehen<select data-mk-field="storageGridImport">${renderOptions(storageGridOptions, asset.storageGridImport, 'Noch nicht festgelegt')}</select></label>
@@ -130,6 +132,8 @@
         <div class="mk-object-editor-form" data-mk-asset-id="${escapeHtml(asset.id)}">
             <div class="mk-asset-form">
                 <label>Bezeichnung<input type="text" data-mk-field="name" value="${escapeHtml(asset.name)}"></label>
+                <label>Bemerkung<textarea data-mk-field="remark" maxlength="240" rows="3" placeholder="Optional">${escapeHtml(asset.remark || '')}</textarea></label>
+                <label class="mk-annotation-toggle"><input type="checkbox" data-mk-field="annotationVisible" ${asset.annotationVisible !== false ? 'checked' : ''}> Infobox anzeigen</label>
                 ${meterFields}
                 ${generationFields}
                 ${steuveFields}
@@ -159,6 +163,7 @@
                 asset.type === 'meter' ? { label: 'Zählerfunktion', value: asset.meterRole } : null,
                 asset.type === 'meter' ? { label: 'Messbereich', value: asset.meterScope === 'base' ? 'Hinter Basiszähler' : asset.meterScope === 'asset' ? 'Vor einzelner Anlage' : 'Vor Anlagengruppe' } : null,
                 asset.type === 'meter' ? { label: 'Zähler vor', value: asset.meterScope === 'base' ? 'Basiszähler der Messstufe' : asset.meterScope === 'asset' ? (currentState.assets.find(item => item.id === asset.targetAssetId)?.name || 'Einzelanlage') : 'Anlagengruppe' } : null,
+                asset.remark ? { label: 'Bemerkung', value: asset.remark } : null,
                 asset.mieterstromObject === 'external-meter' ? { label: 'Mieterstromrolle', value: 'Teilnehmender Zähler' } : null,
                 asset.mieterstromObject === 'external-meter' ? { label: 'Abrechnung', value: 'Nicht über Netzbetreiber (Modellannahme)' } : null,
                 asset.mieterstromObject === 'user' ? { label: 'Mieterstromrolle', value: 'Mieterstromnutzer / gesamter Haushalt' } : null,
@@ -179,6 +184,7 @@
                 asset.type === 'storage' ? { label: 'Max. Ladeleistung', value: asset.storageChargePower } : null,
                 asset.type === 'storage' ? { label: 'Max. Entladeleistung', value: asset.storageDischargePower } : null,
                 asset.type === 'storage' ? { label: 'Wechselrichterleistung', value: asset.storageInverterPower } : null,
+                asset.type === 'storage' ? { label: '§14a-Modul', value: asset.steuveModule } : null,
                 asset.type === 'storage' ? { label: 'Netzeinspeisung', value: asset.storageGridFeedIn === 'yes' ? 'Ja' : asset.storageGridFeedIn === 'no' ? 'Nein' : 'Noch offen' } : null,
                 asset.type === 'storage' ? { label: 'Netzbezug zum Laden', value: asset.storageGridImport === 'yes' ? 'Ja' : asset.storageGridImport === 'no' ? 'Nein' : 'Noch offen' } : null
             ].filter(Boolean).filter(entry => includeEmpty || String(entry.value || '').trim());
@@ -195,14 +201,18 @@
             const details = call('getMeterDetails', {}, index) || {};
             const meter = getAdditionalMeters().find(item => call('getMeterDetailIndex', null, item) === index);
             const meterLabel = meter ? (call('getMeterLabel', '', meter) || `Z${index + 1}`) : `Z${index + 1}`;
-            const fields = meterDetailFields.map(field => `
-        <label>${escapeHtml(field.label)}<input type="${field.type}"${field.maxLength ? ` maxlength="${field.maxLength}"` : ''} data-mk-meter-field="${escapeHtml(field.key)}" data-mk-meter-index="${index}" value="${escapeHtml(details[field.key])}"></label>
-    `).join('');
+            const meterAriaLabel = meter?.mieterstromObject === 'external-meter'
+                ? 'Teilnehmender Mieterstromzähler'
+                : `${meterLabel} · Zähler`;
+            const fields = meterDetailFields.map(field => {
+                const attributes = `${field.maxLength ? ` maxlength="${field.maxLength}"` : ''}${field.rows ? ` rows="${field.rows}"` : ''}${field.inputmode ? ` inputmode="${escapeHtml(field.inputmode)}"` : ''}${field.pattern ? ` pattern="${escapeHtml(field.pattern)}"` : ''} data-mk-meter-field="${escapeHtml(field.key)}" data-mk-meter-index="${index}"`;
+                const control = field.type === 'textarea'
+                    ? `<textarea${attributes}>${escapeHtml(details[field.key])}</textarea>`
+                    : `<input type="${field.type}"${attributes} value="${escapeHtml(details[field.key])}">`;
+                return `<label>${escapeHtml(field.label)}${control}</label>`;
+            }).join('');
             return `
-        <div class="mk-object-editor-head">
-                <span class="mk-asset-icon meter${meter?.mieterstromObject === 'external-meter' ? ' mk-mieterstrom-participating-meter' : ''}" aria-label="${meter?.mieterstromObject === 'external-meter' ? 'Teilnehmender Mieterstromzähler' : escapeHtml(meterLabel)}">${escapeHtml(meterLabel)}</span>
-        </div>
-        <div class="mk-object-editor-form"><div class="mk-meter-form">${fields}</div></div>
+        <div class="mk-object-editor-form mk-mieterstrom-participating-meter" aria-label="${escapeHtml(meterAriaLabel)}"><div class="mk-meter-form">${fields}</div><label class="mk-annotation-toggle"><input type="checkbox" data-mk-meter-field="annotationVisible" data-mk-meter-index="${index}" ${details.annotationVisible !== false ? 'checked' : ''}> Infobox anzeigen</label></div>
     `;
         }
 
@@ -211,21 +221,16 @@
             const isMediumVoltage = voltageLevel === 'medium';
             const selectedLabel = hakVoltageLevels.find(option => option.value === voltageLevel)?.label
                 || (isMediumVoltage ? 'Mittelspannung' : 'Niederspannung');
-            const objectLabel = isMediumVoltage ? 'Transformator' : 'Hausanschlusskasten';
             return `
-        <div class="mk-object-editor-head">
-            <span class="mk-hak-editor-icon ${isMediumVoltage ? 'is-transformer' : ''}" aria-hidden="true">
-                ${isMediumVoltage ? '<span class="mk-transformer-symbol"><i></i><i></i></span><b>Trafo</b>' : '<b>HAK</b>'}
-            </span>
-            <span><b>${objectLabel}</b><small>Netzanschluss</small></span>
-        </div>
         <div class="mk-object-editor-form">
             <div class="mk-hak-form">
                 <label>Spannungsebene<select data-mk-hak-field="voltageLevel">
                     <option value="low" ${voltageLevel === 'low' ? 'selected' : ''}>Niederspannung</option>
                     <option value="medium" ${voltageLevel === 'medium' ? 'selected' : ''}>Mittelspannung</option>
                 </select></label>
-                <p class="mk-hak-editor-hint">Aktuell: ${selectedLabel}. Bei Mittelspannung wird der Netzanschluss in der Skizze als Transformator zwischen Mittel- und Niederspannung dargestellt.</p>
+                <label>Bemerkung<textarea data-mk-hak-field="remark" maxlength="240" rows="3" placeholder="Optional">${escapeHtml(getState()?.hak?.remark || '')}</textarea></label>
+                <label class="mk-annotation-toggle"><input type="checkbox" data-mk-hak-field="annotationVisible" ${getState()?.hak?.annotationVisible !== false ? 'checked' : ''}> Infobox anzeigen</label>
+                ${isMediumVoltage ? `<p class="mk-hak-editor-hint">${selectedLabel}: Der Netzanschluss wird in der Skizze als Transformator zwischen Mittel- und Niederspannung dargestellt.</p>` : ''}
             </div>
         </div>
     `;
@@ -237,13 +242,7 @@
             if (selection?.kind === 'meter') return renderMeterEditorFields(selection.index);
             const asset = currentState.assets.find(item => item.id === selection?.id);
             if (!asset) return '<p class="mk-empty-editor">Objekt nicht mehr vorhanden.</p>';
-            const meta = assetMeta[asset.type] || { className: '', label: 'Baustein' };
-            const mieterstromMeterClass = asset.mieterstromObject === 'external-meter' ? 'mk-mieterstrom-participating-meter' : '';
             return `
-        <div class="mk-object-editor-head">
-            <span class="mk-asset-icon ${meta.className} ${mieterstromMeterClass} ${call('getSteuveIconClass', '', asset)}" aria-label="${asset.type === 'storage' ? 'Batteriespeicher' : escapeHtml(call('getAssetTypeLabel', meta.label, asset) || meta.label)}">${call('renderAssetIcon', '', asset)}</span>
-            <span><b>${escapeHtml(asset.name)}</b><small>${escapeHtml(meta.label)}</small></span>
-        </div>
         ${renderAssetEditorFields(asset)}
     `;
         }
@@ -251,25 +250,43 @@
         function openObjectModal(selection) {
             const currentState = getState();
             const elements = getElements();
-            currentState.selectedObject = selection;
+            // Zusatzzaehler werden ueber ihre stabile Modell-ID aufgeloest.
+            // Der Detailindex bleibt nur als Fallback fuer alte Markups und
+            // virtuelle Basiszaehler erhalten.
+            const selectedMeter = selection?.kind === 'meter' && selection.id
+                ? getAdditionalMeters().find(item => item.id === selection.id)
+                : null;
+            const normalizedSelection = selectedMeter
+                ? { ...selection, index: call('getMeterDetailIndex', selection.index, selectedMeter) }
+                : selection;
+            currentState.selectedObject = normalizedSelection;
             const modal = elements.objectModal;
             const content = elements.objectModalContent;
             if (!modal || !content) return;
             if (elements.objectModalTitle) {
-                const selectedMeter = selection?.kind === 'meter'
-                    ? getAdditionalMeters().find(item => call('getMeterDetailIndex', null, item) === selection.index)
+                const selectedMeterForTitle = normalizedSelection?.kind === 'meter'
+                    ? selectedMeter || getAdditionalMeters().find(item => call('getMeterDetailIndex', null, item) === normalizedSelection.index)
                     : null;
-                const selectedMeterLabel = selectedMeter
-                    ? (call('getMeterLabel', '', selectedMeter) || `Z${selection.index + 1}`)
-                    : `Z${selection?.index + 1}`;
-                const label = selection?.kind === 'hak'
-                    ? (call('getHakVoltageLevel', 'low') === 'medium' ? 'Trafo' : 'HAK')
-                    : selection?.kind === 'meter'
+                const selectedMeterLabel = selectedMeterForTitle
+                    ? (call('getMeterLabel', '', selectedMeterForTitle) || `Z${normalizedSelection.index + 1}`)
+                    : `Z${normalizedSelection?.index + 1}`;
+                const selectedAsset = normalizedSelection?.kind === 'asset'
+                    ? currentState.assets.find(item => item.id === normalizedSelection.id)
+                    : null;
+                const selectedAssetMeta = selectedAsset ? (assetMeta[selectedAsset.type] || { label: 'Objekt' }) : null;
+                const selectedAssetLabel = selectedAsset?.mieterstromObject === 'user'
+                    ? 'Mieterstromnutzer'
+                    : selectedAsset?.mieterstromObject === 'external-meter'
+                        ? 'Mieterstromzähler'
+                        : selectedAssetMeta?.label || 'Objekt';
+                const label = normalizedSelection?.kind === 'hak'
+                    ? (call('getHakVoltageLevel', 'low') === 'medium' ? 'Transformator' : 'Hausanschlusskasten')
+                    : normalizedSelection?.kind === 'meter'
                         ? `${selectedMeterLabel} · Zähler`
-                        : currentState.assets.find(item => item.id === selection?.id)?.name || 'Objekt';
-                elements.objectModalTitle.textContent = `${label} · Angaben`;
+                        : selectedAsset ? `${selectedAsset.name} · ${selectedAssetLabel}` : 'Objekt';
+                elements.objectModalTitle.textContent = label;
             }
-            content.innerHTML = renderObjectEditor(selection);
+            content.innerHTML = renderObjectEditor(normalizedSelection);
             modal.classList.remove('hidden');
             modal.setAttribute('aria-hidden', 'false');
             elements.body?.classList.add('mk-modal-open');
@@ -350,6 +367,10 @@
         <div class="mk-canvas-stage ${currentState.viewMode === 'detail' ? 'detail-mode' : 'simple-mode'}" style="--mk-canvas-zoom: ${currentState.canvasZoom};">
             <svg class="mk-connector-layer" aria-hidden="true" focusable="false" preserveAspectRatio="none"></svg>
             <div class="mk-topology-content">${topologyMarkup}</div>
+            <div class="mk-meter-annotation-layer" aria-label="Eingetragene Infoboxen">
+                <svg class="mk-meter-annotation-connectors" aria-hidden="true" focusable="false" preserveAspectRatio="none"></svg>
+                <div class="mk-meter-annotation-cards"></div>
+            </div>
         </div>
     `;
         }

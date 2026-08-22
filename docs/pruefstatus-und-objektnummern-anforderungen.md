@@ -6,11 +6,12 @@ Die sichtbare Panelüberschrift lautet „Infos und Hinweise“. „Prüfstatus�
 die fachliche Bezeichnung des Regelbereichs in Dokumentation und Tests.
 
 1. Jeder Prüfhinweis erscheint als eigener aufklappbarer Eintrag.
-2. Die geschlossene Zeile bleibt kompakt und zeigt nur den Pfeil, einen
-   nummerierten Tag wie „Hinweis 1“ oder „Info 1“ und, wenn fachlich bekannt,
-   einen Anlagen-Tag.
-3. Info- und Hinweis-Tags sind runde, semantisch gefärbte Pills. Ein Hinweis
-   nutzt einen warmen Orangeton und wird nicht als roter Fehler dargestellt.
+2. Die geschlossene Karte trennt die Ebenen klar: In der ersten Zeile stehen
+   nur Pfeil sowie ein neutraler Status-Marker mit Symbol und Nummer wie
+   „Hinweis 1“ oder „Info 1“. Wenn fachlich bekannt, erscheinen die betroffenen
+   Anlagen darunter als eigene Tag-Zeile.
+3. Info und Hinweis sind bewusst keine Objekt-Tags. Der Marker verwendet eine
+   gut lesbare neutrale Beschriftung und nur einen kleinen farbigen Statuspunkt.
 4. Anlagen-Tags verwenden dieselben Farbfamilien wie Palette und Editor,
    insbesondere PV, Wärmepumpe, Speicher, Wallbox und Verbraucher.
 5. Die Regelüberschrift steht nur einmal im geöffneten Inhalt. Sie wird nicht

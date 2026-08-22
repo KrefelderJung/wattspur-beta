@@ -84,17 +84,23 @@
                 const statusNumber = (statusCounters.get(statusLabel) || 0) + 1;
                 statusCounters.set(statusLabel, statusNumber);
                 const statusTag = `${statusLabel} ${statusNumber}`;
+                const statusIcon = check.level === 'error' ? '×'
+                    : check.level === 'warning' ? '!'
+                        : check.level === 'ok' ? '✓' : 'i';
                 const assetLabels = getCheckAssetTags(check);
                 const assetTags = assetLabels
                     .map(tag => `<span class="mk-validation-asset-tag mk-validation-asset-tag--${escapeHtml(tag.toneClass)}">${escapeHtml(tag.label)}</span>`)
                     .join('');
+                const assetTagRow = assetTags
+                    ? `<div class="mk-validation-summary-assets" aria-label="Betroffene Objekte">${assetTags}</div>`
+                    : '';
                 const links = Array.isArray(check.links) && check.links.length
                     ? `<div class="mk-validation-links">${check.links.map(link => `<a class="mk-reference-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)} ↗</a>`).join('')}</div>`
                     : '';
                 const title = check.title || 'Prüfhinweis';
                 const accessibleLabel = `${statusTag}${assetLabels.length ? `, ${assetLabels.map(tag => tag.label).join(', ')}` : ''}: ${title}`;
                 return `<details class="mk-validation-item ${check.level}" data-mk-rule-id="${escapeHtml(check.ruleId || check.ruleKey || '')}">
-                    <summary aria-label="${escapeHtml(accessibleLabel)}"><span class="mk-validation-tag ${check.level}">${escapeHtml(statusTag)}</span>${assetTags}</summary>
+                    <summary aria-label="${escapeHtml(accessibleLabel)}"><span class="mk-validation-summary-main"><span class="mk-validation-status-marker ${check.level}"><span class="mk-validation-status-icon" aria-hidden="true">${statusIcon}</span><span>${escapeHtml(statusTag)}</span></span></span>${assetTagRow}</summary>
                     <div class="mk-validation-body"><p class="mk-validation-rule-title">${escapeHtml(title)}</p><p>${escapeHtml(check.text)}</p>${links}</div>
                 </details>`;
             }).join('');
