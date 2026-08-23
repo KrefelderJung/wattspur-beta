@@ -35,7 +35,7 @@ const messkonzeptRuntime = read('messkonzept.js');
 const headerPages = ['index.html', 'lastgang-analyse.html', 'messkonzept-konfigurator.html', 'kontakt.html', 'impressum.html', 'datenschutz.html', 'lizenz.html'];
 
 assertSeoPage('index.html', '', 'Wattspur | Energiewerkzeuge im Browser', 'Lastganganalyse');
-assertSeoPage('lastgang-analyse.html', 'lastgang-analyse.html', 'Wattspur | Lastganganalyse', 'CSV- und MSCONS-Lastgänge');
+assertSeoPage('lastgang-analyse.html', 'lastgang-analyse.html', 'Wattspur | Lastganganalyse', 'CSV-, MSCONS- und XLSX-Lastgänge');
 assertSeoPage('messkonzept-konfigurator.html', 'messkonzept-konfigurator.html', 'Wattspur | Messkonzept-Konfigurator', 'Messkonzept-Konfigurator');
 assertSeoPage('kontakt.html', 'kontakt.html', 'Wattspur | Kontakt', 'Kontakt zu Wattspur');
 assertSeoPage('impressum.html', 'impressum.html', 'Impressum | Wattspur', 'Impressum und Betreiberinformationen');
@@ -46,28 +46,30 @@ headerPages.forEach(file => {
     const source = read(file);
     assert(/class="[^"]*\bwattspur-brand\b/.test(source), `${file}: gemeinsamer Wattspur-Header fehlt`);
     assert(/class="[^"]*\bwattspur-brand-copy\b/.test(source), `${file}: gemeinsame Wortmarken-Klasse fehlt`);
-    assert(source.includes('styles.css?v=279'), `${file}: gemeinsamer Stylesheet-Stand fehlt`);
+    assert(source.includes('styles.css?v=283'), `${file}: gemeinsamer Stylesheet-Stand fehlt`);
 });
 
-assert(index.includes('href="lastganganalyse/"'), 'Startseite: Lastganganalyse muss auf die stabile Werkzeugroute verlinken');
+assert(index.includes('href="lastganganalyse/index.html"') && !index.includes('href="lastganganalyse/"'), 'Startseite: Lastganganalyse muss direkt auf die Alias-Datei verlinken');
 assert(index.includes('href="messkonzeptkonfigurator/"'), 'Startseite: Messkonzept muss auf die stabile Werkzeugroute verlinken');
-assert(lastgang.includes('href="lastganganalyse/"'), 'Lastganganalyse: interner Einstieg muss die stabile Werkzeugroute nutzen');
+assert(lastgang.includes('href="lastganganalyse/index.html"') && !lastgang.includes('href="lastganganalyse/"'), 'Lastganganalyse: interner Einstieg muss direkt auf die Alias-Datei verlinken');
 assert(messkonzept.includes('href="messkonzeptkonfigurator/"'), 'Messkonzept: interner Einstieg muss die stabile Werkzeugroute nutzen');
 assert(!/<a[^>]+href="[^"]*\?tool=lastgang/i.test(index), 'Startseite: alter Lastgang-Query-Link darf nicht mehr verwendet werden');
 assert(!lastgang.includes('http-equiv="refresh"') && !lastgang.includes("location.replace('index.html?tool=lastgang')"), 'Lastganganalyse: alte Query-Weiterleitung darf nicht zurückkehren');
-assert(lastgang.includes('href="lastganganalyse/"'), 'Lastganganalyse: Startbutton muss die stabile Werkzeugroute nutzen');
+assert(lastgang.includes('href="lastganganalyse/index.html"'), 'Lastganganalyse: Startbutton muss die Alias-Datei nutzen');
 assert(messkonzept.includes('href="messkonzeptkonfigurator/"'), 'Messkonzept: Startbutton muss die stabile Werkzeugroute nutzen');
 assert(messkonzeptRuntime.includes("window.location.hash === '#messkonzept'") && messkonzeptRuntime.includes("cleanPath === '/messkonzeptkonfigurator'") && messkonzeptRuntime.includes('MK_START_FLOW.showScreen()'), 'Messkonzept: Hash- und Clean-Route-Einstieg müssen die Konfiguratoransicht öffnen');
 assert((index.match(/class="app-legal-footer"/g) || []).length === 2, 'Start-App: dynamische Werkzeugansichten müssen eigene Rechtshinweise anbieten');
 assert(index.includes('class="app-legal-footer"') && (index.match(/href="(kontakt|impressum|datenschutz)\.html"/g) || []).length >= 6, 'Start-App: Impressum, Datenschutz und Kontakt müssen in beiden Werkzeugansichten erreichbar sein');
 assert(index.includes('href="lizenz.html"'), 'Start-App: Die Lizenz muss aus der Werkzeugansicht erreichbar sein');
+const landingFooter = index.match(/<footer class="landing-footer">([\s\S]*?)<\/footer>/);
+assert(landingFooter && (landingFooter[1].match(/href="lizenz\.html"/g) || []).length === 1, 'Startseite: Der Lizenzlink darf im öffentlichen Footer nur einmal erscheinen');
 assert(read('lizenz.html').includes('href="index.html#top"') && read('lizenz.html').includes('Zur Startseite'), 'Lizenzseite: sichtbarer Rückweg zur Startseite fehlt');
 
 assert(robots.includes('Allow: /') && robots.includes('Disallow: /tests.html') && robots.includes('Sitemap: https://wattspur.de/sitemap.xml'), 'robots.txt: Indexierungsregeln oder Sitemap-Verweis fehlen');
 ['https://wattspur.de/', 'https://wattspur.de/lastganganalyse/', 'https://wattspur.de/messkonzeptkonfigurator/', 'https://wattspur.de/lastgang-analyse.html', 'https://wattspur.de/messkonzept-konfigurator.html', 'https://wattspur.de/kontakt.html', 'https://wattspur.de/impressum.html', 'https://wattspur.de/datenschutz.html', 'https://wattspur.de/lizenz.html'].forEach(url => {
     assert(sitemap.includes(`<loc>${url}</loc>`), `sitemap.xml: ${url} fehlt`);
 });
-assert(serviceWorker.includes("'lastgang-analyse.html'") && serviceWorker.includes("'lastganganalyse/index.html'") && serviceWorker.includes("'messkonzept-konfigurator.html'") && serviceWorker.includes("'messkonzeptkonfigurator/index.html'") && serviceWorker.includes("'lizenz.html'") && serviceWorker.includes("'route-loader.js'") && /beta\.357/.test(serviceWorker), 'Offline-Cache: stabile Einstiegsseiten, Clean-Routen oder Versionsstand fehlen');
+assert(serviceWorker.includes("'lastgang-analyse.html'") && serviceWorker.includes("'lastganganalyse/index.html'") && serviceWorker.includes("'messkonzept-konfigurator.html'") && serviceWorker.includes("'messkonzeptkonfigurator/index.html'") && serviceWorker.includes("'lizenz.html'") && serviceWorker.includes("'route-loader.js'") && /APP_VERSION\s*=\s*['"]\d{4}\.\d{2}\.\d{2}-beta\.\d+['"]/.test(serviceWorker), 'Offline-Cache: stabile Einstiegsseiten, Clean-Routen oder gültiger Versionsstand fehlen');
 
 if (failures.length) {
     console.error(`SEO-Test: FEHLER (${failures.length})`);

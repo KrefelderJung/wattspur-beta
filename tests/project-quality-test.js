@@ -65,7 +65,6 @@ const requiredFiles = [
     'docs/lizenz-navigation-anforderungen.md',
     'tests/architecture-smoke-test.js',
     'tests/preset-loader-test.js',
-    'tests/decision-calculator-test.js',
     'tests/meter-delete-guard-test.js',
     'tests/z5-second-asset-test.js',
     'tests/rail-anchor-delete-test.js',
@@ -107,6 +106,12 @@ const requiredFiles = [
     'tests/pruefstatus-collapsible-test.js',
     'tests/meter-annotation-blocks-test.js',
     'tests/object-annotation-visibility-test.js',
+    'tests/object-editor-fields-test.js',
+    'tests/download-button-test.js',
+    'tests/lastgang-start-info-test.js',
+    'tests/empty-data-editor-test.js',
+    'tests/xlsx-import-test.js',
+    'tests/xlsx-import-runtime-test.js',
     'docs/architecture-smoke-test.md',
     'docs/messkonzept-regelwerk.md',
     'docs/messkonzept-startvorlagen.md',
@@ -136,7 +141,13 @@ const requiredFiles = [
     'docs/pruefstatus-und-objektnummern-anforderungen.md',
     'docs/meter-click-selection-anforderungen.md',
     'docs/meter-annotation-blocks-anforderungen.md',
-    'docs/object-annotation-visibility-anforderungen.md'
+    'docs/object-annotation-visibility-anforderungen.md',
+    'docs/object-editor-fields-anforderungen.md',
+    'docs/download-button-anforderungen.md',
+    'docs/lastgang-start-info-anforderungen.md',
+    'docs/lastgang-importformat-footer-anforderungen.md',
+    'docs/empty-data-editor-anforderungen.md',
+    'docs/logo-navigation-anforderungen.md'
 ];
 requiredFiles.forEach(relativePath => assert(fs.existsSync(absolute(relativePath)), `${relativePath}: erwartete Qualitätsdatei fehlt`));
 
@@ -162,6 +173,7 @@ const interactionText = read('js/messkonzept/interaction.js');
 const exportText = read('js/messkonzept/export.js');
 const validationStatusText = read('js/messkonzept/validation-status.js');
 const annotationText = read('js/messkonzept/annotations.js');
+const xlsxParserText = read('js/import/xlsx-parser.js');
 
 // Veröffentlichung darf keine externen Script-/Stylesheet-Abhängigkeiten
 // erzwingen. Fachliche Referenzlinks (z. B. VBEW) sind davon ausgenommen.
@@ -191,7 +203,7 @@ localCoreFiles.forEach(relativePath => {
     assert(!networkApiPattern.test(source), `${relativePath}: Netzwerk-API gehört nicht in den lokalen Messkonzept-Kern`);
 });
 assert(serviceWorkerText.includes('event.request.mode === \'navigate\''), 'service-worker.js: Offline-/Navigationsstrategie fehlt');
-assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && serviceWorkerText.includes("'lizenz.html'") && /beta\.357/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
+assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && serviceWorkerText.includes("'lizenz.html'") && /beta\.366/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
 
 // Der Netzanschluss ist ein eigenes, bearbeitbares Objekt. Diese Prüfungen
 // verhindern, dass ein späteres Refactoring den HAK nur visuell anklickbar
@@ -216,6 +228,8 @@ assert(read('tests/pointer-drag-test.js').includes('Pointer-DnD-Test: OK'), 'Reg
 assert(read('tests/project-field-standard-test.js').includes('Projektfelder-Standard-Test: OK'), 'Regressionstest für die standardisierten Projektfelder fehlt');
 assert(read('tests/pruefstatus-collapsible-test.js').includes('Prüfstatus-Aufklapp-Test: OK'), 'Regressionstest für den aufklappbaren Prüfstatus fehlt');
 assert(annotationText.includes('mk-meter-annotation-card') && annotationText.includes('pointerdown') && stylesText.includes('mk-meter-annotation-connector') && stylesText.includes('stroke-dasharray'), 'Zählerangaben: verschiebbare Karten und Bezugslinien fehlen');
+assert(xlsxParserText.includes('parseXlsxArrayBuffer') && read('tests/xlsx-import-test.js').includes('XLSX-Import-Test: OK'), 'Regressionstest für den lokalen XLSX-Import fehlt');
+assert(read('tests/xlsx-import-runtime-test.js').includes('XLSX-Import-Laufzeittest: OK'), 'Laufzeittest für den XLSX-Import fehlt');
 assert(read('tests/meter-annotation-blocks-test.js').includes('Zähler-Infokarten-Test: OK'), 'Regressionstest für verschiebbare Zählerangaben fehlt');
 assert(read('tests/object-annotation-visibility-test.js').includes('Objekt-Infobox-Sichtbarkeit-Test: OK'), 'Regressionstest für Infobox-Sichtbarkeit fehlt');
 assert(validationStatusText.includes('mk-validation-item') && validationStatusText.includes('<details') && validationStatusText.includes('statusCounters') && validationStatusText.includes('mk-validation-asset-tag') && validationStatusText.includes('mk-validation-summary-main') && validationStatusText.includes('mk-validation-summary-assets'), 'validation-status.js: kompakte, nummerierte Prüfstatus-Tags müssen als aufklappbare Details gerendert werden');
@@ -333,7 +347,9 @@ assert(indexText.includes('mk-start-group-icon') && !indexText.includes('>Häufi
 assert(presetText.includes('showSummary: true') && stylesText.includes('.mk-start-card-summary'), 'Startvorlagen: MK D1 muss die optionale Kurzbeschreibung gezielt anzeigen können');
 assert(indexText.includes('mk-start-group--shared') && indexText.includes('mk-start-group--parallel') && indexText.includes('mk-start-group--cascade') && stylesText.includes('.mk-start-group--cascade'), 'Startvorlagen: Topologiegruppen brauchen getrennte visuelle Zustände');
 assert(indexText.includes('data-mk-preset-group="mieterstrom"') && stylesText.includes('grid-template-columns: repeat(4, minmax(0, 1fr))'), 'Startvorlagen: die vierte Mieterstromkategorie muss im responsiven Gruppengitter berücksichtigt werden');
-assert(indexText.includes('btn-mk-decision-calculator') && indexText.includes('Lohnt sich ein Umbau auf eine Zweitmessung?') && indexText.includes('mk-decision-callout') && indexText.includes('Wirtschaftlichkeits-Check') && indexText.includes('mk-decision-calculator') && indexText.includes('decision-calculator.js') && stylesText.includes('.mk-decision-question') && stylesText.includes('.mk-decision-trigger small') && stylesText.includes('background: var(--mk-storage-bg)') && stylesText.includes('border: 1px solid var(--mk-storage-fg)'), 'Wirtschaftlichkeits-Check: Die Leitfrage muss den Beta-Rechner verständlich einordnen und der Button klar lesbar sein');
+assert(!indexText.includes('btn-mk-decision-calculator') && !indexText.includes('mk-decision-calculator')
+    && !indexText.includes('decision-calculator.js') && !stylesText.includes('.mk-decision-callout')
+    && !stylesText.includes('.mk-decision-form'), 'Der variable Wirtschaftlichkeitsrechner muss aus der Anwendung entfernt bleiben');
 assert(stylesText.includes('width: 2.5rem') && stylesText.includes('flex: 0 0 2.5rem') && stylesText.includes('stroke-width: 2.05;'), 'Startvorlagen: Kategorie-Icons müssen ausreichend groß und klar gezeichnet sein');
 assert(stylesText.includes('[data-theme="light"] .mk-topology-btn.active') && stylesText.includes('color: #ffffff;'), 'Tag-Modus: aktive Messkonzept-Schaltflächen brauchen helle Schrift auf dunkler Fläche');
 assert(stylesText.includes('[data-theme="light"] .mk-start-group--shared') && stylesText.includes('--mk-group-icon-fg: #047857;') && stylesText.includes('--mk-group-icon-fg: #6d28d9;'), 'Tag-Modus: Messkonzept-Icons brauchen gesättigte Linienfarben auf hellen Flächen');

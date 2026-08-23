@@ -31,6 +31,14 @@
 
             const previousState = call('getFieldHistoryBefore', event);
             asset[field] = target.type === 'checkbox' ? target.checked : target.value;
+            if (field === 'remark' && String(asset.remark || '').trim()) {
+                // Eine eingetragene Bemerkung soll nicht unsichtbar bleiben.
+                // Das automatische Einschalten greift nur bei echtem Inhalt;
+                // das bewusste Ausschalten über den Schalter bleibt erhalten.
+                asset.annotationVisible = true;
+                const toggle = getElements()?.objectModalAnnotationToggleInput;
+                if (toggle) toggle.checked = true;
+            }
             if (asset.type === 'generation' && field === 'energyCarrier') {
                 call('syncGenerationName', asset);
                 // PV/Wind erhalten ein Wechselrichterfeld, BHKW nicht. Nach
@@ -63,6 +71,11 @@
             const details = call('getMeterDetails', index);
             if (!details) return;
             details[field] = target.type === 'checkbox' ? target.checked : target.value;
+            if (field === 'remark' && String(details.remark || '').trim()) {
+                details.annotationVisible = true;
+                const toggle = getElements()?.objectModalAnnotationToggleInput;
+                if (toggle) toggle.checked = true;
+            }
             call('refreshMeterAnnotations');
             if (previousState) call('recordHistory', previousState);
         }
@@ -85,7 +98,20 @@
             if (previousState) call('recordHistory', previousState);
         }
 
+        function updateObjectAnnotationToggle(event) {
+            const target = event?.target;
+            if (target?.dataset?.mkObjectAnnotationToggle !== 'true') return;
+            const selection = getState()?.selectedObject;
+            if (!selection) return;
+            const previousState = call('getFieldHistoryBefore', event);
+            call('updateObjectAnnotationVisibility', selection, Boolean(target.checked));
+            call('refreshMeterAnnotations');
+            call('refreshInlineStatus');
+            if (previousState) call('recordHistory', previousState);
+        }
+
         function handleFieldEvent(event) {
+            updateObjectAnnotationToggle(event);
             updateAssetField(event);
             updateMeterDetailField(event);
             updateHakField(event);

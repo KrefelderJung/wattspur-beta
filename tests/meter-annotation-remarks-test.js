@@ -26,12 +26,12 @@ assert(renderer.includes('field.type === \'textarea\''), 'Zähler-Renderer unter
 assert(renderer.includes("label: 'Bemerkung'"), 'Bemerkung fehlt in der Objektübersicht');
 assert(annotations.includes('data-mk-meter-annotation-editable') && !annotations.includes('mk-meter-annotation-label'), 'Infokarte wiederholt den Zählernamen weiterhin sichtbar');
 assert(annotations.includes('mk-meter-annotation-value') && annotations.includes('beginInlineEdit'), 'Direkte Bearbeitung eines Infoboxwertes fehlt');
-assert(annotations.includes('mk-annotation-confirm') && annotations.includes('Änderung bestätigen'), 'Bestätigungshäkchen für Inline-Bearbeitung fehlt');
+assert(!annotations.includes('mk-annotation-confirm') && annotations.includes('finishOnOutsidePointerDown'), 'Inline-Bearbeitung muss ohne Bestätigungshäkchen auf Klick außerhalb reagieren');
 assert(annotations.includes("if (event.target.closest?.('.mk-meter-annotation-value')) return;"), 'Textwerte sind nicht vom Karten-Drag ausgenommen');
 assert(annotations.includes('dblclick') && !annotations.includes('openObjectModal'), 'Freier Infoboxbereich darf kein Objektfenster öffnen');
 assert(main.includes('refreshInlineStatus: () => MK_VALIDATION_STATUS.refresh()'), 'Inline-Bearbeitung aktualisiert den Prüfstatus nicht');
 assert(styles.includes('.mk-meter-form textarea') && styles.includes('.mk-asset-form textarea'), 'Bemerkungstextfeld ist nicht gestaltet');
-assert(styles.includes('.mk-annotation-confirm') && styles.includes('#34d399'), 'Bestätigungshäkchen ist nicht als grünes UI-Element gestaltet');
+assert(!styles.includes('.mk-annotation-confirm'), 'Veraltetes Bestätigungshäkchen ist noch gestaltet');
 assert(styles.includes('white-space: pre-wrap;'), 'Mehrzeilige Bemerkungen werden in der Infokarte nicht erhalten');
 assert(requirements.includes('Doppelklick') && requirements.includes('240 Zeichen'), 'Akzeptanzkriterien für Bemerkungen fehlen');
 

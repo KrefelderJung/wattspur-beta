@@ -28,6 +28,13 @@ Objektkarten oder technische Nebeninformationen.
   zur Transformator-Darstellung erscheint ausschließlich bei Mittelspannung.
 - Das Feld `Zählernummer` verwendet eine Zahlen-Tastatur und begrenzt die
   Eingabe auf höchstens elf Stellen.
+- Im Zählerdialog stehen `Marktlokation Bezug` und `Marktlokation Lieferung`
+  in einer gemeinsamen Reihe.
+- `Messlokation` bleibt als eigene breite Angabe lesbar. `Zählernummer` und
+  `Einbaudatum` stehen in einer gemeinsamen Reihe.
+- Das Freitextfeld `Bemerkung` bleibt als letzte, breite Zeile erhalten.
+- Auf Smartphone- und Tabletbreite fallen die zweispaltigen Reihen auf eine
+  Spalte zurück.
 - Die bestehende Objekt- und Messlogik sowie die Leitungsgeometrie bleiben
   unverändert.
 

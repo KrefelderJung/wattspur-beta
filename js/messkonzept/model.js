@@ -160,7 +160,10 @@
             // liegen relativ zur Skizzenbühne und beeinflussen keine
             // fachliche Zähler- oder Leitungslogik.
             meterAnnotationPositions: {},
-            hak: { voltageLevel: 'low', annotationVisible: true, remark: '' },
+            // Infokarten bleiben zunächst aus, damit eine neue Skizze ruhig
+            // startet. Wer eine Karte einschaltet oder eine Bemerkung einträgt,
+            // erhält die relevanten Angaben automatisch.
+            hak: { voltageLevel: 'low', annotationVisible: false, remark: '' },
             project: { name: '', reference: '', measurementConcept: '', street: '', houseNumber: '', postalCode: '', city: '' },
             notes: '',
             selectedObject: null
@@ -223,14 +226,14 @@
             result[field.key] = '';
             return result;
         }, {});
-        details.annotationVisible = true;
+        details.annotationVisible = false;
         return details;
     }
 
     function getMeterDetails(currentState, index) {
         const key = String(index + 1);
         if (!currentState.meterDetails[key]) currentState.meterDetails[key] = createMeterDetails();
-        if (currentState.meterDetails[key].annotationVisible === undefined) currentState.meterDetails[key].annotationVisible = true;
+        if (currentState.meterDetails[key].annotationVisible === undefined) currentState.meterDetails[key].annotationVisible = false;
         return currentState.meterDetails[key];
     }
 
@@ -287,7 +290,7 @@
             inverterPower: type === 'generation' ? '' : '',
             commissioningDate: '',
             remark: '',
-            annotationVisible: true,
+            annotationVisible: false,
             meterRole: type === 'meter' ? 'Bezug / Lieferung' : '',
             generationMeter: false,
             storageGridFeedIn: type === 'storage' ? 'unknown' : '',
@@ -371,7 +374,7 @@
         currentState.assets = [];
         currentState.meterDetails = {};
         currentState.meterAnnotationPositions = {};
-        currentState.hak = { voltageLevel: 'low', annotationVisible: true, remark: '' };
+        currentState.hak = { voltageLevel: 'low', annotationVisible: false, remark: '' };
         currentState.selectedObject = null;
     }
 

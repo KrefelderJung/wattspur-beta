@@ -224,6 +224,96 @@
          * berechneten SVG-Maße eingefroren. Die Leitungen bleiben damit an
          * exakt denselben Ankern wie im Editor.
          */
+        function createVisualBounds() {
+            return { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity, hasContent: false };
+        }
+
+        function extendVisualBounds(bounds, x, y, width, height) {
+            const values = [x, y, width, height].map(Number);
+            if (!values.every(Number.isFinite) || values[2] <= 0 || values[3] <= 0) return false;
+            bounds.minX = Math.min(bounds.minX, values[0]);
+            bounds.minY = Math.min(bounds.minY, values[1]);
+            bounds.maxX = Math.max(bounds.maxX, values[0] + values[2]);
+            bounds.maxY = Math.max(bounds.maxY, values[1] + values[3]);
+            bounds.hasContent = true;
+            return true;
+        }
+
+        function getStageCoordinateScale(stage) {
+            const rect = stage?.getBoundingClientRect?.();
+            const layoutWidth = Number(stage?.offsetWidth) || 0;
+            const layoutHeight = Number(stage?.offsetHeight) || 0;
+            return {
+                x: rect?.width && layoutWidth ? rect.width / layoutWidth : 1,
+                y: rect?.height && layoutHeight ? rect.height / layoutHeight : 1
+            };
+        }
+
+        function extendDomBounds(bounds, element, stage, scale, stageRect) {
+            const rect = element?.getBoundingClientRect?.();
+            if (!rect || !stageRect) return false;
+            const x = (rect.left - stageRect.left) / Math.max(0.01, scale.x);
+            const y = (rect.top - stageRect.top) / Math.max(0.01, scale.y);
+            const width = rect.width / Math.max(0.01, scale.x);
+            const height = rect.height / Math.max(0.01, scale.y);
+            return extendVisualBounds(bounds, x, y, width, height);
+        }
+
+        function extendSvgBounds(bounds, svg) {
+            const shapes = svg?.querySelectorAll?.('path,circle,ellipse,line,polyline,polygon,rect');
+            if (!shapes?.length) return false;
+            let found = false;
+            shapes.forEach(shape => {
+                try {
+                    const box = shape.getBBox?.();
+                    if (box) found = extendVisualBounds(bounds, box.x, box.y, box.width, box.height) || found;
+                } catch (error) {
+                    // Ein noch nicht layoutetes SVG wird über den Fallback behandelt.
+                }
+            });
+            return found;
+        }
+
+        function collectVisualBounds(stage, topologyWidth, topologyHeight) {
+            const topology = createVisualBounds();
+            const annotations = createVisualBounds();
+            let measured = false;
+            const stageRect = stage?.getBoundingClientRect?.();
+            const scale = getStageCoordinateScale(stage);
+            const topologyElement = stage?.querySelector?.('.mk-topology-content');
+            const topologySelectors = [
+                '.mk-hak-node',
+                '.mk-meter-node',
+                '.mk-meter-detail-card',
+                '.mk-generation-meter',
+                '.mk-rail-meter-node',
+                '.mk-inline-meter',
+                '.mk-asset-card',
+                '.mk-zone-junction',
+                '.mk-ownership-marker',
+                '.mk-ownership-label',
+                '.mk-transformer-symbol'
+            ].join(',');
+            topologyElement?.querySelectorAll?.(topologySelectors)?.forEach(element => {
+                measured = extendDomBounds(topology, element, stage, scale, stageRect) || measured;
+            });
+
+            const connectorLayer = stage?.querySelector?.('.mk-connector-layer');
+            const hasTopologySvg = extendSvgBounds(topology, connectorLayer);
+            measured = hasTopologySvg || measured;
+            if (!hasTopologySvg) {
+                extendVisualBounds(topology, 0, 0, topologyWidth, topologyHeight);
+            }
+
+            const annotationLayer = stage?.querySelector?.('.mk-meter-annotation-layer');
+            annotationLayer?.querySelectorAll?.('.mk-meter-annotation-card')?.forEach(card => {
+                measured = extendDomBounds(annotations, card, stage, scale, stageRect) || measured;
+            });
+            const annotationConnector = annotationLayer?.querySelector?.('.mk-meter-annotation-connectors');
+            measured = extendSvgBounds(annotations, annotationConnector) || measured;
+            return { topology, annotations, measured };
+        }
+
         function getTopologyMarkup() {
             const canvas = getElements().canvas;
             const stage = canvas?.querySelector?.('.mk-canvas-stage');
@@ -231,16 +321,71 @@
 
             const clone = stage.cloneNode(true);
             const connectorLayer = clone.querySelector('.mk-connector-layer');
-            const viewBox = String(connectorLayer?.getAttribute('viewBox') || '')
-                .trim()
-                .split(/\s+/)
-                .map(Number);
+            const annotationConnector = clone.querySelector('.mk-meter-annotation-connectors');
+            const parseViewBox = element => {
+                const values = String(element?.getAttribute?.('viewBox') || '')
+                    .trim()
+                    .split(/\s+/)
+                    .map(Number);
+                return values.length === 4 && values.every(Number.isFinite)
+                    ? { x: values[0], y: values[1], width: values[2], height: values[3] }
+                    : null;
+            };
+            const viewBox = parseViewBox(connectorLayer);
+            const annotationViewBox = parseViewBox(annotationConnector);
             const parseDimension = (value, fallback) => {
                 const number = Number.parseFloat(String(value || ''));
                 return Number.isFinite(number) && number > 0 ? number : fallback;
             };
-            const width = parseDimension(connectorLayer?.getAttribute('width'), parseDimension(viewBox[2], stage.scrollWidth || stage.offsetWidth || 1));
-            const height = parseDimension(connectorLayer?.getAttribute('height'), parseDimension(viewBox[3], stage.scrollHeight || stage.offsetHeight || 1));
+            const topologyWidth = parseDimension(
+                connectorLayer?.getAttribute('width'),
+                parseDimension(viewBox?.width, stage.scrollWidth || stage.offsetWidth || 1)
+            );
+            const connectorHeight = parseDimension(
+                connectorLayer?.getAttribute('height'),
+                parseDimension(viewBox?.height, stage.scrollHeight || stage.offsetHeight || 1)
+            );
+            const topologyHeight = parseDimension(stage.dataset?.mkTopologyContentHeight, connectorHeight);
+            const annotationHeight = parseDimension(stage.dataset?.mkAnnotationContentHeight, 0);
+            // Die Annotationsebene kann einen negativen Ursprung haben, wenn
+            // eine Infobox links oder oberhalb der Skizze abgelegt wurde. Der
+            // Export berechnet deshalb den tatsächlichen sichtbaren Rahmen aus
+            // SVG-Pfaden und DOM-Karten. Die technische Bühnenbreite bleibt
+            // nur ein Fallback, wenn der Browser noch keine Geometrie liefern
+            // kann.
+            const visualBounds = collectVisualBounds(stage, topologyWidth, topologyHeight);
+            const annotationFallback = annotationViewBox && !visualBounds.measured
+                ? annotationViewBox
+                : null;
+            const topologyMinX = visualBounds.topology.hasContent ? visualBounds.topology.minX : 0;
+            const topologyMinY = visualBounds.topology.hasContent ? visualBounds.topology.minY : 0;
+            const topologyMaxX = visualBounds.topology.hasContent ? visualBounds.topology.maxX : topologyWidth;
+            const topologyMaxY = visualBounds.topology.hasContent ? visualBounds.topology.maxY : topologyHeight;
+            const annotationMinX = visualBounds.annotations.hasContent
+                ? visualBounds.annotations.minX
+                : (annotationFallback?.x || 0);
+            const annotationMinY = visualBounds.annotations.hasContent
+                ? visualBounds.annotations.minY
+                : (annotationFallback?.y || 0);
+            const annotationMaxX = visualBounds.annotations.hasContent
+                ? visualBounds.annotations.maxX
+                : (annotationFallback ? annotationFallback.x + annotationFallback.width : 0);
+            const annotationMaxY = visualBounds.annotations.hasContent
+                ? visualBounds.annotations.maxY
+                : (annotationFallback ? annotationFallback.y + annotationFallback.height : annotationHeight);
+            const rawMinX = Math.min(topologyMinX, annotationMinX);
+            const rawMinY = Math.min(topologyMinY, annotationMinY);
+            const rawMaxX = Math.max(topologyMaxX, annotationMaxX);
+            const rawMaxY = Math.max(topologyMaxY, annotationMaxY, annotationHeight);
+            const cropPadding = visualBounds.measured ? 24 : 0;
+            const contentMinX = rawMinX - cropPadding;
+            const contentMinY = rawMinY - cropPadding;
+            const contentMaxX = rawMaxX + cropPadding;
+            const contentMaxY = rawMaxY + cropPadding;
+            const width = Math.max(1, contentMaxX - contentMinX);
+            const height = Math.max(1, contentMaxY - contentMinY);
+            const contentOffsetX = -contentMinX;
+            const contentOffsetY = -contentMinY;
             // The one-page export reserves space for the header, notice and
             // project fields. Scale only the isolated PDF copy, never the
             // editor stage, so the editor geometry remains unchanged.
@@ -275,11 +420,35 @@
             clone.style.setProperty('transform-origin', 'top left');
             clone.style.setProperty('--mk-canvas-zoom', '1');
 
+            // Die Druckbühne beginnt bei (0, 0). Alle sichtbaren Ebenen werden
+            // gemeinsam verschoben, damit negative Annotation-Koordinaten
+            // nicht aus dem PDF-Rahmen herausfallen und die Leitungen weiter
+            // exakt zu Karten und Objekten passen.
+            if (contentOffsetX || contentOffsetY) {
+                const contentTransform = `translate(${contentOffsetX}px, ${contentOffsetY}px)`;
+                [
+                    clone.querySelector('.mk-connector-layer'),
+                    clone.querySelector('.mk-topology-content'),
+                    clone.querySelector('.mk-meter-annotation-layer')
+                ].filter(Boolean).forEach(element => {
+                    element.style.setProperty('transform', contentTransform);
+                    element.style.setProperty('transform-origin', 'top left');
+                });
+            }
+
             if (connectorLayer) {
-                connectorLayer.setAttribute('width', String(Math.ceil(width)));
-                connectorLayer.setAttribute('height', String(Math.ceil(height)));
-                connectorLayer.style.setProperty('width', `${Math.ceil(width)}px`);
-                connectorLayer.style.setProperty('height', `${Math.ceil(height)}px`);
+                /*
+                 * Die Leitungs-SVG bleibt in ihrer eigenen Topologiegröße.
+                 * Würde ihre gerenderte Breite auf die gemeinsame Exportbreite
+                 * gesetzt, würde preserveAspectRatio="none" die Leitungen
+                 * strecken, sobald eine Infobox zusätzlichen Raum erzeugt.
+                 * Der gemeinsame Offset verschiebt die Ebene; die
+                 * Leitungskoordinaten selbst bleiben unverändert.
+                 */
+                connectorLayer.setAttribute('width', String(Math.ceil(topologyWidth)));
+                connectorLayer.setAttribute('height', String(Math.ceil(connectorHeight)));
+                connectorLayer.style.setProperty('width', `${Math.ceil(topologyWidth)}px`);
+                connectorLayer.style.setProperty('height', `${Math.ceil(connectorHeight)}px`);
             }
 
             return `<div class="mk-print-canvas-frame"><div class="mk-print-canvas-fit" style="width:${scaledWidth}px;height:${scaledHeight}px">${clone.outerHTML}</div></div>`;

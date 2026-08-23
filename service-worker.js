@@ -1,4 +1,4 @@
-const APP_VERSION = '2026.08.22-beta.357';
+const APP_VERSION = '2026.08.23-beta.366';
 const CACHE_NAME = `lastgang-analyse-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
@@ -105,7 +105,9 @@ const ASSETS_TO_CACHE = [
     'icon-192.png',
     'icon-512.png',
     'lib/echarts.min.js',
-    'lib/papaparse.min.js'
+    'lib/papaparse.min.js',
+    'lib/jszip.min.js',
+    'js/import/xlsx-parser.js'
 ];
 
 // Install Event - Resilient per-asset caching (Punkt 20)

@@ -16,6 +16,7 @@ function assert(condition, message) {
 }
 
 const index = read('index.html');
+const app = read('app.js');
 const routeLoader = read('route-loader.js');
 const messkonzept = read('messkonzept.js');
 const sitemap = read('sitemap.xml');
@@ -28,9 +29,10 @@ const sitemap = read('sitemap.xml');
     assert(source.includes('rel="canonical"'), `${file}: Canonical fehlt`);
 });
 
-assert(routeLoader.includes("fetch(fallback") && routeLoader.includes("<base href=\"/\">") && routeLoader.includes('document.open()'), 'Routen-Loader: statischer App-Loader ist unvollständig');
-assert(index.includes("routePath === '/lastganganalyse'") && index.includes("routePath === '/messkonzeptkonfigurator'"), 'index.html: Clean-Routen werden nicht erkannt');
+assert(routeLoader.includes("window.location.protocol === 'file:'") && routeLoader.includes('window.location.replace(`${fallback}#${route}`)') && routeLoader.includes("fetch(fallback") && routeLoader.includes("<base href=\"/\">") && routeLoader.includes('document.open()'), 'Routen-Loader: Web- und file://-Einstieg sind unvollständig');
+assert(index.includes("routePath === '/lastganganalyse'") && index.includes("routePath === '/lastganganalyse/index.html'") && index.includes("routePath === '/messkonzeptkonfigurator'") && index.includes("routePath === '/messkonzeptkonfigurator/index.html'"), 'index.html: Clean-Routen und direkte Alias-Dateien werden nicht erkannt');
 assert(index.includes("document.documentElement.dataset.tool = activeRoute"), 'index.html: aktiver Werkzeugmodus wird nicht gesetzt');
+assert(app.includes("window.addEventListener('hashchange'") && app.includes("a[href$=\"index.html#top\"]") && app.includes("window.location.hash === '#top'") && app.includes("messkonzept-screen") && app.includes("screens.upload?.classList.remove('hidden')") && app.includes("screens.dashboard?.classList.add('hidden')"), 'Lastgang: Logo-Rückweg zum Hauptmenü reagiert nicht auf Hash-Navigation oder Direktklick');
 assert(index.includes('canonical: \'https://wattspur.de/lastganganalyse/\'') && index.includes('canonical: \'https://wattspur.de/messkonzeptkonfigurator/\''), 'index.html: Clean-Route-Metadaten fehlen');
 assert(messkonzept.includes("cleanPath === '/messkonzeptkonfigurator'"), 'Messkonzept: Clean-Route wird nicht geöffnet');
 assert(sitemap.includes('<loc>https://wattspur.de/lastganganalyse/</loc>') && sitemap.includes('<loc>https://wattspur.de/messkonzeptkonfigurator/</loc>'), 'Sitemap: Clean-Routen fehlen');

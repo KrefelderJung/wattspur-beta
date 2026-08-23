@@ -3,6 +3,14 @@
     const route = document.documentElement.dataset.route;
     const fallback = '../index.html';
 
+    // Unter file:// zeigt ein Verzeichnis-Link nur den Ordnerinhalt. Die
+    // konkrete Alias-Datei leitet deshalb lokal direkt in die App-Ansicht um.
+    // Auf einem Webserver bleibt die stabile Clean-Route unverändert.
+    if (window.location.protocol === 'file:') {
+        window.location.replace(`${fallback}#${route}`);
+        return;
+    }
+
     try {
         const response = await fetch(fallback, { cache: 'no-store' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);

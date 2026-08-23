@@ -718,6 +718,35 @@ function handleFiles(files) {
             } catch (hashError) {
                 console.warn('Datei-Fingerabdruck konnte nicht erstellt werden:', hashError);
             }
+
+            const isXlsx = /\.xlsx$/i.test(file.name) || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            if (isXlsx) {
+                const parseXlsxFn = window.parseXlsxArrayBuffer;
+                if (typeof parseXlsxFn !== 'function') {
+                    errors.push(`${file.name}: Der XLSX-Importer ist nicht verfügbar.`);
+                    onFileFinished();
+                    return;
+                }
+                try {
+                    const xlsxResult = await parseXlsxFn(arrayBuffer, file.name);
+                    if (!xlsxResult.success) {
+                        errors.push(`${file.name}: ${(xlsxResult.errors || []).map(error => error.message).join(', ') || 'Keine gültigen XLSX-Daten gefunden.'}`);
+                    } else if (xlsxResult.datasets) {
+                        xlsxResult.datasets.forEach(ds => {
+                            ds.data.forEach(d => { d.dateObj = new Date(d.timestamp); });
+                            ds.fileHash = sourceFileHash;
+                            ds.sourceFileName = file.name;
+                        });
+                        allExtractedDatasets = allExtractedDatasets.concat(xlsxResult.datasets);
+                    }
+                } catch (xlsxError) {
+                    errors.push(`${file.name}: XLSX-Datei konnte nicht verarbeitet werden.`);
+                    console.error('XLSX-Import fehlgeschlagen:', xlsxError);
+                }
+                onFileFinished();
+                return;
+            }
+
             let text = '';
             try {
                 const decoder = new TextDecoder('utf-8', { fatal: true });

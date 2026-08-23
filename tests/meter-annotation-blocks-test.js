@@ -47,6 +47,11 @@ assert(styles.includes('background: transparent;') && styles.includes('width: fi
 assert(styles.includes('overflow-wrap: anywhere;'), 'Lange Zählerwerte müssen innerhalb der Infokarte umbrechen können');
 assert(annotation.includes('const above = targetPoint.y - cardHeight - 18;') && annotation.includes('const y = above >= 6 ? above'), 'Infokarten starten nicht bevorzugt oberhalb des Zählers');
 assert(exportModule.includes('mk-print-canvas-stage'), 'PDF-Export nutzt die Zeichenflächenkopie');
+assert(exportModule.includes('mk-meter-annotation-connectors')
+    && exportModule.includes('contentMinX')
+    && exportModule.includes('contentMinY')
+    && exportModule.includes('contentOffsetX')
+    && exportModule.includes('contentOffsetY'), 'PDF-Export muss linke und obere Infobox-Grenzen berücksichtigen');
 
 [
     'Zählerangaben',

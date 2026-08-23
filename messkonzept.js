@@ -124,8 +124,6 @@ const MK_PROJECT_META = window.WattspurMesskonzeptProjectMeta.createProjectMetaC
     bindHistoryButtons: () => MK_HISTORY.bindButtons()
 });
 
-const MK_DECISION_CALCULATOR = window.WattspurMesskonzeptDecisionCalculator.createController();
-
 const MK_VALIDATION_STATUS = window.WattspurMesskonzeptValidationStatus.createValidationStatusController({
     getState: () => mkConfiguratorState,
     getElements: () => mkElements,
@@ -222,8 +220,26 @@ const MK_EDITOR = window.WattspurMesskonzeptEditor.createEditorController({
         getMeterDetails: index => mkGetMeterDetails(index),
         updateHakField: (field, value) => {
             if (field === 'voltageLevel') MK_MODEL.setHakVoltageLevel(mkConfiguratorState, value);
-            if (field === 'annotationVisible') mkConfiguratorState.hak.annotationVisible = Boolean(value);
-            if (field === 'remark') mkConfiguratorState.hak.remark = String(value ?? '');
+            if (field === 'remark') {
+                mkConfiguratorState.hak.remark = String(value ?? '');
+                if (mkConfiguratorState.hak.remark.trim()) {
+                    mkConfiguratorState.hak.annotationVisible = true;
+                    if (mkElements.objectModalAnnotationToggleInput) mkElements.objectModalAnnotationToggleInput.checked = true;
+                }
+            }
+        },
+        updateObjectAnnotationVisibility: (selection, visible) => {
+            if (selection?.kind === 'hak') {
+                mkConfiguratorState.hak.annotationVisible = Boolean(visible);
+                return;
+            }
+            if (selection?.kind === 'meter') {
+                const details = mkGetMeterDetails(selection.index);
+                if (details) details.annotationVisible = Boolean(visible);
+                return;
+            }
+            const asset = mkConfiguratorState.assets.find(item => item.id === selection?.id);
+            if (asset) asset.annotationVisible = Boolean(visible);
         },
         refreshObjectModal: selection => MK_CANVAS_RENDERER.openObjectModal(selection),
         syncGenerationName: asset => mkSyncGenerationName(asset),
@@ -352,7 +368,8 @@ const MK_INTERACTION = window.WattspurMesskonzeptInteraction.createInteractionCo
         handleCanvasDragEnd: event => mkHandleCanvasDragEnd(event),
         handleCanvasClick: event => mkHandleCanvasClick(event),
         initializePointerDrag: () => MK_POINTER_DRAG.initialize(),
-        consumePointerClickSuppression: () => MK_POINTER_DRAG.consumeClickSuppression()
+        consumePointerClickSuppression: () =>
+            MK_POINTER_DRAG.consumeClickSuppression() || MK_VIEWPORT.consumePanClickSuppression()
     }
 });
 
@@ -381,6 +398,7 @@ const MK_ANNOTATIONS = window.WattspurMesskonzeptAnnotations.createAnnotationCon
     getAdditionalMeters: () => mkGetAdditionalMeters(),
     getMeterDetailIndex: meter => mkGetMeterDetailIndex(meter),
     getMeterLabel: meter => mkGetMeterLabel(meter),
+    getAssetAnnotationEntries: asset => MK_CANVAS_RENDERER.getAssetAnnotationEntries(asset),
     getStageScale: stage => MK_GEOMETRY.getStageScale(stage),
     escapeHtml: mkEscapeHtml,
     meterDetailFields: MK_METER_DETAIL_FIELDS,
@@ -943,7 +961,6 @@ function mkHandleCanvasClick(event) {
 function mkInitialize(elements = MK_BOOTSTRAP.collectElements()) {
     mkElements = elements || {};
     if (!mkElements.canvas) return;
-    MK_DECISION_CALCULATOR.initialize();
     mkInitializeCanvasPan();
 
     MK_EDITOR.initialize();

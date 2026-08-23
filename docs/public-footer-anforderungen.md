@@ -15,4 +15,6 @@ dynamischen Arbeitsflächen, die innerhalb von `index.html` geöffnet werden.
 - Die Links sind per Tastatur erreichbar und auf kleinen Bildschirmen lesbar.
 - Die Arbeitsfläche bleibt nutzbar; die Links dürfen keine wichtigen Inhalte
   verdecken.
+- Jeder rechtliche Link, einschließlich „Lizenz“, erscheint pro Fußzeile genau
+  einmal.
 - Der SEO-Test prüft die Links und die beiden dynamischen Fußzeilen.

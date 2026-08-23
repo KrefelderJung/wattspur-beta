@@ -131,17 +131,39 @@
             return `
         <div class="mk-object-editor-form" data-mk-asset-id="${escapeHtml(asset.id)}">
             <div class="mk-asset-form">
-                <label>Bezeichnung<input type="text" data-mk-field="name" value="${escapeHtml(asset.name)}"></label>
-                <label>Bemerkung<textarea data-mk-field="remark" maxlength="240" rows="3" placeholder="Optional">${escapeHtml(asset.remark || '')}</textarea></label>
-                <label class="mk-annotation-toggle"><input type="checkbox" data-mk-field="annotationVisible" ${asset.annotationVisible !== false ? 'checked' : ''}> Infobox anzeigen</label>
                 ${meterFields}
                 ${generationFields}
                 ${steuveFields}
                 ${nshFields}
                 ${storageFields}
+                <label>Bemerkung<textarea data-mk-field="remark" maxlength="240" rows="3" placeholder="Optional">${escapeHtml(asset.remark || '')}</textarea></label>
             </div>
         </div>
     `;
+        }
+
+        function getAssetAnnotationEntries(asset) {
+            if (!asset) return [];
+            // Infoboxen dokumentieren nur Werte, die der Bediener tatsächlich
+            // eingetragen oder bewusst ausgewählt hat. Automatische Objekt-
+            // und Typbezeichnungen sowie offene Platzhalter gehören in den
+            // Prüfstatus, nicht in jede einzelne Karte.
+            const excludedLabels = new Set([
+                'Bezeichnung', 'Anlage', 'Anlagenart', 'Bemerkung',
+                'Zähler davor', 'Erzeugungszähler', 'Mieterstromrolle', 'Abrechnung'
+            ]);
+            const isMeaningfulValue = entry => {
+                const value = String(entry?.value || '').trim();
+                return value && !/noch offen/i.test(value) && value !== 'Fachliche Einordnung offen';
+            };
+            const entries = getAssetSummaryEntries(asset, false)
+                .filter(entry => !excludedLabels.has(entry.label))
+                .filter(isMeaningfulValue)
+                .slice(0, 4);
+            if (String(asset.remark || '').trim()) {
+                entries.push({ key: 'remark', label: 'Bemerkung', value: String(asset.remark).trim() });
+            }
+            return entries;
         }
 
         function getAssetSummaryEntries(asset, includeEmpty = false) {
@@ -204,15 +226,35 @@
             const meterAriaLabel = meter?.mieterstromObject === 'external-meter'
                 ? 'Teilnehmender Mieterstromzähler'
                 : `${meterLabel} · Zähler`;
-            const fields = meterDetailFields.map(field => {
+            const renderedKeys = new Set();
+            const renderField = field => {
+                if (!field) return '';
+                renderedKeys.add(field.key);
                 const attributes = `${field.maxLength ? ` maxlength="${field.maxLength}"` : ''}${field.rows ? ` rows="${field.rows}"` : ''}${field.inputmode ? ` inputmode="${escapeHtml(field.inputmode)}"` : ''}${field.pattern ? ` pattern="${escapeHtml(field.pattern)}"` : ''} data-mk-meter-field="${escapeHtml(field.key)}" data-mk-meter-index="${index}"`;
                 const control = field.type === 'textarea'
                     ? `<textarea${attributes}>${escapeHtml(details[field.key])}</textarea>`
                     : `<input type="${field.type}"${attributes} value="${escapeHtml(details[field.key])}">`;
-                return `<label>${escapeHtml(field.label)}${control}</label>`;
-            }).join('');
+                return `<label data-mk-meter-form-field="${escapeHtml(field.key)}">${escapeHtml(field.label)}${control}</label>`;
+            };
+            const fieldByKey = new Map(meterDetailFields.map(field => [field.key, field]));
+            const renderRow = (keys, className) => {
+                const fields = keys.map(key => renderField(fieldByKey.get(key))).filter(Boolean).join('');
+                return fields ? `<div class="mk-meter-form-row ${className}">${fields}</div>` : '';
+            };
+            const rows = [
+                renderRow(['maloBezug', 'maloLieferung'], 'mk-meter-form-row--market'),
+                renderRow(['melo'], 'mk-meter-form-row--single'),
+                renderRow(['meterNumber', 'installationDate'], 'mk-meter-form-row--identity')
+            ];
+            const remainingFields = meterDetailFields
+                .filter(field => !renderedKeys.has(field.key) && field.key !== 'remark')
+                .map(renderField)
+                .join('');
+            if (remainingFields) rows.push(`<div class="mk-meter-form-row mk-meter-form-row--extra">${remainingFields}</div>`);
+            const remarkField = fieldByKey.get('remark');
+            if (remarkField) rows.push(`<div class="mk-meter-form-row mk-meter-form-row--remark">${renderField(remarkField)}</div>`);
             return `
-        <div class="mk-object-editor-form mk-mieterstrom-participating-meter" aria-label="${escapeHtml(meterAriaLabel)}"><div class="mk-meter-form">${fields}</div><label class="mk-annotation-toggle"><input type="checkbox" data-mk-meter-field="annotationVisible" data-mk-meter-index="${index}" ${details.annotationVisible !== false ? 'checked' : ''}> Infobox anzeigen</label></div>
+        <div class="mk-object-editor-form mk-mieterstrom-participating-meter" aria-label="${escapeHtml(meterAriaLabel)}"><div class="mk-meter-form">${rows.join('')}</div></div>
     `;
         }
 
@@ -229,7 +271,6 @@
                     <option value="medium" ${voltageLevel === 'medium' ? 'selected' : ''}>Mittelspannung</option>
                 </select></label>
                 <label>Bemerkung<textarea data-mk-hak-field="remark" maxlength="240" rows="3" placeholder="Optional">${escapeHtml(getState()?.hak?.remark || '')}</textarea></label>
-                <label class="mk-annotation-toggle"><input type="checkbox" data-mk-hak-field="annotationVisible" ${getState()?.hak?.annotationVisible !== false ? 'checked' : ''}> Infobox anzeigen</label>
                 ${isMediumVoltage ? `<p class="mk-hak-editor-hint">${selectedLabel}: Der Netzanschluss wird in der Skizze als Transformator zwischen Mittel- und Niederspannung dargestellt.</p>` : ''}
             </div>
         </div>
@@ -263,6 +304,15 @@
             const modal = elements.objectModal;
             const content = elements.objectModalContent;
             if (!modal || !content) return;
+            if (elements.objectModalAnnotationToggle && elements.objectModalAnnotationToggleInput) {
+                const annotationVisible = normalizedSelection?.kind === 'hak'
+                    ? currentState.hak?.annotationVisible !== false
+                    : normalizedSelection?.kind === 'meter'
+                        ? call('getMeterDetails', {}, normalizedSelection.index)?.annotationVisible !== false
+                        : currentState.assets.find(item => item.id === normalizedSelection?.id)?.annotationVisible !== false;
+                elements.objectModalAnnotationToggle.hidden = false;
+                elements.objectModalAnnotationToggleInput.checked = annotationVisible;
+            }
             if (elements.objectModalTitle) {
                 const selectedMeterForTitle = normalizedSelection?.kind === 'meter'
                     ? selectedMeter || getAdditionalMeters().find(item => call('getMeterDetailIndex', null, item) === normalizedSelection.index)
@@ -379,13 +429,18 @@
             const currentState = getState();
             const elements = getElements();
             if (!elements.canvas) return;
+            // Die Zoomsteuerung liegt bewusst als stabile Overlay-Schicht im
+            // Canvas. Nur die Bühnenfläche wird neu aufgebaut, damit ihre
+            // Klick- und Tastaturverkabelung bei jedem Renderlauf erhalten
+            // bleibt.
+            const renderTarget = elements.canvas.querySelector('.mk-canvas-stage-host') || elements.canvas;
             if (currentState.mode === 'parallel') {
-                elements.canvas.innerHTML = renderCanvasStage(renderParallelCanvas());
+                renderTarget.innerHTML = renderCanvasStage(renderParallelCanvas());
                 return;
             }
             if (currentState.mode === 'single') {
                 const minimumCanvasWidth = call('getSimpleCanvasMinimumWidth', 0, call('getZoneAssets', [], 'single-main').length);
-                elements.canvas.innerHTML = renderCanvasStage(`
+                renderTarget.innerHTML = renderCanvasStage(`
             <div class="mk-single-stack" style="--mk-single-min-width: ${minimumCanvasWidth}px;">
                 ${renderHakMeterRow()}
                 ${call('renderDropZone', '', 'single-main', 0)}
@@ -400,6 +455,7 @@
             renderMeterNode,
             renderMeterLayout,
             renderAssetEditorFields,
+            getAssetAnnotationEntries,
             renderAssetSummary,
             getAssetSummaryEntries,
             renderMeterEditorFields,

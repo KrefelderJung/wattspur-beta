@@ -236,26 +236,18 @@ body {
     padding: 3.2rem 0 5rem;
 }
 
-.landing-home #import,
-.landing-home #format-example,
-.landing-home #transparency {
+.landing-home #import {
     display: none;
 }
 
 /* Analyse-Modus: dieselbe vollständige App, aber ohne die Startseiteninhalte. */
 html[data-tool="lastgang"] .landing-header .landing-links,
 html[data-tool="lastgang"] .landing-hero,
-html[data-tool="lastgang"] #modules,
-html[data-tool="lastgang"] .landing-footer {
+html[data-tool="lastgang"] #modules {
     display: none;
 }
 
 html[data-tool="lastgang"] .landing-home #import,
-html[data-tool="lastgang"] .landing-home #format-example,
-html[data-tool="lastgang"] .landing-home #transparency {
-    display: block;
-}
-
 html[data-tool="lastgang"] .landing-home #import {
     display: grid;
 }
@@ -446,7 +438,7 @@ html[data-tool="lastgang"] .landing-main {
 .landing-module-icon {
     display: grid;
     place-items: center;
-    width: 3.2rem;
+    width: auto;
     height: 3.2rem;
     border: 1px solid rgba(56, 189, 248, 0.5);
     border-radius: 0.9rem;
@@ -623,6 +615,51 @@ html[data-tool="lastgang"] .landing-main {
     border-color: var(--warning-color);
 }
 
+.analysis-info-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin-top: 0.8rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid color-mix(in srgb, var(--border-color) 78%, transparent);
+}
+
+.analysis-info-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 38px;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 52%, var(--border-color));
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--surface-hover) 82%, transparent);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.analysis-info-button:hover,
+.analysis-info-button:focus-visible {
+    background: color-mix(in srgb, var(--primary-color) 18%, var(--surface-hover));
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.analysis-info-button:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--secondary-color) 62%, white);
+    outline-offset: 2px;
+}
+
+.analysis-info-button-icon {
+    color: var(--primary-color);
+    font-size: 1rem;
+    line-height: 1;
+}
+
 [data-theme="dark"] .demo-entry-editor {
     color: #082f49;
 }
@@ -633,36 +670,16 @@ html[data-tool="lastgang"] .landing-main {
     }
 }
 
-.format-example {
-    scroll-margin-top: 1rem;
-    margin-top: 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    background: var(--surface-color);
-    overflow: hidden;
-}
-
-.format-example summary {
-    min-height: 52px;
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    padding: 0.85rem 1rem;
-    cursor: pointer;
-    color: var(--primary-color);
-    font-weight: 700;
-}
-
 .format-example-body {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(230px, 0.8fr);
     gap: 1.2rem;
-    padding: 0 1rem 1rem;
+    padding: 0;
     color: var(--text-muted);
     font-size: 0.86rem;
 }
 
-.format-example pre {
+.format-example-body pre {
     overflow-x: auto;
     margin-top: 0.7rem;
     padding: 1rem;
@@ -672,7 +689,7 @@ html[data-tool="lastgang"] .landing-main {
     border: 1px solid var(--border-color);
 }
 
-.format-example ul {
+.format-example-body ul {
     padding-left: 1.2rem;
     align-self: center;
 }
@@ -688,13 +705,6 @@ html[data-tool="lastgang"] .landing-main {
 
 .format-downloads .btn {
     min-height: 38px;
-}
-
-.transparency-panel {
-    padding: clamp(1.2rem, 4vw, 2.5rem);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    background: var(--surface-color);
 }
 
 .transparency-columns {
@@ -993,48 +1003,94 @@ html[data-tool="lastgang"] .landing-main {
     color: var(--text-main);
 }
 
-.landing-details {
-    padding: 0;
-    overflow: hidden;
-}
-
-.landing-details > summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: clamp(1.2rem, 4vw, 2rem) clamp(1.2rem, 4vw, 2.5rem);
-    cursor: pointer;
-    list-style: none;
-}
-
-.landing-details > summary::-webkit-details-marker {
-    display: none;
-}
-
-.landing-details > summary::after {
-    content: "+";
-    width: 2rem;
-    height: 2rem;
+.analysis-info-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
     display: grid;
     place-items: center;
-    flex: 0 0 2rem;
+    padding: 1.25rem;
+}
+
+.analysis-info-dialog-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(7, 17, 31, 0.68);
+    backdrop-filter: blur(3px);
+}
+
+.analysis-info-dialog-card {
+    position: relative;
+    width: min(700px, 100%);
+    max-height: min(760px, calc(100vh - 2.5rem));
+    overflow: auto;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 55%, var(--border-color));
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+    color: var(--text-main);
+    box-shadow: 0 22px 70px rgba(2, 8, 23, 0.42);
+}
+
+.analysis-info-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.analysis-info-dialog-header h2 {
+    margin: 0.25rem 0 0;
+    font-size: clamp(1.25rem, 2.5vw, 1.7rem);
+}
+
+.analysis-info-dialog-close {
+    display: grid;
+    place-items: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    flex: 0 0 2.15rem;
     border: 1px solid var(--border-color);
     border-radius: 50%;
-    color: var(--primary-color);
-    font-size: 1.2rem;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 1.45rem;
+    line-height: 1;
+    cursor: pointer;
 }
 
-.landing-details[open] > summary::after {
-    content: "−";
+.analysis-info-dialog-close:hover,
+.analysis-info-dialog-close:focus-visible {
+    border-color: var(--primary-color);
+    color: var(--text-main);
 }
 
-.landing-details > summary h2 {
-    margin: 0;
+.analysis-info-dialog-close:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--secondary-color) 62%, white);
+    outline-offset: 2px;
 }
 
-.transparency-content {
-    padding: 0 clamp(1.2rem, 4vw, 2.5rem) clamp(1.2rem, 4vw, 2.5rem);
+.analysis-info-dialog-content {
+    padding: 1.2rem 1.25rem 1.35rem;
+}
+
+.analysis-info-dialog-content .format-example-body,
+.analysis-info-dialog-content .transparency-content {
+    padding: 0;
+}
+
+.analysis-info-dialog-content .transparency-content {
+    color: var(--text-muted);
+}
+
+.analysis-info-dialog-content .transparency-columns {
+    margin-top: 0;
+}
+
+.analysis-info-dialog-content .beta-disclaimer {
+    margin-top: 1rem;
 }
 
 /* ==========================================
@@ -1320,514 +1376,6 @@ html[data-tool="lastgang"] .landing-main {
     letter-spacing: -0.02em;
 }
 
-.mk-decision-callout {
-    display: flex;
-    align-items: flex-end;
-    flex-direction: column;
-    gap: 0.28rem;
-    max-width: min(100%, 23rem);
-}
-
-.mk-decision-question {
-    margin: 0;
-    color: var(--text-main);
-    font-size: 0.84rem;
-    font-weight: 750;
-    line-height: 1.25;
-    text-align: right;
-}
-
-.mk-decision-trigger {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.48rem;
-    flex: 0 0 auto;
-    min-height: 2.35rem;
-    padding: 0.42rem 0.72rem;
-    color: var(--text-main);
-    border: 1px solid var(--mk-storage-bg);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--mk-storage-bg) 32%, var(--surface-color));
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mk-storage-bg) 16%, transparent), 0 3px 8px color-mix(in srgb, var(--mk-storage-fg) 12%, transparent);
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.82rem;
-    font-weight: 750;
-    transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
-}
-
-.mk-decision-trigger small {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.08rem 0.3rem;
-    color: var(--mk-storage-fg);
-    background: var(--mk-storage-bg);
-    border: 1px solid var(--mk-storage-fg);
-    border-radius: 999px;
-    font-size: 0.62rem;
-    font-weight: 850;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.mk-decision-trigger-icon {
-    display: grid;
-    place-items: center;
-    width: 1.35rem;
-    height: 1.35rem;
-    color: var(--mk-storage-fg);
-    background: var(--mk-storage-bg);
-    border: 1px solid var(--mk-storage-fg);
-    border-radius: 0.42rem;
-    font-size: 0.82rem;
-    font-weight: 850;
-    line-height: 1;
-}
-
-.mk-decision-trigger:hover,
-.mk-decision-trigger:focus-visible {
-    border-color: var(--mk-storage-fg);
-    background: color-mix(in srgb, var(--mk-storage-bg) 46%, var(--surface-color));
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mk-storage-bg) 24%, transparent), 0 5px 14px color-mix(in srgb, var(--mk-storage-fg) 22%, transparent);
-    outline: none;
-    transform: translateY(-1px);
-}
-
-.mk-decision-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    display: grid;
-    place-items: center;
-    padding: 1rem;
-    background: color-mix(in srgb, #020617 72%, transparent);
-}
-
-.mk-decision-dialog {
-    width: min(760px, 100%);
-    max-height: min(92vh, 800px);
-    overflow: auto;
-    padding: clamp(1rem, 2.4vw, 1.5rem);
-    color: var(--text-main);
-    border: 1px solid color-mix(in srgb, var(--mk-storage-bg) 42%, var(--border-color));
-    border-radius: var(--radius-lg);
-    background: var(--surface-color);
-    box-shadow: 0 24px 70px rgba(2, 6, 23, 0.42), inset 0 1px 0 color-mix(in srgb, #fff 9%, transparent);
-}
-
-.mk-decision-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.mk-decision-kicker {
-    display: block;
-    margin-bottom: 0.25rem;
-    color: var(--mk-storage-bg);
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.mk-decision-header h2 {
-    margin: 0;
-    font-size: clamp(1.15rem, 2.4vw, 1.5rem);
-    line-height: 1.2;
-}
-
-.mk-decision-close {
-    display: grid;
-    flex: 0 0 auto;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    color: var(--text-muted);
-    border: 1px solid var(--border-color);
-    border-radius: 0.6rem;
-    background: transparent;
-    cursor: pointer;
-    font-size: 1.35rem;
-    line-height: 1;
-}
-
-.mk-decision-close:hover,
-.mk-decision-close:focus-visible {
-    color: var(--text-main);
-    border-color: var(--primary-color);
-    outline: none;
-}
-
-.mk-decision-description {
-    max-width: 64rem;
-    margin: 0.75rem 0 1.1rem;
-    color: var(--text-muted);
-    font-size: 0.88rem;
-}
-
-.mk-decision-form {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.85rem;
-}
-
-.mk-decision-form fieldset {
-    display: grid;
-    align-self: start;
-    align-content: start;
-    gap: 0.7rem;
-    min-width: 0;
-    padding: 0.8rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--surface-hover) 55%, var(--surface-color));
-}
-
-.mk-decision-form legend {
-    padding: 0 0.35rem;
-    color: var(--text-main);
-    font-size: 0.78rem;
-    font-weight: 800;
-}
-
-.mk-decision-form label {
-    display: grid;
-    align-self: start;
-    align-content: start;
-    gap: 0.28rem;
-    color: var(--text-main);
-    font-size: 0.78rem;
-    font-weight: 650;
-}
-
-.mk-decision-form label span {
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
-.mk-decision-form .mk-decision-label-line {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    color: var(--text-main);
-    font-weight: 650;
-}
-
-.mk-decision-form .mk-decision-label-line > span:first-child {
-    color: inherit;
-}
-
-.mk-decision-form .mk-decision-unit {
-    flex: 0 0 auto;
-    color: var(--text-muted);
-    font-size: 0.72rem;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.mk-decision-form input {
-    width: 100%;
-    min-height: 2.35rem;
-    padding: 0.45rem 0.55rem;
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: var(--bg-color);
-    font: inherit;
-}
-
-.mk-decision-form select {
-    width: 100%;
-    min-height: 2.35rem;
-    padding: 0.45rem 0.55rem;
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: var(--bg-color);
-    font: inherit;
-}
-
-.mk-decision-form input:focus,
-.mk-decision-form select:focus {
-    border-color: var(--primary-color);
-    outline: 2px solid color-mix(in srgb, var(--primary-color) 25%, transparent);
-}
-
-.mk-decision-check-label {
-    display: flex !important;
-    grid-template-columns: auto 1fr;
-    align-items: center;
-    gap: 0.55rem !important;
-}
-
-.mk-decision-check-label input {
-    width: 1.05rem;
-    min-height: 1.05rem;
-    accent-color: var(--mk-storage-fg);
-}
-
-.mk-decision-field-note {
-    margin: -0.1rem 0 0;
-    color: var(--text-muted);
-    font-size: 0.7rem;
-    line-height: 1.35;
-}
-
-.mk-decision-field-info {
-    position: relative;
-    align-self: start;
-    margin-top: 0.1rem;
-}
-
-.mk-decision-info-button {
-    display: grid;
-    place-items: center;
-    width: 1.35rem;
-    height: 1.35rem;
-    color: var(--mk-storage-fg);
-    border: 1px solid currentColor;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 0.72rem;
-    font-weight: 800;
-    list-style: none;
-}
-
-.mk-decision-info-button::-webkit-details-marker {
-    display: none;
-}
-
-.mk-decision-field-info > div {
-    position: absolute;
-    z-index: 2;
-    top: calc(100% + 0.45rem);
-    left: 0;
-    width: min(25rem, calc(100vw - 3rem));
-    padding: 0.72rem 0.8rem;
-    color: var(--text-main);
-    border: 1px solid color-mix(in srgb, var(--mk-storage-bg) 45%, var(--border-color));
-    border-radius: var(--radius-sm);
-    background: var(--surface-color);
-    box-shadow: 0 0.8rem 2rem rgba(2, 6, 23, 0.25);
-    font-size: 0.74rem;
-    font-weight: 500;
-    line-height: 1.45;
-}
-
-.mk-decision-field-info > div a {
-    display: inline-block;
-    margin-top: 0.35rem;
-    color: var(--primary-color);
-    font-weight: 750;
-}
-
-.mk-decision-actions {
-    display: flex;
-    grid-column: 1 / -1;
-    justify-content: flex-end;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-}
-
-.mk-decision-example,
-.mk-decision-submit {
-    min-height: 2.45rem;
-    padding: 0.5rem 0.8rem;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.8rem;
-    font-weight: 750;
-}
-
-.mk-decision-example {
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    background: transparent;
-}
-
-.mk-decision-submit {
-    color: #fff;
-    border: 1px solid var(--primary-color);
-    background: var(--primary-color);
-}
-
-.mk-decision-example:hover,
-.mk-decision-example:focus-visible,
-.mk-decision-submit:hover,
-.mk-decision-submit:focus-visible {
-    filter: brightness(1.08);
-    outline: none;
-}
-
-.mk-decision-result {
-    margin-top: 1rem;
-    padding: 0.9rem;
-    border: 1px solid color-mix(in srgb, var(--mk-storage-bg) 42%, var(--border-color));
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--mk-storage-bg) 9%, var(--surface-color));
-}
-
-.mk-decision-result-placeholder,
-.mk-decision-sensitivity {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.8rem;
-}
-
-.mk-decision-result-heading {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
-}
-
-.mk-decision-result-heading span {
-    color: var(--text-muted);
-    font-size: 0.78rem;
-    font-weight: 700;
-}
-
-.mk-decision-result-heading strong {
-    color: var(--mk-storage-fg);
-    font-size: clamp(1rem, 2vw, 1.25rem);
-}
-
-.mk-decision-result-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-
-.mk-decision-result-grid div {
-    display: grid;
-    gap: 0.18rem;
-    padding: 0.55rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--surface-hover) 66%, var(--surface-color));
-}
-
-.mk-decision-result-grid span {
-    color: var(--text-muted);
-    font-size: 0.68rem;
-}
-
-.mk-decision-result-grid strong {
-    font-size: 0.85rem;
-}
-
-.mk-decision-chart {
-    margin-top: 0.85rem;
-    padding: 0.7rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--surface-hover) 60%, var(--surface-color));
-}
-
-.mk-decision-chart-heading {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.35rem;
-}
-
-.mk-decision-chart-heading strong {
-    font-size: 0.8rem;
-}
-
-.mk-decision-chart-heading span {
-    color: var(--text-muted);
-    font-size: 0.68rem;
-}
-
-.mk-decision-chart svg {
-    display: block;
-    width: 100%;
-    height: auto;
-    min-height: 11rem;
-}
-
-.mk-decision-chart-gridline {
-    stroke: color-mix(in srgb, var(--border-color) 75%, transparent);
-    stroke-width: 1;
-    stroke-dasharray: 3 5;
-}
-
-.mk-decision-chart-zero {
-    stroke: color-mix(in srgb, var(--text-main) 48%, transparent);
-    stroke-width: 1.2;
-}
-
-.mk-decision-chart-line {
-    fill: none;
-    stroke: var(--mk-chart-line);
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    vector-effect: non-scaling-stroke;
-}
-
-.mk-decision-chart-axis-label {
-    fill: var(--text-muted);
-    font-size: 10px;
-}
-
-.mk-decision-chart-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 0.8rem;
-    color: var(--text-muted);
-    font-size: 0.68rem;
-}
-
-.mk-decision-chart-legend span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.mk-decision-chart-legend i {
-    display: inline-block;
-    width: 1.1rem;
-    height: 0.18rem;
-    border-radius: 99px;
-    background: var(--mk-chart-line);
-}
-
-.mk-decision-module-ranges {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.4rem;
-    margin-top: 0.75rem;
-    color: var(--text-muted);
-    font-size: 0.72rem;
-}
-
-.mk-decision-module-ranges span {
-    padding: 0.45rem 0.55rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-}
-
-.mk-decision-module-ranges strong {
-    display: block;
-    margin-top: 0.15rem;
-    color: var(--text-main);
-}
-
-.mk-decision-disclaimer {
-    margin: 0.85rem 0 0;
-    color: var(--text-muted);
-    font-size: 0.72rem;
-}
-
 .mk-start-groups {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2038,38 +1586,6 @@ html[data-tool="lastgang"] .landing-main {
     .mk-start-cases-heading {
         align-items: stretch;
         flex-direction: column;
-    }
-
-    .mk-decision-callout {
-        align-items: stretch;
-        max-width: none;
-    }
-
-    .mk-decision-question {
-        text-align: left;
-    }
-
-    .mk-decision-trigger {
-        justify-content: center;
-        width: 100%;
-    }
-
-    .mk-decision-form {
-        grid-template-columns: 1fr;
-    }
-
-    .mk-decision-result-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .mk-decision-chart-heading {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 0.15rem;
-    }
-
-    .mk-decision-module-ranges {
-        grid-template-columns: 1fr;
     }
 
     .mk-start-info-panel {
@@ -2714,9 +2230,7 @@ html[data-tool="lastgang"] .landing-main {
 }
 
 .mk-toolbar-controls {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) max-content;
-    grid-template-areas: "mode zoom";
+    display: flex;
     align-items: end;
     gap: 0.7rem;
     min-width: 0;
@@ -2730,9 +2244,6 @@ html[data-tool="lastgang"] .landing-main {
     gap: 0.2rem;
 }
 
-.mk-control-group:nth-child(1) { grid-area: zoom; }
-.mk-control-group:nth-child(2) { grid-area: mode; }
-
 .mk-control-label {
     padding-left: 0.25rem;
     color: var(--text-muted);
@@ -2744,27 +2255,95 @@ html[data-tool="lastgang"] .landing-main {
 }
 
 .mk-canvas-zoom-controls {
+    position: absolute;
+    right: 0.85rem;
+    top: 0.85rem;
+    z-index: 20;
     display: flex;
     align-items: center;
-    gap: 0.15rem;
-    padding: 0.2rem;
+    gap: 0;
+    width: max-content;
+    max-width: calc(100% - 1.7rem);
+    padding: 0.12rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: var(--bg-color);
-    overflow: hidden;
+    background: color-mix(in srgb, var(--bg-color) 72%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 0.35rem 0.9rem rgba(2, 6, 23, 0.28);
+    pointer-events: auto;
 }
 
-.mk-canvas-zoom-controls .mk-topology-btn {
-    min-width: 2rem;
-    padding-inline: 0.45rem;
+.mk-canvas-zoom-button {
+    display: grid;
+    place-items: center;
+    min-width: 1.9rem;
+    min-height: 1.7rem;
+    padding: 0.15rem 0.4rem;
+    border: 0;
+    border-radius: 0;
+    color: var(--text-main);
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1;
+    touch-action: manipulation;
+    white-space: nowrap;
 }
 
-.mk-canvas-zoom-controls .mk-zoom-value {
-    min-width: 3.7rem;
+.mk-canvas-zoom-button:first-child {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 }
 
-.mk-canvas-zoom-controls .mk-zoom-fit {
-    min-width: auto;
+.mk-canvas-zoom-button:last-child {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.mk-canvas-zoom-button + .mk-canvas-zoom-button {
+    position: relative;
+}
+
+.mk-canvas-zoom-button + .mk-canvas-zoom-button::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 22%;
+    bottom: 22%;
+    width: 1px;
+    background: color-mix(in srgb, var(--border-color) 78%, transparent);
+    pointer-events: none;
+}
+
+.mk-canvas-zoom-button:hover:not(:disabled),
+.mk-canvas-zoom-button:focus-visible {
+    color: var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 16%, transparent);
+    outline: none;
+}
+
+.mk-canvas-zoom-button:disabled {
+    color: color-mix(in srgb, var(--text-muted) 48%, transparent);
+    cursor: not-allowed;
+}
+
+.mk-canvas-zoom-button.mk-zoom-fit {
+    min-width: 1.9rem;
+    width: 1.9rem;
+    color: var(--text-main);
+    line-height: 0;
+}
+
+.mk-fit-icon {
+    display: block;
+    width: 1.15rem;
+    height: 1.15rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
 }
 
 .mk-panel-heading-label {
@@ -2785,7 +2364,7 @@ html[data-tool="lastgang"] .landing-main {
     align-items: center;
     gap: 0.25rem;
     justify-self: start;
-    width: fit-content;
+    width: max-content;
     padding: 0.2rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -2799,8 +2378,7 @@ html[data-tool="lastgang"] .landing-main {
    bewusst untereinander gesetzt, statt sich gegenseitig zu überdecken. */
 @container mk-toolbar (max-width: 44rem) {
     .mk-toolbar-controls {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-areas: "mode" "zoom";
+        flex-wrap: wrap;
         gap: 0.65rem;
     }
 
@@ -2808,9 +2386,8 @@ html[data-tool="lastgang"] .landing-main {
         width: 100%;
     }
 
-    .mk-topology-switch,
-    .mk-canvas-zoom-controls {
-        width: 100%;
+    .mk-topology-switch {
+        width: max-content;
         max-width: 100%;
         box-sizing: border-box;
     }
@@ -2880,17 +2457,30 @@ html[data-tool="lastgang"] .landing-main {
     width: fit-content;
 }
 
+.mk-meter-count-switch .mk-topology-btn {
+    flex: 0 0 auto;
+}
+
 .mk-meter-count-btn {
     min-width: 1.8rem;
     padding-inline: 0.45rem;
 }
 
 .mk-canvas {
+    position: relative;
     min-height: 470px;
+    /* Die Zeichenfläche bleibt ein eigener, scrollbarer Arbeitsbereich.
+       So erzeugt ein oberer oder unterer Infobox-Rand nicht die komplette
+       Seite neu, sondern lässt sich wie der horizontale Rand verschieben. */
+    max-height: min(70vh, 680px);
     padding: 1.3rem;
     overflow: auto;
     overscroll-behavior: contain;
-    cursor: grab;
+    /* Die freie Zeichenfläche ist zunächst eine normale Klickfläche.
+       Erst eine echte Pan-Geste beziehungsweise die Leertaste signalisiert
+       mit der Hand, dass die Ansicht verschoben werden kann. */
+    cursor: default;
+    touch-action: none;
     background:
         linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
         linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px),
@@ -2898,11 +2488,31 @@ html[data-tool="lastgang"] .landing-main {
     background-size: 24px 24px;
 }
 
+.mk-canvas-stage-host {
+    display: contents;
+}
+
+/* Zoomsymbole gehören zur Bearbeitung, nicht zum PDF-Inhalt. */
+body.mk-printing .mk-canvas-zoom-controls {
+    display: none;
+}
+
 .mk-canvas-stage {
     position: relative;
     width: max-content;
     min-width: 100%;
+    margin: var(--mk-annotation-gutter-top, 0px)
+        var(--mk-annotation-gutter-right, 0px)
+        var(--mk-annotation-gutter-bottom, 0px)
+        var(--mk-annotation-gutter-left, 0px);
     zoom: var(--mk-canvas-zoom, 1);
+}
+
+/* Zusätzlicher Arbeitsraum gehört nur zur Editoransicht. Er gibt verschobenen
+   Infoboxen an allen Rändern Platz, verändert aber keine Topologie- oder
+   PDF-Koordinaten. */
+body.mk-printing .mk-canvas-stage {
+    margin: 0 !important;
 }
 
 .mk-topology-content {
@@ -3001,54 +2611,50 @@ html[data-tool="lastgang"] .landing-main {
     outline: none;
 }
 
-.mk-annotation-confirm {
+.mk-annotation-resize-handle {
     position: absolute;
-    top: 0.16rem;
-    right: 1.45rem;
-    width: 1.1rem;
-    height: 1.1rem;
+    right: 0.08rem;
+    bottom: 0.08rem;
+    width: 1rem;
+    height: 1rem;
     padding: 0;
-    border: 1px solid #34d399;
-    border-radius: 50%;
-    background: color-mix(in srgb, #34d399 18%, var(--bg-color));
-    color: #34d399;
-    font: inherit;
-    font-size: 0.78rem;
-    font-weight: 900;
-    line-height: 0.95rem;
-    cursor: pointer;
+    border: 0;
+    border-radius: 0.25rem;
+    background: transparent;
+    cursor: nwse-resize;
     pointer-events: auto;
+    touch-action: none;
 }
 
-.mk-annotation-confirm:hover,
-.mk-annotation-confirm:focus-visible {
-    border-color: #6ee7b7;
-    background: color-mix(in srgb, #34d399 30%, var(--bg-color));
-    color: #6ee7b7;
-    outline: none;
+.mk-annotation-resize-handle::before {
+    content: "";
+    position: absolute;
+    right: 0.16rem;
+    bottom: 0.16rem;
+    width: 0.48rem;
+    height: 0.48rem;
+    border-right: 2px solid color-mix(in srgb, var(--primary-color) 82%, var(--text-muted));
+    border-bottom: 2px solid color-mix(in srgb, var(--primary-color) 82%, var(--text-muted));
+    opacity: 0.9;
+}
+
+.mk-annotation-resize-handle:hover,
+.mk-annotation-resize-handle:focus-visible {
+    background: color-mix(in srgb, var(--primary-color) 16%, transparent);
+    outline: 1px solid var(--primary-color);
+    outline-offset: 1px;
+}
+
+.mk-meter-annotation-card.is-resizing {
+    cursor: nwse-resize;
 }
 
 .mk-meter-annotation-card:has(.mk-annotation-dismiss) .mk-meter-annotation-values {
     padding-right: 1.15rem;
 }
 
-.mk-meter-annotation-card.is-editing .mk-meter-annotation-values {
-    padding-right: 2.35rem;
-}
-
-.mk-annotation-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    width: fit-content;
-    margin-top: 0.35rem;
-    color: var(--text-main);
-    font-size: 0.82rem;
-    cursor: pointer;
-}
-
-.mk-annotation-toggle input {
-    accent-color: var(--primary-color);
+.mk-meter-annotation-card:has(.mk-annotation-resize-handle) .mk-meter-annotation-values {
+    padding-bottom: 0.55rem;
 }
 
 .mk-meter-annotation-card:hover,
@@ -3334,6 +2940,7 @@ html[data-tool="lastgang"] .landing-main {
     border-radius: 0;
     background: transparent;
     text-align: center;
+    /* Der HAK öffnet sein Objektfenster, er ist kein Ansichts-Griff. */
     cursor: pointer;
     user-select: none;
 }
@@ -3572,6 +3179,26 @@ html[data-tool="lastgang"] .landing-main {
     margin-top: 0.55rem;
 }
 
+/* Zählerangaben werden fachlich in kurzen, gut erfassbaren Reihen gruppiert.
+   Die zweispaltigen Reihen fallen auf kleinen Bildschirmen automatisch auf
+   eine Spalte zurück, damit kein Feld gequetscht oder abgeschnitten wird. */
+.mk-meter-form-row {
+    display: grid;
+    min-width: 0;
+    gap: 0.55rem;
+}
+
+.mk-meter-form-row--market,
+.mk-meter-form-row--identity {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mk-meter-form-row--single,
+.mk-meter-form-row--extra,
+.mk-meter-form-row--remark {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .mk-meter-form label {
     display: grid;
     gap: 0.2rem;
@@ -3593,7 +3220,8 @@ html[data-tool="lastgang"] .landing-main {
 }
 
 .mk-meter-form textarea,
-.mk-asset-form textarea {
+.mk-asset-form textarea,
+.mk-hak-form textarea {
     width: 100%;
     min-height: 4.2rem;
     box-sizing: border-box;
@@ -3606,6 +3234,15 @@ html[data-tool="lastgang"] .landing-main {
     font: inherit;
     font-size: 0.78rem;
     line-height: 1.35;
+}
+
+/* Der HAK nutzt dieselbe Formularsprache wie Zähler und Anlagen. Ohne diese
+   Regel fällt die native Textarea auf ihre HTML-Standardbreite zurück. */
+.mk-hak-form label {
+    display: grid;
+    gap: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.76rem;
 }
 
 .mk-object-editor-form {
@@ -3702,6 +3339,13 @@ html[data-tool="lastgang"] .landing-main {
     border-bottom: 1px solid var(--border-color);
 }
 
+.mk-object-dialog-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-width: 0;
+}
+
 .mk-object-dialog-header h2 {
     margin: 0.1rem 0 0;
     font-size: 1.05rem;
@@ -3712,6 +3356,74 @@ html[data-tool="lastgang"] .landing-main {
     align-items: center;
     gap: 0.3rem;
     flex: 0 0 auto;
+}
+
+.mk-modal-annotation-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+}
+
+.mk-modal-annotation-toggle input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.mk-modal-switch-track {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 2.1rem;
+    height: 1.15rem;
+    padding: 0.12rem;
+    box-sizing: border-box;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bg-color) 88%, var(--text-muted));
+    transition: border-color 140ms ease, background 140ms ease;
+}
+
+.mk-modal-switch-track > span {
+    display: block;
+    width: 0.78rem;
+    height: 0.78rem;
+    border-radius: 50%;
+    background: var(--text-muted);
+    box-shadow: 0 1px 2px rgba(2, 6, 23, 0.3);
+    transform: translateX(0);
+    transition: transform 140ms ease, background 140ms ease;
+}
+
+.mk-modal-annotation-toggle input:checked + .mk-modal-switch-track {
+    border-color: var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 42%, var(--bg-color));
+}
+
+.mk-modal-annotation-toggle input:checked + .mk-modal-switch-track > span {
+    background: var(--primary-color);
+    transform: translateX(0.9rem);
+}
+
+.mk-modal-annotation-toggle input:focus-visible + .mk-modal-switch-track {
+    outline: 2px solid color-mix(in srgb, var(--primary-color) 72%, transparent);
+    outline-offset: 2px;
+}
+
+.mk-modal-annotation-toggle:hover {
+    color: var(--text-main);
 }
 
 .mk-modal-confirm {
@@ -4625,7 +4337,6 @@ html.mk-dragging .mk-meter-drop-hitbox {
 }
 
 .mk-start-info-button,
-.mk-decision-info-button,
 .mk-palette-info-button,
 .mk-validation-item > summary {
     cursor: pointer;
@@ -5052,42 +4763,6 @@ html.mk-dragging .mk-meter-drop-hitbox {
     overflow-wrap: anywhere;
 }
 
-.mk-export-button {
-    width: 100%;
-    border: 1px solid color-mix(in srgb, var(--primary-color) 68%, var(--text-main));
-    cursor: pointer;
-}
-
-.mk-export-actions {
-    display: grid;
-    gap: 0.5rem;
-    margin-top: 1rem;
-}
-
-.mk-export-button--sketch {
-    background: var(--surface-hover);
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-}
-
-.mk-export-button--sketch:hover,
-.mk-export-button--sketch:focus-visible {
-    background: color-mix(in srgb, var(--primary-color) 12%, var(--surface-hover));
-}
-
-/* Im hellen Modus braucht der gefüllte Exportbutton eine helle Schrift.
-   Die Kontur bleibt in beiden Themen sichtbar und trennt den Button klar
-   von der Kartenfläche. */
-.mk-export-button:not(.mk-export-button--sketch) {
-    color: #ffffff;
-    border-color: color-mix(in srgb, var(--primary-color) 68%, var(--text-main));
-}
-
-[data-theme="dark"] .mk-export-button:not(.mk-export-button--sketch) {
-    color: #082f49;
-    border-color: var(--primary-color);
-}
-
 @media (max-width: 1100px) {
     .mk-start-groups {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5105,11 +4780,17 @@ html.mk-dragging .mk-meter-drop-hitbox {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .mk-builder-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        gap: 0.75rem;
+    }
+
     /* Fallback für Browser ohne Container-Queries: Die Bediengruppen
        erhalten auch bei schmalem Browserfenster eine eigene Zeile. */
     .mk-toolbar-controls {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-areas: "mode" "zoom";
+        display: flex;
+        flex-wrap: wrap;
         gap: 0.65rem;
     }
 
@@ -5117,9 +4798,8 @@ html.mk-dragging .mk-meter-drop-hitbox {
         width: 100%;
     }
 
-    .mk-topology-switch,
-    .mk-canvas-zoom-controls {
-        width: 100%;
+    .mk-topology-switch {
+        width: max-content;
         max-width: 100%;
         box-sizing: border-box;
     }
@@ -5157,6 +4837,20 @@ html.mk-dragging .mk-meter-drop-hitbox {
 
     .mk-summary-panel .mk-validation-list {
         grid-template-columns: 1fr;
+    }
+
+    /* Editorsteuerung und Aktionsgruppe bekommen auf Tablets eigene Zeilen.
+       So bleiben PDF, Verlauf und Messkonzept auch bei schmalen Breiten ohne
+       Überlappung erreichbar. */
+    .mk-builder-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        gap: 0.75rem;
+    }
+
+    .mk-history-actions {
+        width: 100%;
+        justify-content: flex-start;
     }
 }
 
@@ -5235,15 +4929,14 @@ html.mk-dragging .mk-meter-drop-hitbox {
         gap: 0.75rem;
     }
 
-    .mk-toolbar-controls,
-    .mk-canvas-zoom-controls {
+    .mk-toolbar-controls {
         width: 100%;
     }
 
     .mk-toolbar-controls {
+        display: flex;
         align-items: stretch;
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-areas: "mode" "zoom";
+        flex-direction: column;
         gap: 0.65rem;
     }
 
@@ -5264,13 +4957,27 @@ html.mk-dragging .mk-meter-drop-hitbox {
         overflow-wrap: anywhere;
     }
 
-    .mk-canvas-zoom-controls .mk-zoom-fit {
-        flex: 1.35;
-    }
-
     .mk-canvas {
         min-height: 400px;
         padding: 0.75rem;
+    }
+
+    .mk-canvas-zoom-controls {
+        top: 0.5rem;
+        right: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    .mk-canvas-zoom-button {
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        padding-inline: 0.5rem;
+    }
+
+    .mk-canvas-zoom-button.mk-zoom-fit {
+        min-width: 2.5rem;
+        width: 2.5rem;
+        font-size: 0.7rem;
     }
 
     .mk-topology-switch {
@@ -5410,6 +5117,11 @@ html.mk-dragging .mk-meter-drop-hitbox {
         grid-template-columns: 1fr;
     }
 
+    .mk-meter-form-row--market,
+    .mk-meter-form-row--identity {
+        grid-template-columns: 1fr;
+    }
+
     .mk-asset-form-grid label:last-child {
         grid-column: auto;
     }
@@ -5509,20 +5221,26 @@ html.mk-dragging .mk-meter-drop-hitbox {
         border-radius: 14px;
     }
 
-    .transparency-content {
-        padding: 0 1rem 1rem;
-    }
-
-    .landing-details > summary {
-        padding: 1rem;
-    }
-
     .upload-container {
         padding: 0.75rem;
     }
 
     .drop-zone {
         padding: 2rem 1rem;
+    }
+
+    .analysis-info-dialog {
+        padding: 0.65rem;
+    }
+
+    .analysis-info-dialog-card {
+        max-height: calc(100vh - 1.3rem);
+    }
+
+    .analysis-info-dialog-header,
+    .analysis-info-dialog-content {
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 }
 
@@ -7597,7 +7315,8 @@ html.mk-dragging .mk-meter-drop-hitbox {
     align-items: center;
     justify-content: flex-end;
     gap: 0.35rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-width: max-content;
 }
 
 .mk-history-button {
@@ -7667,6 +7386,27 @@ html.mk-dragging .mk-meter-drop-hitbox {
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 2;
+}
+
+.ws-download-button {
+    min-width: 0;
+    white-space: nowrap;
+    touch-action: manipulation;
+}
+
+.ws-download-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+}
+
+.ws-download-button-label {
+    white-space: nowrap;
 }
 
 .mk-reset-button:hover,
@@ -7753,6 +7493,16 @@ html.mk-dragging .mk-meter-drop-hitbox {
         align-items: flex-start;
         flex-direction: column;
         gap: 0.15rem;
+    }
+
+    .ws-download-button {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        padding-inline: 0.55rem;
+    }
+
+    .ws-download-button-label {
+        display: none;
     }
 }
 
@@ -7962,6 +7712,7 @@ body.mk-printing .mk-print-sheet {
         display: block;
         margin: 0;
         padding: 0;
+        min-height: 0 !important;
         min-width: 0;
         max-width: none;
         overflow: visible;

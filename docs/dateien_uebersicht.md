@@ -38,7 +38,7 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`numbers.js`** | **`NumberParser`** (robuste Zahlenkonvertierung für de-DE/en-US) sowie Währungs- und Zahlenformatierung. |
 | **`dates.js`** | Datumsformatierung, ISO-Verarbeitung, **Schaltjahr-Prüfung** und **NRW-Feiertagsberechnung** (Ostern, Pfingsten etc.). |
 | **`html.js`** | **HTML-Escaping** (`escapeHtml`) zum sicheren Schutz vor XSS-Angriffen in dynamischen Ansichten. |
-| **`download.js`** | Client-seitiger Datei-Download (`triggerDownload`) zur Erzeugung von CSV- und JSON-Dateien ohne Server. |
+| **`download.js`** | Client-seitiger Datei-Download (`triggerDownload`) und gemeinsame Downloadbutton-Komponente für CSV-, Bild- und PDF-Aktionen ohne Server. |
 
 ---
 
@@ -75,6 +75,7 @@ Diese Dokumentation bietet eine präzise Übersicht über die Aufgaben und Veran
 | **`file-import.js`** | High-Level Orchestrierer (`processFileImport`): Dateileser, FileReader und automatische Format-Erkennung. |
 | **`csv-parser.js`** | Reiner, robuster **CSV-Parser** (`parseCsvText`) für Trennzeichen-basierte Dateien. |
 | **`mscons-parser.js`** | Reiner **EDIFACT/MSCONS 2.4c Parser** (`parseMsconsText`) für Strom-Messwertnachrichten. |
+| **`xlsx-parser.js`** | Lokaler, bewusst begrenzter **XLSX-Parser** (`parseXlsxArrayBuffer`) für das Format `Datum | Uhrzeit | Lastgang`. |
 | **`import-validator.js`** | Erzeugt ein **auditierbares Import-Protokoll** (`validateImportResult`) mit gelesenen, verworfenen & gültigen Zeilen. |
 
 ---
@@ -149,8 +150,8 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`commands.js`** | Bündelt Zustandsänderungen wie Reset, Moduswechsel, Kaskadenstufen, Anlagenanlage und Verschieben. |
 | **`project-meta.js`** | Synchronisiert Projektname, Referenz, Messkonzept, Standort und den festen Kommentarabschnitt der Projektangaben mit dem Zustand. |
 | **`canvas-renderer.js`** | Komponiert Canvas, klickbaren HAK bzw. Trafo, Zählerstruktur und Objekt-Modal aus injizierten Render- und Zustandsfunktionen. |
-| **`annotations.js`** | Rendert ausgefüllte Zählerangaben als verschiebbare Karten mit gestrichelter Bezugslinie, bearbeitet Werte direkt per Doppelklick und übernimmt die Karten in die PDF-Kopie. |
-| **`editor.js`** | Verarbeitet Eingaben im Objekt-Dialog und meldet Asset- sowie Zählerdetailänderungen über injizierte Callbacks. |
+| **`annotations.js`** | Rendert eingeschaltete Objekt- und Zählerangaben als verschiebbare Karten mit gestrichelter Bezugslinie, bearbeitet Werte direkt per Doppelklick und übernimmt die Karten in die PDF-Kopie. |
+| **`editor.js`** | Verarbeitet Eingaben im Objekt-Dialog, hält Bemerkungen am Ende des Formulars und meldet Asset- sowie Zählerdetailänderungen über injizierte Callbacks. |
 | **`start-flow.js`** | Kapselt Werkzeugwechsel, Startauswahl, freie Skizze und Laden der Messkonzept-Vorlagen. |
 | **`render-cycle.js`** | Orchestriert einen vollständigen UI-Renderlauf über injizierte Adapter, ohne Messlogik oder DOM-Suche zu kennen. |
 | **`drag-drop.js`** | Fachliche Drag-and-Drop- und Löschlogik über injizierte Befehls-Callbacks. |
@@ -167,7 +168,6 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`docs/architecture-smoke-test.md`** | Verständliche Beschreibung des Smoke-Tests, Aufruf und Akzeptanzkriterium. |
 | **`js/messkonzept/presets.js`** | DOM-freier Katalog der häufigsten Messkonzept-Startvorlagen. |
 | **`js/messkonzept/preset-loader.js`** | Übersetzt eine Vorlage in normale, bearbeitbare Modellobjekte und Zählerbeziehungen. |
-| **`js/messkonzept/decision-calculator.js`** | Reine Orientierungsrechnung für Umbaukosten, Messentgelt, Tarifdifferenz, Modul 1, Modul 2 und Wärmepumpenprivileg mit Sensitivitätsspanne und Verlaufsgrafik. |
 | **`docs/messkonzept-startvorlagen.md`** | Spezifikation, Akzeptanzkriterien und technische Trennung der Startauswahl. |
 | **`tests/project-quality-test.js`** | Browserfreier projektweiter Qualitäts-Gate-Test für Pflichtdateien, Syntax, lokale Verarbeitung und Release-Schutz. |
 | **`tests/mieterstrom-objects-test.js`** | Prüft die beiden optionalen Mieterstromobjekte, die eigenen `ZN…`-Kennungen und ihre neutralen technischen Statusfelder. |
@@ -215,5 +215,7 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`docs/palette-border-anforderungen.md`** | Anforderungen für den einheitlichen blauen Rand aller Bausteine in der Auswahlleiste. |
 | **`docs/tablet-pointer-dnd-anforderungen.md`** | Anforderungen für Finger- und Stift-Drag-and-Drop auf Android- und iOS-Tablets. |
 | **`docs/startkarten-ueberschriften-anforderungen.md`** | Anforderungen für eine einmalige Messkonzeptüberschrift ohne doppelte Objektzeile auf Vorlagekarten. |
+| **`docs/object-editor-fields-anforderungen.md`** | Anforderungen für Bemerkungen statt editierbarer Bezeichnungen und für den Infobox-Startzustand. |
+| **`tests/object-editor-fields-test.js`** | Regressionstest für Feldreihenfolge, entfernte Bezeichnungsfelder und automatisch befüllte Infoboxen. |
 
 Der Einstiegspunkt [`messkonzept.js`](../messkonzept.js) orchestriert diese Module weiterhin. Zustandsänderungen werden über `commands.js` geführt; weitere Auslagerungen sollten diese Grenze beibehalten und nicht erneut DOM-, Geometrie- und Fachlogik vermischen.

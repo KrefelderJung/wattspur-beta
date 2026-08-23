@@ -28,6 +28,18 @@ diese Hinweise ebenfalls erhalten bleiben.
 
 Der Lizenzhinweis ist in der gebündelten Datei enthalten.
 
+## JSZip
+
+- Datei: `lib/jszip.min.js`
+- Version: 3.10.1
+- Lizenz: MIT License
+- Projekt: <https://stuk.github.io/jszip/>
+- Lizenztext: <https://github.com/Stuk/jszip/blob/main/LICENSE.markdown>
+
+Die Bibliothek wird ausschließlich lokal verwendet, um XLSX-Dateien im
+Browser zu entpacken. Es werden keine importierten Dateien an einen Server
+übertragen.
+
 Weitere externe Bibliotheken oder Grafiken sind nach aktuellem Projektstand
 nicht bekannt. Bei später hinzugefügten Abhängigkeiten muss diese Datei
 ergänzt und die jeweilige Originallizenz beibehalten werden.

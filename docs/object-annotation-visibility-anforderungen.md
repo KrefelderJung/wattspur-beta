@@ -13,8 +13,13 @@ verändern.
   unverändert; die `×`-Schaltfläche am Objekt löscht weiterhin das Objekt.
 - Im Objektfenster gibt es für jedes Objekt und den HAK den Schalter
   `Infobox anzeigen`.
-- Das Einschalten stellt die Infobox wieder her, sobald für das Objekt
-  anzuzeigende Angaben vorhanden sind.
+- Der Schalter steht kompakt neben der Objektüberschrift in der Kopfzeile.
+- Das Einschalten stellt nur tatsächlich eingetragene oder bewusst
+  ausgewählte technische Angaben wieder her. Automatische Objektarten,
+  Standardwerte und offene Platzhalter werden nicht wiederholt. Gibt es keine
+  solchen Angaben, wird keine leere Karte gerendert.
+- Neue Objekte starten mit ausgeschalteter Infobox. Eine eingetragene Bemerkung
+  schaltet die Karte automatisch ein, damit der Text nicht unbemerkt bleibt.
 - Freitext und alle übrigen Objektangaben bleiben beim Ausblenden erhalten.
 - Die Sichtbarkeit wird im laufenden Projektzustand, in Undo/Redo und im PDF-Export
   berücksichtigt. Eine dauerhafte Speicherung über einen Browser-Neustart hinweg
@@ -24,9 +29,15 @@ verändern.
   Wallbox, Wärmepumpe, Verbraucher, Mieterstromobjekte und HAK.
 - Die Steuerung funktioniert per Maus, Touch/Stift und Tastatur und besitzt
   eine verständliche Beschriftung für Screenreader.
-- Bei der direkten Bearbeitung eines Infoboxwerts steht ein grünes
-  Bestätigungshäkchen zur Verfügung. Enter bestätigt weiterhin, Escape verwirft
-  die Änderung.
+- Bei der direkten Bearbeitung eines Infoboxwerts beendet ein Klick außerhalb
+  des Feldes die Bearbeitung und übernimmt den Inhalt. Enter bestätigt
+  weiterhin, Escape verwirft die Änderung.
+- Das Aktivieren oder Deaktivieren einer Infobox darf die Positionen der
+  Messobjekte und Leitungen nicht verändern.
+- Die Zeichenfläche darf durch wiederholte Infobox-Aktualisierungen nicht
+  wachsen. Zusätzlicher Arbeitsraum wird nur erzeugt, wenn eine Infobox
+  bewusst außerhalb der bisherigen Topologie verschoben oder vergrößert wird.
+- Das wiederholte Umschalten einer Infobox muss höhenstabil und idempotent sein.
 
 ## Nicht-Ziele
 

@@ -33,6 +33,10 @@ assert(renderer.includes('${isMediumVoltage ? `<p class="mk-hak-editor-hint">'),
 
 assert(model.includes("{ key: 'meterNumber', label: 'Zählernummer', type: 'text', maxLength: 11, inputmode: 'numeric'"), 'Zählernummer muss auf elf Stellen begrenzt und für die Zahlen-Tastatur vorbereitet sein');
 assert(styles.includes('input[data-mk-meter-field="meterNumber"]') && styles.includes('max-width: 16rem'), 'Die Zählernummer soll im Dialog kompakt dargestellt werden');
+assert(renderer.includes('mk-meter-form-row--market') && renderer.includes('mk-meter-form-row--identity')
+    && renderer.includes('mk-meter-form-row--remark'), 'Zählerfelder müssen in fachlich sinnvolle Reihen gruppiert werden');
+assert(styles.includes('.mk-meter-form-row--market') && styles.includes('.mk-meter-form-row--identity')
+    && styles.includes('grid-template-columns: 1fr'), 'Die gruppierten Zählerfelder brauchen eine responsive Einspaltenregel');
 assert(interaction.includes("event.key === 'Escape' && modal && !modal.classList.contains('hidden')"), 'Esc muss den Objekt-Dialog schließen');
 assert(interaction.includes('event.target === elements.objectModal'), 'Klick außerhalb des Dialoginhalts muss den Objekt-Dialog schließen');
 assert(interaction.includes("bindClick('btn-mk-modal-confirm', () => call('closeModal'))"), 'Die Fertig-Aktion muss den Dialog schließen');

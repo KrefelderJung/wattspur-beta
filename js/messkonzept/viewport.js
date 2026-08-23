@@ -33,11 +33,14 @@
         };
 
         function renderZoomControls() {
-            const elements = getElements();
             const state = getState();
             const config = getZoomConfig();
             const percentage = `${Math.round(Number(state.canvasZoom || 1) * 100)} %`;
-            if (elements.zoomLevel) elements.zoomLevel.textContent = percentage;
+            const fitButton = getDocument()?.querySelector('[data-mk-zoom="fit"]');
+            if (fitButton) {
+                fitButton.title = `Ansicht einpassen (aktuell ${percentage})`;
+                fitButton.setAttribute('aria-label', `Ansicht einpassen, aktuell ${percentage}`);
+            }
             getDocument()?.querySelectorAll('[data-mk-zoom]').forEach(button => {
                 const action = button.dataset.mkZoom;
                 const zoom = Number(state.canvasZoom || 1);
@@ -76,6 +79,10 @@
             }
             if (action !== 'fit') return;
 
+            if (getElements().canvas) {
+                getElements().canvas.scrollLeft = 0;
+                getElements().canvas.scrollTop = 0;
+            }
             state.canvasZoom = 1;
             applyCanvasZoom();
             requestFrame(() => {
@@ -131,6 +138,8 @@
             // Die Zeichenfläche lässt sich direkt mit der linken Maustaste
             // verschieben. Interaktive Objekte bleiben davon ausgenommen,
             // damit Auswahl und HTML5-Drag-and-Drop nicht blockiert werden.
+            // Der HAK ist dabei bewusst kein Pan-Griff: Ein Klick öffnet sein
+            // Objektfenster, ein Ziehen verändert weder Ansicht noch Modell.
             // Leertaste + linke Maustaste und die mittlere Maustaste bleiben
             // als kompatible Alternativen erhalten.
             const isTextField = target => target?.matches?.('input, textarea, select, [contenteditable="true"]');
@@ -189,6 +198,12 @@
             canvas.addEventListener('lostpointercapture', endCanvasPan);
         }
 
+        function consumePanClickSuppression() {
+            // API-Kompatibilität für den Interaktionscontroller. Der HAK ist
+            // kein Pan-Griff mehr, daher muss kein Klick unterdrückt werden.
+            return false;
+        }
+
         return Object.freeze({
             renderZoomControls,
             applyCanvasZoom,
@@ -196,7 +211,8 @@
             observeConnectorGeometry,
             centerParallelViewport,
             endCanvasPan,
-            initializeCanvasPan
+            initializeCanvasPan,
+            consumePanClickSuppression
         });
     }
 

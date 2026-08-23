@@ -34,6 +34,34 @@ document.addEventListener('DOMContentLoaded', () => {
     selectAggregation = document.getElementById('aggregation-select');
     profileFilters = document.getElementsByName('profile-filter');
 
+    // Gemeinsamer Rückweg zur Werkzeugauswahl. Die Logo-Links wechseln auf
+    // index.html#top. Bei file://-Aufrufen kann der Browser dabei nur den
+    // Hash ändern, ohne die Seite neu zu laden. Deshalb wird der sichtbare
+    // Bildschirm zusätzlich auf den Startzustand zurückgesetzt.
+    const showToolSelection = () => {
+        screens.upload?.classList.remove('hidden');
+        screens.dashboard?.classList.add('hidden');
+        document.getElementById('messkonzept-screen')?.classList.add('hidden');
+        document.documentElement.removeAttribute('data-tool');
+        window.scrollTo?.({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleToolSelectionHash = () => {
+        if (window.location.hash === '#top') showToolSelection();
+    };
+
+    window.addEventListener('hashchange', handleToolSelectionHash);
+    document.querySelectorAll('a[href$="index.html#top"], a[href="#top"]').forEach(link => {
+        link.addEventListener('click', event => {
+            const target = new URL(link.href, window.location.href);
+            if (target.pathname !== window.location.pathname) return;
+            event.preventDefault();
+            if (window.location.hash !== '#top') window.location.hash = '#top';
+            showToolSelection();
+        });
+    });
+    handleToolSelectionHash();
+
     initCharts();
     setupEventListeners();
     setupHolidayEvents();
@@ -1792,27 +1820,12 @@ function setupEventListeners() {
     }
 
     function createEmptyDataset() {
-        const emptyData = [];
-        for (let i = 0; i < 96; i++) {
-            const h = Math.floor(i / 4);
-            const m = (i % 4) * 15;
-            const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-            const ts = new Date(2026, 0, 1, h, m);
-            emptyData.push({
-                timestamp: ts.getTime(),
-                dateObj: ts,
-                dateStr: "01.01.2026",
-                timeStr,
-                rawKw: null,
-                kw: null,
-                kvar: null,
-                hasData: false
-            });
-        }
-
+        // Der Start im Dateneditor ist wirklich leer. Ein Eingaberaster wird
+        // erst vom Editor erzeugt und darf nicht als Messdaten in Statistik,
+        // Datenqualität oder Diagrammen erscheinen.
         return {
             name: 'Manueller Lastgang',
-            data: emptyData,
+            data: [],
             totalRowsCount: 0,
             invalidRowsCount: 0,
             importedUnit: 'kw'
@@ -1835,10 +1848,15 @@ function openDatasetsInDashboard(datasets, options = {}) {
         const validTimestamps = validDates.map(date => date.getTime());
         const minTimestamp = validTimestamps.reduce((min, timestamp) => Math.min(min, timestamp), Infinity);
         const maxTimestamp = validTimestamps.reduce((max, timestamp) => Math.max(max, timestamp), -Infinity);
-        const minDate = new Date(minTimestamp);
-        const maxDate = new Date(maxTimestamp);
-        globalDateRange.validMin = minDate;
-        globalDateRange.validMax = maxDate;
+        const hasValidDates = validTimestamps.length > 0;
+        // Der Editor braucht für sein leeres Eingaberaster einen stabilen
+        // Referenztag. Dieser Tag ist kein Messpunkt und wird deshalb nicht
+        // als validMin/validMax in die fachlichen Auswertungen übernommen.
+        const emptyEditorDate = new Date(2026, 0, 1);
+        const minDate = hasValidDates ? new Date(minTimestamp) : emptyEditorDate;
+        const maxDate = hasValidDates ? new Date(maxTimestamp) : new Date(emptyEditorDate.getTime());
+        globalDateRange.validMin = hasValidDates ? minDate : null;
+        globalDateRange.validMax = hasValidDates ? maxDate : null;
         globalDateRange.start = minDate;
         globalDateRange.end = maxDate;
 
@@ -1935,31 +1953,67 @@ function openDatasetsInDashboard(datasets, options = {}) {
         URL.revokeObjectURL(url);
     }
 
-    const btnDownloadCsvTemplate = document.getElementById('btn-download-csv-template');
-    if (btnDownloadCsvTemplate) {
-        btnDownloadCsvTemplate.addEventListener('click', () => {
+    const downloadInfoActions = Object.freeze({
+        'btn-download-csv-template': () => {
             downloadCsvText(createCsvTemplate(), 'lastgang-vorlage.csv');
             showToast('CSV-Vorlage heruntergeladen.', 'success');
-        });
-    }
-
-    const btnDownloadDemoHousehold = document.getElementById('btn-download-demo-household');
-    if (btnDownloadDemoHousehold) {
-        btnDownloadDemoHousehold.addEventListener('click', () => {
+        },
+        'btn-download-demo-household': () => {
             const householdDataset = createHouseholdDemoDatasets()[0];
             downloadCsvText(createLoadProfileCsv(householdDataset), 'demo-hausverbrauch-jahresprofil-2021.csv');
             showToast('Synthetisches Jahresprofil für den Hausverbrauch heruntergeladen.', 'success');
-        });
-    }
-
-    const btnDownloadDemoIndustrial = document.getElementById('btn-download-demo-industrial');
-    if (btnDownloadDemoIndustrial) {
-        btnDownloadDemoIndustrial.addEventListener('click', () => {
+        },
+        'btn-download-demo-industrial': () => {
             const industrialDataset = createIndustrialDemoDatasets()[0];
             downloadCsvText(createLoadProfileCsv(industrialDataset), 'demo-industrieverbrauch-jahresprofil-2021.csv');
             showToast('Synthetisches Jahresprofil für den Industrieverbrauch heruntergeladen.', 'success');
-        });
-    }
+        }
+    });
+
+    const infoDialog = document.getElementById('analysis-info-dialog');
+    const infoContent = document.getElementById('analysis-info-content');
+    const infoTitle = document.getElementById('analysis-info-title');
+    const infoTemplates = {
+        format: document.getElementById('analysis-info-format'),
+        hints: document.getElementById('analysis-info-hints')
+    };
+    let infoTrigger = null;
+
+    const closeAnalysisInfo = () => {
+        if (!infoDialog) return;
+        infoDialog.classList.add('hidden');
+        infoContent?.replaceChildren();
+        infoTrigger?.focus();
+        infoTrigger = null;
+    };
+
+    const openAnalysisInfo = (kind, trigger) => {
+        const template = infoTemplates[kind];
+        if (!infoDialog || !infoContent || !template) return;
+        infoTrigger = trigger;
+        infoContent.replaceChildren(template.content.cloneNode(true));
+        if (infoTitle) infoTitle.textContent = kind === 'format' ? 'Importformat' : 'Hinweise';
+        infoDialog.classList.remove('hidden');
+        infoDialog.querySelector('.analysis-info-dialog-close')?.focus();
+    };
+
+    document.querySelectorAll('[data-analysis-info]').forEach(button => {
+        button.addEventListener('click', () => openAnalysisInfo(button.dataset.analysisInfo, button));
+    });
+    infoDialog?.addEventListener('click', event => {
+        if (event.target.closest('[data-analysis-info-close]')) closeAnalysisInfo();
+    });
+    infoContent?.addEventListener('click', event => {
+        const button = event.target.closest('button[id]');
+        const action = button ? downloadInfoActions[button.id] : null;
+        if (action) action();
+    });
+    window.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && infoDialog && !infoDialog.classList.contains('hidden')) {
+            event.preventDefault();
+            closeAnalysisInfo();
+        }
+    });
 
     // --- Start empty dataset ---
     const btnStartEmpty = document.getElementById('btn-start-empty');
@@ -2295,8 +2349,10 @@ function updateDashboard() {
             }
         }
 
+        // Ein leerer Startzustand soll trotzdem seine KPIs aktualisieren.
+        // Früher wurde hier vorzeitig abgebrochen, wodurch alte Werte stehen
+        // bleiben konnten. Leere Arrays werden von den Renderern unterstützt.
         const firstActiveData = getFilteredData(activeDatasetIds[0]);
-        if (firstActiveData.length === 0) return;
 
         // Update header dropdown file list
         const menuFileList = document.getElementById('header-menu-file-list');
@@ -2557,7 +2613,7 @@ function updateDashboard() {
         let totalLength = 0;
         activeFilteredDatasets.forEach(item => { totalLength += item.data.length; });
         if (kpiCount) kpiCount.textContent = totalLength.toLocaleString('de-DE');
-        if (kpiRange) kpiRange.textContent = 'Gültige Messungen';
+        if (kpiRange) kpiRange.textContent = totalLength > 0 ? 'Gültige Messungen' : 'Noch keine Messwerte';
 
         // Render Energy Consumption KPI (Total)
         const totalEnergyKwh = totalEnergyWh / 1000;
@@ -2620,8 +2676,13 @@ function updateDashboard() {
         if (kpiQuality) {
             const totalActualAndMissing = totalRowsCombined + totalMissingCount;
             const totalBad = invalidRowsCombined + totalMissingCount + totalDuplicateCount + totalImplausibleCount;
-            const pctQuality = totalActualAndMissing > 0 ? ((totalActualAndMissing - totalBad) / totalActualAndMissing) * 100 : 100;
-            kpiQuality.innerHTML = `${Math.max(0, pctQuality).toFixed(2)} <span class="unit">%</span>`;
+            const hasQualityData = totalActualAndMissing > 0;
+            if (hasQualityData) {
+                const pctQuality = ((totalActualAndMissing - totalBad) / totalActualAndMissing) * 100;
+                kpiQuality.innerHTML = `${Math.max(0, pctQuality).toFixed(2)} <span class="unit">%</span>`;
+            } else {
+                kpiQuality.textContent = '–';
+            }
             
             const issues = [];
             if (invalidRowsCombined > 0) issues.push(`${invalidRowsCombined.toLocaleString('de-DE')} ungültig`);
@@ -2634,8 +2695,12 @@ function updateDashboard() {
                 kpiQualitySub.textContent = issues.join(', ') + ' übersprungen';
                 kpiQualitySub.style.color = 'var(--warning-color)';
                 if (warningDot) warningDot.classList.remove('hidden');
-            } else {
+            } else if (hasQualityData) {
                 kpiQualitySub.textContent = `100% fehlerfreie Messwerte`;
+                kpiQualitySub.style.color = '';
+                if (warningDot) warningDot.classList.add('hidden');
+            } else {
+                kpiQualitySub.textContent = 'Noch keine Messwerte';
                 kpiQualitySub.style.color = '';
                 if (warningDot) warningDot.classList.add('hidden');
             }

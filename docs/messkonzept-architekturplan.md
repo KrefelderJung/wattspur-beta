@@ -541,3 +541,18 @@ am selben Messpunkt liegen. Eine alte Nachtspeicherregelung wird nicht
 automatisch auf eine neue Anlage übertragen. Die fachliche Grundlage und die
 Grenzfälle stehen in `docs/nsh-steuve-gemeinsame-messung-anforderungen.md`;
 der Regressionstest liegt in `tests/nsh-steuve-gemeinsame-messung-test.js`.
+
+## Aktualisierter Architekturstatus – Zoom direkt am Editor (22.08.2026)
+
+Die Zoomsteuerung bleibt jetzt als stabile Overlay-Schicht im `#mk-canvas`.
+`js/messkonzept/canvas-renderer.js` ersetzt bei Renderläufen nur noch den
+`.mk-canvas-stage-host`; dadurch werden Zoom-Buttons und ihre Verkabelung nicht
+bei jedem Topologie-Update neu erzeugt. Die Kopfzeile bleibt dadurch auf die
+Messkonzept- und Historienaktionen konzentriert. Einpassen, 100-Prozent-Reset,
+Vergrößern und Verkleinern sind weiterhin per Maus, Tastatur und Touch erreichbar.
+
+Die Parallel-Auswahl verwendet eine intrinsische Breite und hält die Zählerstufen
+2 bis 4 kompakt. Ein Flex-Override verhindert, dass ein nicht vorhandener fünfter
+Zähler durch einen leeren Restbereich suggeriert wird. Die Anforderungen und
+Regressionen liegen in `docs/darstellung-einfache-toolbar-anforderungen.md`,
+`tests/toolbar-responsive-test.js` und `tests/canvas-zoom-controls-test.js`.

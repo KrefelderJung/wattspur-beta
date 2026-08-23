@@ -16,6 +16,7 @@
         const getAdditionalMeters = options.getAdditionalMeters || (() => []);
         const getMeterDetailIndex = options.getMeterDetailIndex || (() => null);
         const getMeterLabel = options.getMeterLabel || (meter => meter?.id || 'Zähler');
+        const getAssetAnnotationEntries = options.getAssetAnnotationEntries || (() => []);
         const getStageScale = options.getStageScale || (() => 1);
         const escapeHtml = options.escapeHtml || (value => String(value ?? ''));
         const meterDetailFields = options.meterDetailFields || [];
@@ -24,6 +25,7 @@
         const refreshInlineStatus = options.refreshInlineStatus || (() => {});
 
         let activeDrag = null;
+        let activeResize = null;
 
         function findCard(cards, key) {
             return [...(cards?.querySelectorAll?.('.mk-annotation-card') || [])]
@@ -91,23 +93,28 @@
 
         function getEntries(record) {
             if (record.kind === 'asset') {
-                return record.asset?.remark
-                    ? [{ key: 'remark', label: 'Bemerkung', value: String(record.asset.remark).trim() }]
-                    : [];
+                return getAssetAnnotationEntries(record.asset) || [];
             }
             if (record.kind === 'hak') {
-                return record.hak?.remark
-                    ? [{ key: 'remark', label: 'Bemerkung', value: String(record.hak.remark).trim() }]
-                    : [];
+                const entries = [];
+                const voltageLabel = record.hak?.voltageLevel === 'medium'
+                    ? 'Mittelspannung'
+                    : '';
+                if (voltageLabel) entries.push({ key: 'voltageLevel', label: 'Spannungsebene', value: voltageLabel });
+                if (String(record.hak?.remark || '').trim()) {
+                    entries.push({ key: 'remark', label: 'Bemerkung', value: String(record.hak.remark).trim() });
+                }
+                return entries;
             }
             const details = getMeterDetails(record.index) || {};
-            return meterDetailFields
+            const entries = meterDetailFields
                 .map(field => ({
                     key: field.key,
                     label: field.label,
                     value: String(details[field.key] || '').trim()
                 }))
                 .filter(entry => entry.value);
+            return entries;
         }
 
         function getVisibleRecords() {
@@ -139,12 +146,136 @@
             return connector && cards ? { layer, connector, cards } : null;
         }
 
+        function getTopologyContentHeight(stage) {
+            const topology = stage?.querySelector?.('.mk-topology-content');
+            const connector = stage?.querySelector?.('.mk-connector-layer');
+            const connectorHeight = Number.parseFloat(connector?.getAttribute?.('height') || '0') || 0;
+            const storedHeight = Number.parseFloat(stage?.dataset?.mkTopologyContentHeight || '0') || 0;
+            return Math.max(topology?.offsetHeight || 0, topology?.scrollHeight || 0, storedHeight, storedHeight ? 0 : connectorHeight, 1);
+        }
+
+        function getTopologyContentWidth(stage) {
+            const topology = stage?.querySelector?.('.mk-topology-content');
+            const connector = stage?.querySelector?.('.mk-connector-layer');
+            const connectorWidth = Number.parseFloat(connector?.getAttribute?.('width') || '0') || 0;
+            const storedWidth = Number.parseFloat(stage?.dataset?.mkTopologyContentWidth || '0') || 0;
+            return Math.max(topology?.offsetWidth || 0, topology?.scrollWidth || 0, storedWidth, storedWidth ? 0 : connectorWidth, 1);
+        }
+
+        function getWorkspaceGutters(stage) {
+            const read = name => Math.max(0, Number.parseFloat(stage?.style?.getPropertyValue(name) || '0') || 0);
+            return {
+                left: read('--mk-annotation-gutter-left'),
+                right: read('--mk-annotation-gutter-right'),
+                top: read('--mk-annotation-gutter-top'),
+                bottom: read('--mk-annotation-gutter-bottom')
+            };
+        }
+
+        function applyAnnotationWorkspace(stage, gutters, { preserveScroll = true } = {}) {
+            if (!stage) return;
+            const current = getWorkspaceGutters(stage);
+            const next = {
+                left: Math.max(0, Number(gutters.left) || 0),
+                right: Math.max(0, Number(gutters.right) || 0),
+                top: Math.max(0, Number(gutters.top) || 0),
+                bottom: Math.max(0, Number(gutters.bottom) || 0)
+            };
+            const canvas = getElements().canvas;
+            stage.style.setProperty('--mk-annotation-gutter-left', `${Math.ceil(next.left)}px`);
+            stage.style.setProperty('--mk-annotation-gutter-right', `${Math.ceil(next.right)}px`);
+            stage.style.setProperty('--mk-annotation-gutter-top', `${Math.ceil(next.top)}px`);
+            stage.style.setProperty('--mk-annotation-gutter-bottom', `${Math.ceil(next.bottom)}px`);
+
+            const baseWidth = getTopologyContentWidth(stage);
+            const baseHeight = getTopologyContentHeight(stage);
+            if (next.right > 0) stage.style.minWidth = `${Math.ceil(baseWidth + next.right)}px`;
+            else stage.style.removeProperty('min-width');
+            // Ein oberer Arbeitsraum liegt außerhalb des ursprünglichen
+            // Bühnenursprungs. Die positive Mindesthöhe stellt sicher, dass
+            // dieser Raum auch als vertikaler Scrollbereich berücksichtigt
+            // wird. Der obere Rand darf nicht nur optisch als Margin wirken.
+            if (next.top > 0 || next.bottom > 0) {
+                stage.style.minHeight = `${Math.ceil(baseHeight + next.top + next.bottom)}px`;
+            } else {
+                stage.style.removeProperty('min-height');
+            }
+
+            // Linker und oberer Arbeitsraum liegen vor dem Bühnenursprung.
+            // Die Scrollposition wird um genau diese Differenz nachgeführt,
+            // damit die Topologie beim Erweitern sichtbar stehen bleibt.
+            if (preserveScroll && canvas) {
+                canvas.scrollLeft += next.left - current.left;
+                canvas.scrollTop += next.top - current.top;
+            }
+        }
+
+        function getWorkspaceRequirements(stage, records = [], cardMap = new Map(), extra = null) {
+            const baseWidth = getTopologyContentWidth(stage);
+            const baseHeight = getTopologyContentHeight(stage);
+            const requirements = { left: 0, right: 0, top: 0, bottom: 0 };
+            const include = (x, y, width, height) => {
+                const cardWidth = Math.max(1, Number(width) || 160);
+                const cardHeight = Math.max(1, Number(height) || 60);
+                const positionX = Number(x) || 0;
+                const positionY = Number(y) || 0;
+                requirements.left = Math.max(requirements.left, 6 - positionX);
+                requirements.right = Math.max(requirements.right, positionX + cardWidth + 6 - baseWidth);
+                requirements.top = Math.max(requirements.top, 6 - positionY);
+                requirements.bottom = Math.max(requirements.bottom, positionY + cardHeight + 6 - baseHeight);
+            };
+            records.forEach(record => {
+                const saved = getSavedPosition(record.key);
+                if (!saved?.manual) return;
+                const card = cardMap.get(record.key);
+                include(saved.x, saved.y, card?.offsetWidth, card?.offsetHeight);
+            });
+            if (extra) include(extra.x, extra.y, extra.width, extra.height);
+            return {
+                left: Math.max(0, requirements.left),
+                right: Math.max(0, requirements.right),
+                top: Math.max(0, requirements.top),
+                bottom: Math.max(0, requirements.bottom)
+            };
+        }
+
         function getStageMetrics(stage) {
             const scale = Math.max(0.01, Number(getStageScale(stage)) || 1);
             const stageRect = stage.getBoundingClientRect();
-            const width = Math.max(stage.offsetWidth || 0, stage.scrollWidth || 0, 1);
-            const height = Math.max(stage.offsetHeight || 0, stage.scrollHeight || 0, 1);
-            return { scale, stageRect, width, height };
+            const gutters = getWorkspaceGutters(stage);
+            const width = Math.max(getTopologyContentWidth(stage) + gutters.right, 1);
+            const height = Math.max(getTopologyContentHeight(stage) + gutters.bottom, 1);
+            return {
+                scale,
+                stageRect,
+                width,
+                height,
+                minX: 6 - gutters.left,
+                minY: 6 - gutters.top
+            };
+        }
+
+        function ensureAnnotationWorkspace(stage, requirements = {}) {
+            if (!stage) return;
+            const topologyWidth = getTopologyContentWidth(stage);
+            const topologyHeight = getTopologyContentHeight(stage);
+            stage.dataset.mkTopologyContentWidth = String(Math.ceil(topologyWidth));
+            stage.dataset.mkTopologyContentHeight = String(Math.ceil(topologyHeight));
+            applyAnnotationWorkspace(stage, requirements);
+        }
+
+        function updateAnnotationContentHeight(stage, records, cardMap) {
+            if (!records.length) {
+                delete stage.dataset.mkAnnotationContentHeight;
+                return;
+            }
+            const bottom = records.reduce((max, record) => {
+                const card = cardMap.get(record.key);
+                if (!card) return max;
+                const y = Number.parseFloat(card.style.top) || 0;
+                return Math.max(max, y + (card.offsetHeight || 60) + 6);
+            }, 0);
+            stage.dataset.mkAnnotationContentHeight = String(Math.ceil(bottom));
         }
 
         function getTargetPoint(stage, target, metrics) {
@@ -161,8 +292,8 @@
             const cardHeight = Math.max(1, card.offsetHeight || 60);
             const margin = 6;
             return {
-                x: Math.max(margin, Math.min(metrics.width - cardWidth - margin, Number(x) || 0)),
-                y: Math.max(margin, Math.min(metrics.height - cardHeight - margin, Number(y) || 0))
+                x: Math.max(metrics.minX ?? margin, Math.min(metrics.width - cardWidth - margin, Number(x) || 0)),
+                y: Math.max(metrics.minY ?? margin, Math.min(metrics.height - cardHeight - margin, Number(y) || 0))
             };
         }
 
@@ -174,10 +305,28 @@
         }
 
         function setSavedPosition(key, position, manual = true) {
+            const current = ensurePositionStore()[key] || {};
             ensurePositionStore()[key] = {
+                ...current,
                 x: Math.round(position.x),
                 y: Math.round(position.y),
                 manual: Boolean(manual)
+            };
+        }
+
+        function getSavedSize(key) {
+            const saved = ensurePositionStore()[key];
+            return saved && Number.isFinite(Number(saved.width)) && Number.isFinite(Number(saved.height))
+                ? { width: Number(saved.width), height: Number(saved.height) }
+                : null;
+        }
+
+        function setSavedSize(key, size) {
+            const current = ensurePositionStore()[key] || {};
+            ensurePositionStore()[key] = {
+                ...current,
+                width: Math.round(size.width),
+                height: Math.round(size.height)
             };
         }
 
@@ -206,14 +355,21 @@
             card.style.top = `${Math.round(position.y)}px`;
         }
 
+        function applyCardSize(card, size) {
+            if (!card || !size) return;
+            card.style.width = `${Math.round(size.width)}px`;
+            card.style.height = `${Math.round(size.height)}px`;
+        }
+
         function renderCard(record, entries) {
             const values = renderEntryValues(entries);
             const aria = `${record.label}: ${entries.map(entry => `${entry.label} ${entry.value}`).join(', ')}`;
             const title = record.kind === 'meter'
-                ? 'Infobox verschieben · Werte doppelklicken zum Bearbeiten'
+                ? 'Infobox verschieben · Größe unten rechts ändern · Werte doppelklicken zum Bearbeiten'
                 : 'Infobox verschieben';
             return `<article class="mk-meter-annotation-card mk-annotation-card" data-mk-annotation="${escapeHtml(record.key)}" data-mk-meter-annotation="${escapeHtml(record.key)}" data-mk-meter-annotation-editable="true" role="group" tabindex="0" aria-label="${escapeHtml(aria)}" title="${title}">
                 <button type="button" class="mk-annotation-dismiss" data-mk-annotation-dismiss="${escapeHtml(record.key)}" aria-label="Infobox ausblenden" title="Infobox ausblenden">×</button>
+                <button type="button" class="mk-annotation-resize-handle" data-mk-annotation-resize="${escapeHtml(record.key)}" aria-label="Infoboxgröße ändern" title="Infoboxgröße ändern"></button>
                 <div class="mk-meter-annotation-values">${values}</div>
             </article>`;
         }
@@ -246,26 +402,25 @@
             if (field.inputmode) control.setAttribute('inputmode', field.inputmode);
             if (field.pattern) control.setAttribute('pattern', field.pattern);
             valueNode.replaceWith(control);
-            card.classList.add('is-editing');
             let finished = false;
-            let confirmButton = null;
-            const removeConfirmButton = () => {
-                confirmButton?.remove();
-                confirmButton = null;
+            const cleanup = () => {
+                getDocument().removeEventListener('pointerdown', finishOnOutsidePointerDown, true);
+            };
+            const finishOnOutsidePointerDown = event => {
+                if (event.target === control || control.contains(event.target)) return;
+                commit();
             };
             const cancel = () => {
                 if (finished) return;
                 finished = true;
-                card.classList.remove('is-editing');
-                removeConfirmButton();
+                cleanup();
                 sync();
             };
             const commit = () => {
                 if (finished) return;
                 finished = true;
                 details[field.key] = control.value;
-                card.classList.remove('is-editing');
-                removeConfirmButton();
+                cleanup();
                 if (before) recordHistory(before);
                 refreshInlineStatus();
                 sync();
@@ -284,24 +439,7 @@
             control.addEventListener('blur', commit, { once: true });
             control.addEventListener('pointerdown', event => event.stopPropagation());
             control.addEventListener('dblclick', event => event.stopPropagation());
-            confirmButton = getDocument().createElement('button');
-            confirmButton.type = 'button';
-            confirmButton.className = 'mk-annotation-confirm';
-            confirmButton.textContent = '✓';
-            confirmButton.setAttribute('aria-label', 'Änderung bestätigen');
-            confirmButton.title = 'Änderung bestätigen';
-            // Der Klick auf das Häkchen darf weder einen Karten-Drag noch den
-            // Blur-Commit auslösen, bevor der Button seine Bestätigung ausführt.
-            confirmButton.addEventListener('pointerdown', event => {
-                event.preventDefault();
-                event.stopPropagation();
-            });
-            confirmButton.addEventListener('click', event => {
-                event.preventDefault();
-                event.stopPropagation();
-                commit();
-            });
-            card.appendChild(confirmButton);
+            getDocument().addEventListener('pointerdown', finishOnOutsidePointerDown, true);
             control.focus();
             if (control.select) control.select();
         }
@@ -331,11 +469,19 @@
 
         function updateConnectors(stage, records, cardMap, metrics, connector) {
             const paths = [];
-            const width = Math.max(metrics.width, stage.offsetWidth || 1);
-            const height = Math.max(metrics.height, stage.offsetHeight || 1);
-            connector.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            const minX = Math.min(0, metrics.minX || 0);
+            const minY = Math.min(0, metrics.minY || 0);
+            const width = Math.max(metrics.width - minX, stage.offsetWidth - minX || 1);
+            const height = Math.max(metrics.height - minY, stage.offsetHeight - minY || 1);
+            connector.setAttribute('viewBox', `${minX} ${minY} ${width} ${height}`);
             connector.setAttribute('width', String(width));
             connector.setAttribute('height', String(height));
+            connector.style.setProperty('left', `${minX}px`);
+            connector.style.setProperty('top', `${minY}px`);
+            connector.style.setProperty('right', 'auto');
+            connector.style.setProperty('bottom', 'auto');
+            connector.style.setProperty('width', `${width}px`);
+            connector.style.setProperty('height', `${height}px`);
             records.forEach(record => {
                 const card = cardMap.get(record.key);
                 const target = getTargetElement(stage, record);
@@ -368,7 +514,6 @@
             cardMap.forEach((card, key) => {
                 if (!activeKeys.has(key)) card.remove();
             });
-            const metrics = getStageMetrics(stage);
             records.forEach(record => {
                 let card = cardMap.get(record.key);
                 if (!card) {
@@ -380,6 +525,15 @@
                     card.setAttribute('aria-label', `${record.label}: ${record.entries.map(entry => `${entry.label} ${entry.value}`).join(', ')}`);
                 }
                 if (!card) return;
+                const savedSize = getSavedSize(record.key);
+                if (savedSize) applyCardSize(card, savedSize);
+            });
+            const renderedCards = getCardMap(parts.cards);
+            ensureAnnotationWorkspace(stage, getWorkspaceRequirements(stage, records, renderedCards));
+            const metrics = getStageMetrics(stage);
+            records.forEach(record => {
+                const card = findCard(parts.cards, record.key);
+                if (!card) return;
                 const target = getTargetElement(stage, record);
                 const saved = getSavedPosition(record.key);
                 const position = saved?.manual
@@ -387,6 +541,7 @@
                     : getAutomaticPosition(record, target, card, metrics);
                 applyCardPosition(card, position);
             });
+            updateAnnotationContentHeight(stage, records, getCardMap(parts.cards));
             updateConnectors(stage, records, getCardMap(parts.cards), metrics, parts.connector);
         }
 
@@ -395,15 +550,72 @@
             const stage = getElements().canvas?.querySelector('.mk-canvas-stage');
             if (!stage) return;
             const metrics = getStageMetrics(stage);
+            const candidateX = activeDrag.startPosition.x + (event.clientX - activeDrag.startX) / metrics.scale;
+            const candidateY = activeDrag.startPosition.y + (event.clientY - activeDrag.startY) / metrics.scale;
+            const records = getVisibleRecords();
+            const parts = getLayerParts(stage);
+            const cardMap = parts ? getCardMap(parts.cards) : new Map();
+            ensureAnnotationWorkspace(stage, getWorkspaceRequirements(stage, records, cardMap, {
+                x: candidateX,
+                y: candidateY,
+                width: activeDrag.card.offsetWidth || 160,
+                height: activeDrag.card.offsetHeight || 60
+            }));
+            const nextMetrics = getStageMetrics(stage);
             const next = clampPosition(stage, activeDrag.card,
-                activeDrag.startPosition.x + (event.clientX - activeDrag.startX) / metrics.scale,
-                activeDrag.startPosition.y + (event.clientY - activeDrag.startY) / metrics.scale,
-                metrics);
+                candidateX,
+                candidateY,
+                nextMetrics);
             setSavedPosition(activeDrag.key, next, true);
             applyCardPosition(activeDrag.card, next);
-            const parts = getLayerParts(stage);
-            if (parts) updateConnectors(stage, getVisibleRecords(), getCardMap(parts.cards), metrics, parts.connector);
+            if (parts) {
+                updateAnnotationContentHeight(stage, records, cardMap);
+                updateConnectors(stage, records, cardMap, nextMetrics, parts.connector);
+            }
             activeDrag.moved = true;
+            event.preventDefault();
+        }
+
+        function updateSizeFromPointer(event) {
+            if (!activeResize || event.pointerId !== activeResize.pointerId) return;
+            const stage = getElements().canvas?.querySelector('.mk-canvas-stage');
+            if (!stage) return;
+            const metrics = getStageMetrics(stage);
+            const card = activeResize.card;
+            const currentX = Number.parseFloat(card.style.left) || 6;
+            const currentY = Number.parseFloat(card.style.top) || 6;
+            const minWidth = 120;
+            const minHeight = 48;
+            const requestedWidth = activeResize.startSize.width + (event.clientX - activeResize.startX) / metrics.scale;
+            const requestedHeight = activeResize.startSize.height + (event.clientY - activeResize.startY) / metrics.scale;
+            const records = getVisibleRecords();
+            const parts = getLayerParts(stage);
+            const cardMap = parts ? getCardMap(parts.cards) : new Map();
+            ensureAnnotationWorkspace(stage, getWorkspaceRequirements(stage, records, cardMap, {
+                x: currentX,
+                y: currentY,
+                width: requestedWidth,
+                height: requestedHeight
+            }));
+            const nextMetrics = getStageMetrics(stage);
+            const maxWidth = Math.max(minWidth, nextMetrics.width - currentX - 6);
+            const maxHeight = Math.max(minHeight, nextMetrics.height - currentY - 6);
+            const width = Math.max(minWidth, Math.min(maxWidth, requestedWidth));
+            const height = Math.max(minHeight, Math.min(maxHeight,
+                requestedHeight));
+            applyCardSize(card, { width, height });
+            // Schmale Karten können durch den automatischen Zeilenumbruch mehr
+            // Höhe benötigen als der Griff gerade vorgibt. Text wird nicht
+            // abgeschnitten, die Karte wächst in diesem Fall minimal mit.
+            const requiredHeight = card.scrollHeight || height;
+            const adjustedHeight = Math.max(height, Math.min(maxHeight, requiredHeight));
+            if (adjustedHeight !== height) applyCardSize(card, { width, height: adjustedHeight });
+            setSavedSize(activeResize.key, { width, height: adjustedHeight });
+            if (parts) {
+                updateAnnotationContentHeight(stage, records, cardMap);
+                updateConnectors(stage, records, cardMap, nextMetrics, parts.connector);
+            }
+            activeResize.moved = true;
             event.preventDefault();
         }
 
@@ -416,17 +628,70 @@
             activeDrag = null;
         }
 
+        function endPointerResize(event) {
+            if (!activeResize || (event?.pointerId !== undefined && event.pointerId !== activeResize.pointerId)) return;
+            const card = activeResize.card;
+            if (card?.hasPointerCapture?.(activeResize.pointerId)) card.releasePointerCapture(activeResize.pointerId);
+            card?.classList.remove('is-resizing');
+            if (activeResize.moved && activeResize.history) recordHistory(activeResize.history);
+            activeResize = null;
+        }
+
+        function resizeCardBy(card, key, dx, dy) {
+            const stage = getElements().canvas?.querySelector('.mk-canvas-stage');
+            if (!stage || !card) return;
+            const before = captureHistoryState();
+            const currentX = Number.parseFloat(card.style.left) || 6;
+            const currentY = Number.parseFloat(card.style.top) || 6;
+            const current = getSavedSize(key) || { width: card.offsetWidth || 160, height: card.offsetHeight || 60 };
+            const records = getVisibleRecords();
+            const parts = getLayerParts(stage);
+            const cardMap = parts ? getCardMap(parts.cards) : new Map();
+            ensureAnnotationWorkspace(stage, getWorkspaceRequirements(stage, records, cardMap, {
+                x: currentX,
+                y: currentY,
+                width: current.width + dx,
+                height: current.height + dy
+            }));
+            const nextMetrics = getStageMetrics(stage);
+            const next = {
+                width: Math.max(120, Math.min(nextMetrics.width - currentX - 6, current.width + dx)),
+                height: Math.max(48, Math.min(nextMetrics.height - currentY - 6, current.height + dy))
+            };
+            applyCardSize(card, next);
+            const requiredHeight = card.scrollHeight || next.height;
+            next.height = Math.max(next.height, Math.min(nextMetrics.height - currentY - 6, requiredHeight));
+            applyCardSize(card, next);
+            setSavedSize(key, next);
+            if (parts) {
+                updateAnnotationContentHeight(stage, records, cardMap);
+                updateConnectors(stage, records, cardMap, nextMetrics, parts.connector);
+            }
+            recordHistory(before);
+        }
+
         function nudgeCard(card, key, dx, dy) {
             const stage = getElements().canvas?.querySelector('.mk-canvas-stage');
             if (!stage) return;
             const before = captureHistoryState();
-            const metrics = getStageMetrics(stage);
             const current = getSavedPosition(key) || { x: Number.parseFloat(card.style.left) || 6, y: Number.parseFloat(card.style.top) || 6 };
-            const next = clampPosition(stage, card, current.x + dx, current.y + dy, metrics);
+            const records = getVisibleRecords();
+            const parts = getLayerParts(stage);
+            const cardMap = parts ? getCardMap(parts.cards) : new Map();
+            ensureAnnotationWorkspace(stage, getWorkspaceRequirements(stage, records, cardMap, {
+                x: current.x + dx,
+                y: current.y + dy,
+                width: card.offsetWidth || 160,
+                height: card.offsetHeight || 60
+            }));
+            const nextMetrics = getStageMetrics(stage);
+            const next = clampPosition(stage, card, current.x + dx, current.y + dy, nextMetrics);
             setSavedPosition(key, next, true);
             applyCardPosition(card, next);
-            const parts = getLayerParts(stage);
-            if (parts) updateConnectors(stage, getVisibleRecords(), getCardMap(parts.cards), metrics, parts.connector);
+            if (parts) {
+                updateAnnotationContentHeight(stage, records, cardMap);
+                updateConnectors(stage, records, cardMap, nextMetrics, parts.connector);
+            }
             recordHistory(before);
         }
 
@@ -436,8 +701,30 @@
             layer.addEventListener('pointerdown', event => {
                 const card = event.target.closest?.('.mk-meter-annotation-card');
                 if (!card) return;
+                const resizeHandle = event.target.closest?.('.mk-annotation-resize-handle');
+                if (resizeHandle) {
+                    const key = card.dataset.mkAnnotation || card.dataset.mkMeterAnnotation;
+                    const saved = getSavedSize(key) || {
+                        width: card.offsetWidth || 160,
+                        height: card.offsetHeight || 60
+                    };
+                    activeResize = {
+                        card,
+                        key,
+                        pointerId: event.pointerId,
+                        startX: event.clientX,
+                        startY: event.clientY,
+                        startSize: saved,
+                        history: captureHistoryState(),
+                        moved: false
+                    };
+                    card.classList.add('is-resizing');
+                    card.setPointerCapture?.(event.pointerId);
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return;
+                }
                 if (event.target.closest?.('.mk-annotation-dismiss')) return;
-                if (event.target.closest?.('.mk-annotation-confirm')) return;
                 // Textwerte sind direkte Bearbeitungsziele. Sie dürfen den
                 // Karten-Drag nicht starten, sonst wird der native Doppelklick
                 // vom Pointer-Handler abgefangen und Inline-Bearbeitung bleibt
@@ -464,8 +751,11 @@
                 event.stopPropagation();
             });
             layer.addEventListener('pointermove', updatePositionFromPointer, { passive: false });
+            layer.addEventListener('pointermove', updateSizeFromPointer, { passive: false });
             layer.addEventListener('pointerup', endPointerDrag);
+            layer.addEventListener('pointerup', endPointerResize);
             layer.addEventListener('pointercancel', endPointerDrag);
+            layer.addEventListener('pointercancel', endPointerResize);
             layer.addEventListener('click', event => {
                 const dismiss = event.target.closest?.('.mk-annotation-dismiss');
                 if (!dismiss) return;
@@ -490,6 +780,21 @@
                 if (valueNode && event.key === 'Enter') {
                     event.preventDefault();
                     beginInlineEdit(card, valueNode);
+                    return;
+                }
+                const resizeHandle = event.target.closest?.('.mk-annotation-resize-handle');
+                if (resizeHandle) {
+                    const card = resizeHandle.closest?.('.mk-meter-annotation-card');
+                    const key = card?.dataset.mkAnnotation || card?.dataset.mkMeterAnnotation;
+                    const step = event.shiftKey ? 20 : 8;
+                    const deltas = {
+                        ArrowLeft: [-step, 0], ArrowRight: [step, 0],
+                        ArrowUp: [0, -step], ArrowDown: [0, step]
+                    };
+                    const delta = deltas[event.key];
+                    if (!delta || !card || !key) return;
+                    event.preventDefault();
+                    resizeCardBy(card, key, delta[0], delta[1]);
                     return;
                 }
                 const step = event.shiftKey ? 10 : 3;
