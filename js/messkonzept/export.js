@@ -769,9 +769,14 @@
             if (!urlApi?.createObjectURL) throw new Error('Der Browser stellt keine lokale Bild-URL bereit.');
             const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
             const svgUrl = urlApi.createObjectURL(svgBlob);
+            // Edge blockiert im file://-Modus teilweise eingebettete CSS-Regeln im
+            // foreignObject. Die Inline-Stile der Klone bleiben erhalten, daher
+            // versuchen wir zusätzlich eine CSS-freie lokale SVG-Data-URL.
+            const inlineOnlySvg = svg.replace('<style>' + safeCss + '</style>', '');
             const svgSources = [
                 svgUrl,
-                'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
+                'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
+                'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(inlineOnlySvg)
             ];
             const loadImage = source => new Promise((resolve, reject) => {
                 const image = doc.createElement('img');

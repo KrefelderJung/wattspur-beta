@@ -11,6 +11,8 @@ const workerSource = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8
 
 assert(exportSource.includes("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)"),
     'PNG-Export muss neben der Blob-Quelle eine lokale SVG-Data-URL als Edge-Fallback anbieten');
+assert(exportSource.includes('inlineOnlySvg') && exportSource.includes('safeCss'),
+    'Der PNG-Export muss für file:// einen CSS-freien SVG-Fallback anbieten');
 assert(exportSource.includes("typeof canvasElement.toBlob === 'function'"),
     'PNG-Export muss toBlob sicher prüfen');
 assert(exportSource.includes("canvasElement.toDataURL('image/png')"),
@@ -19,9 +21,9 @@ assert(exportSource.includes('else fallback()'),
     'Ein fehlendes toBlob-Ergebnis muss ebenfalls auf den Data-URL-Fallback wechseln');
 assert(exportSource.includes('context.setTransform?.(1, 0, 0, 1, 0, 0)'),
     'PNG-Export muss beim zweiten Render-Versuch die Canvas-Transformation zurücksetzen');
-assert(/export\.js\?v=17/.test(indexSource),
+assert(/export\.js\?v=18/.test(indexSource),
     'Der PNG-Export muss mit dem aktualisierten Cache-Buster geladen werden');
-assert(/APP_VERSION\s*=\s*['"]2026\.08.25-beta\.374['"]/.test(workerSource),
+assert(/APP_VERSION\s*=\s*['"]2026\.08.25-beta\.375['"]/.test(workerSource),
     'Der Service Worker muss den Edge-kompatiblen Exportstand cachen');
 
 console.log('PNG-Edge-Fallback-Test: OK');
