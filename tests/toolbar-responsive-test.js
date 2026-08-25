@@ -18,6 +18,6 @@ assert(index.includes('class="mk-toolbar-controls"') && index.includes('class="m
 assert(index.includes('class="mk-canvas-zoom-controls"') && index.includes('class="mk-canvas-stage-host"'), 'Zoomsteuerung muss als stabile Overlay-Schicht am Editor liegen');
 assert(index.includes('class="btn btn-secondary btn-sm"') && index.includes('data-download-label="PDF"') && index.includes('<span>PDF</span>'), 'PDF-Export muss als kompakte sichtbare Download-Aktion in der Editor-Toolbar erreichbar sein');
 assert(styles.includes('.ws-download-button {') && styles.includes('min-height: 2.75rem') && styles.includes('.ws-download-button-label'), 'Die gemeinsame Download-Komponente braucht auf kleinen Bildschirmen eine ausreichend große Touchfläche und darf die Beschriftung kompakt ausblenden');
-assert(styles.includes('@media (max-width: 820px)') && styles.includes('.mk-builder-toolbar {\n        grid-template-columns: minmax(0, 1fr);'), 'Editor-Toolbar muss auf Tabletbreiten in getrennte Zeilen umbrechen');
+assert(styles.includes('@media (max-width: 820px)') && /\.mk-builder-toolbar[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\);/.test(styles), 'Editor-Toolbar muss auf Tabletbreiten in getrennte Zeilen umbrechen');
 
 console.log('Responsive-Toolbar-Test: OK');
