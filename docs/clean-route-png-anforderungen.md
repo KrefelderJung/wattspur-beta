@@ -21,6 +21,8 @@ funktionieren, wenn ein Browser eingebettete SVG-Fremdinhalte einschränkt.
 - Ein Browser, der den `toBlob`-Callback bei einer blockierten Canvas nicht
   ausführt, darf den Export nicht dauerhaft hängen lassen. Nach einem kurzen
   Timeout muss der Data-URL-Fallback oder die nächste lokale SVG-Quelle greifen.
+- Die native PNG-Darstellung enthält die gestrichelte Eigentumsgrenze und den
+  zugehörigen Text auch dann, wenn der Browser keine SVG-Fremdobjekte rendert.
 - Das Verhalten bleibt lokal (`file:`), online (`https:`), in Edge und in
   Chromium-basierten Browsern testbar.
 

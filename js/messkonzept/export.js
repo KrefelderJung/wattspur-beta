@@ -664,6 +664,27 @@
             return `<path class="mk-export-hak-meter-wire" d="M ${x1.toFixed(2)} ${y1.toFixed(2)} V ${bendY.toFixed(2)} H ${x2.toFixed(2)} V ${y2.toFixed(2)}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />`;
         }
 
+        function renderNativeOwnershipMarker(stage, minX, minY, win) {
+            const stageRect = stage?.getBoundingClientRect?.();
+            const marker = stage?.querySelector?.('.mk-ownership-marker');
+            const markerRect = marker?.getBoundingClientRect?.();
+            const scale = getStageCoordinateScale(stage);
+            if (!stageRect || !markerRect || markerRect.width <= 0) return '';
+
+            // Die Eigentumsgrenze ist im Editor ein CSS-border-top auf einem
+            // span mit Höhe 0. Ein natives SVG muss diese Linie ausdrücklich
+            // zeichnen, weil der Edge-Fallback keine CSS-Elemente übernimmt.
+            const x1 = (markerRect.left - stageRect.left) / Math.max(0.01, scale.x) - minX;
+            const x2 = (markerRect.right - stageRect.left) / Math.max(0.01, scale.x) - minX;
+            const y = (markerRect.top + markerRect.height / 2 - stageRect.top) / Math.max(0.01, scale.y) - minY;
+            if (![x1, x2, y].every(Number.isFinite) || x2 <= x1) return '';
+
+            const computed = win?.getComputedStyle?.(marker);
+            const stroke = String(computed?.borderTopColor || computed?.borderColor || '#38bdf8').trim();
+            const strokeWidth = Math.max(1, Number.parseFloat(computed?.borderTopWidth || '2') || 2);
+            return `<line class="mk-export-ownership-marker" x1="${x1.toFixed(2)}" y1="${y.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y.toFixed(2)}" stroke="${escapeSvgAttribute(stroke)}" stroke-width="${strokeWidth.toFixed(2)}" stroke-dasharray="8 6" stroke-linecap="butt" />`;
+        }
+
         function getTopologyMarkup() {
             const canvas = getElements().canvas;
             const stage = canvas?.querySelector?.('.mk-canvas-stage');
@@ -1025,6 +1046,7 @@
                 ? `<g class="mk-export-annotation-connectors" transform="translate(${-minX} ${-minY})">${annotationConnectorMarkup}</g>`
                 : '';
             const nativeHakMeterWire = renderNativeHakMeterWire(stage, minX, minY);
+            const nativeOwnershipMarker = renderNativeOwnershipMarker(stage, minX, minY, win);
             const nativeCards = renderNativeCards(stage, width, height, minX, minY, win);
             const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
                 <style>${safeCss}</style>
@@ -1047,6 +1069,7 @@
                 ${nativeConnectors}
                 ${nativeAnnotationConnectors}
                 ${nativeHakMeterWire}
+                ${nativeOwnershipMarker}
                 ${nativeCards}
                 ${annotationTextMarkup}
                 <text x="${Math.max(8, width - 8)}" y="${Math.max(12, height - 8)}" text-anchor="end" font-family="Arial, sans-serif" font-size="8" fill="#64748b">Wattspur.de</text>
