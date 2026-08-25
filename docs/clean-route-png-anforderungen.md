@@ -18,6 +18,9 @@ funktionieren, wenn ein Browser eingebettete SVG-Fremdinhalte einschränkt.
 - Alle temporären Objekt-URLs werden nach dem Export wieder freigegeben.
 - Jeder SVG-Versuch verwendet eine eigene Canvas, damit ein blockierter
   `foreignObject`-Versuch den nativen Fallback nicht unbrauchbar macht.
+- Ein Browser, der den `toBlob`-Callback bei einer blockierten Canvas nicht
+  ausführt, darf den Export nicht dauerhaft hängen lassen. Nach einem kurzen
+  Timeout muss der Data-URL-Fallback oder die nächste lokale SVG-Quelle greifen.
 - Das Verhalten bleibt lokal (`file:`), online (`https:`), in Edge und in
   Chromium-basierten Browsern testbar.
 

@@ -1065,7 +1065,6 @@
             const nativeSource = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(nativeSvg);
             const nativeSvgBlob = new Blob([nativeSvg], { type: 'image/svg+xml;charset=utf-8' });
             const nativeSvgUrl = urlApi.createObjectURL(nativeSvgBlob);
-            const isLocalFile = String(win?.location?.protocol || '') === 'file:';
             const svgSources = [
                 nativeSvgUrl,
                 nativeSource,
@@ -1101,17 +1100,29 @@
                 return new Blob([bytes], { type: 'image/png' });
             };
             const canvasToPngBlob = canvasElement => new Promise((resolve, reject) => {
+                let settled = false;
+                let timeoutId = null;
+                const finish = (callback, value) => {
+                    if (settled) return;
+                    settled = true;
+                    if (timeoutId !== null) win.clearTimeout?.(timeoutId);
+                    callback(value);
+                };
                 const fallback = () => {
                     try {
-                        resolve(canvasToDataUrlBlob(canvasElement));
+                        finish(resolve, canvasToDataUrlBlob(canvasElement));
                     } catch (error) {
-                        reject(error);
+                        finish(reject, error);
                     }
                 };
+                // Edge kann bei einer blockierten oder verunreinigten Canvas
+                // den toBlob-Callback auslassen. Ohne Timeout würde der
+                // gesamte Bildexport dann dauerhaft hängen.
+                timeoutId = win.setTimeout?.(fallback, 2500) ?? null;
                 if (typeof canvasElement.toBlob === 'function') {
                     try {
                         canvasElement.toBlob(blob => {
-                            if (blob) resolve(blob);
+                            if (blob) finish(resolve, blob);
                             else fallback();
                         }, 'image/png');
                         return;
