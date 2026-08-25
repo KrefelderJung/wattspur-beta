@@ -1,4 +1,4 @@
-const APP_VERSION = '2026.08.23-beta.366';
+const APP_VERSION = '2026.08.25-beta.373';
 const CACHE_NAME = `lastgang-analyse-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
@@ -10,6 +10,7 @@ const ASSETS_TO_CACHE = [
     'impressum.html',
     'datenschutz.html',
     'lizenz.html',
+    'tests.html',
     'styles.css',
     'theme.js',
     'assets/hero-wattspur-trail.png',

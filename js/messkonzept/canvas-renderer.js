@@ -230,7 +230,7 @@
             const renderField = field => {
                 if (!field) return '';
                 renderedKeys.add(field.key);
-                const attributes = `${field.maxLength ? ` maxlength="${field.maxLength}"` : ''}${field.rows ? ` rows="${field.rows}"` : ''}${field.inputmode ? ` inputmode="${escapeHtml(field.inputmode)}"` : ''}${field.pattern ? ` pattern="${escapeHtml(field.pattern)}"` : ''} data-mk-meter-field="${escapeHtml(field.key)}" data-mk-meter-index="${index}"`;
+                const attributes = `${field.maxLength ? ` maxlength="${field.maxLength}"` : ''}${field.rows ? ` rows="${field.rows}"` : ''}${field.inputmode ? ` inputmode="${escapeHtml(field.inputmode)}"` : ''}${field.pattern ? ` pattern="${escapeHtml(field.pattern)}"` : ''}${field.placeholder ? ` placeholder="${escapeHtml(field.placeholder)}"` : ''} data-mk-meter-field="${escapeHtml(field.key)}" data-mk-meter-index="${index}"`;
                 const control = field.type === 'textarea'
                     ? `<textarea${attributes}>${escapeHtml(details[field.key])}</textarea>`
                     : `<input type="${field.type}"${attributes} value="${escapeHtml(details[field.key])}">`;
@@ -244,7 +244,7 @@
             const rows = [
                 renderRow(['maloBezug', 'maloLieferung'], 'mk-meter-form-row--market'),
                 renderRow(['melo'], 'mk-meter-form-row--single'),
-                renderRow(['meterNumber', 'installationDate'], 'mk-meter-form-row--identity')
+                renderRow(['meterNumber'], 'mk-meter-form-row--identity')
             ];
             const remainingFields = meterDetailFields
                 .filter(field => !renderedKeys.has(field.key) && field.key !== 'remark')

@@ -22,7 +22,8 @@ const topologyPosition = exportSource.indexOf('<section class="mk-print-topology
 const notesPosition = exportSource.indexOf('${renderNotes()}');
 
 assert(exportSource.includes('function renderExportNotice()'), 'PDF muss einen zentralen Hinweisbaustein besitzen');
-assert(noticePosition >= 0 && topologyPosition > noticePosition, 'PDF-Reihenfolge: Hinweis muss vor der Messskizze stehen');
+const footerPosition = exportSource.indexOf('<footer class="mk-print-footer"');
+assert(noticePosition >= 0 && footerPosition > topologyPosition && noticePosition > footerPosition, 'PDF-Reihenfolge: Hinweis muss in der Fußzeile nach dem Inhalt stehen');
 assert(topologyPosition > 0 && projectPosition > topologyPosition, 'PDF-Reihenfolge: Projektangaben müssen unter der Messskizze stehen');
 assert(notesPosition > projectPosition && exportSource.includes('mk-print-sheet--one-page') && !exportSource.includes('renderExportDetails()}'), 'Kommentar muss nach den Projektangaben folgen; Prüfstatus und Objektdetails bleiben draußen');
 assert(exportSource.includes('mk-print-project-row') && exportSource.includes('Messkonzept'), 'Projektangaben müssen in kompakte Zeilen mit Messkonzept aufgeteilt werden');

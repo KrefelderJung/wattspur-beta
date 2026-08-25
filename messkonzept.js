@@ -346,6 +346,7 @@ const MK_INTERACTION = window.WattspurMesskonzeptInteraction.createInteractionCo
         reset: () => MK_COMMANDS.reset(),
         notify: (message, type) => mkNotify(message, type),
         downloadPdf: options => mkDownloadPdf(options),
+        downloadImage: options => mkDownloadImage(options),
         changeMode: mode => MK_COMMANDS.changeMode(mode),
         changeCascadeLevels: level => MK_COMMANDS.changeCascadeLevels(level),
         changeCanvasZoom: action => mkChangeCanvasZoom(action),
@@ -399,6 +400,17 @@ const MK_ANNOTATIONS = window.WattspurMesskonzeptAnnotations.createAnnotationCon
     getMeterDetailIndex: meter => mkGetMeterDetailIndex(meter),
     getMeterLabel: meter => mkGetMeterLabel(meter),
     getAssetAnnotationEntries: asset => MK_CANVAS_RENDERER.getAssetAnnotationEntries(asset),
+    updateAssetField: (asset, field, value) => {
+        if (!asset || !field) return;
+        asset[field] = value;
+        if (field === 'remark' && String(value || '').trim()) asset.annotationVisible = true;
+    },
+    updateHakField: (field, value) => {
+        if (!mkConfiguratorState.hak || !field) return;
+        mkConfiguratorState.hak[field] = value;
+        if (field === 'remark' && String(value || '').trim()) mkConfiguratorState.hak.annotationVisible = true;
+    },
+    render: () => MK_RENDER_CYCLE.render(),
     getStageScale: stage => MK_GEOMETRY.getStageScale(stage),
     escapeHtml: mkEscapeHtml,
     meterDetailFields: MK_METER_DETAIL_FIELDS,
@@ -924,6 +936,10 @@ function mkRenderPrintSheet(stand, options) {
 
 function mkDownloadPdf(options) {
     return MK_EXPORT.downloadPdf(options);
+}
+
+function mkDownloadImage(options) {
+    return MK_EXPORT.downloadImage(options);
 }
 
 function mkHandlePaletteDragStart(event, button) {

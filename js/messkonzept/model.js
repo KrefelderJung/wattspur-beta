@@ -75,9 +75,8 @@
         { key: 'maloBezug', label: 'Marktlokation Bezug', type: 'text' },
         { key: 'maloLieferung', label: 'Marktlokation Lieferung', type: 'text' },
         { key: 'melo', label: 'Messlokation', type: 'text', maxLength: 33 },
-        { key: 'meterNumber', label: 'Zählernummer', type: 'text', maxLength: 11, inputmode: 'numeric', pattern: '[0-9]*' },
-        { key: 'installationDate', label: 'Einbaudatum', type: 'date' },
-        { key: 'remark', label: 'Bemerkung', type: 'textarea', maxLength: 240, rows: 3 }
+        { key: 'meterNumber', label: 'Zählernummer', type: 'text', maxLength: 32, inputmode: 'text', autocomplete: 'off' },
+        { key: 'remark', label: 'Bemerkung', type: 'textarea', maxLength: 240, rows: 3, placeholder: 'z. B. Ausbau / Einbau, Datum' }
     ]);
 
     function getGenerationDisplay(energyCarrier) {

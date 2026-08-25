@@ -12,14 +12,14 @@ const indexText = read('index.html');
 const stylesText = read('styles.css');
 const requirementsText = read('docs/projektfelder-standard-anforderungen.md');
 
-['name', 'reference', 'measurementConcept', 'street', 'houseNumber', 'postalCode', 'city'].forEach(field => {
+['name', 'reference', 'measurementConcept', 'streetAddress', 'postalCode', 'city'].forEach(field => {
     assert(indexText.includes(`data-mk-project-field="${field}"`), `Projektfeld fehlt: ${field}`);
 });
-['z. B. PV-Erweiterung Wohnhaus', 'z. B. Vorgang 2026-001', 'z. B. MK D1', 'z. B. Musterstraße', 'z. B. 21', 'z. B. 47804', 'z. B. Krefeld'].forEach(placeholder => {
+['z. B. PV-Erweiterung Wohnhaus', 'z. B. Vorgang 2026-001', 'z. B. MK D1', 'z. B. Musterstraße 21', 'z. B. 47804', 'z. B. Krefeld'].forEach(placeholder => {
     assert(indexText.includes(`placeholder="${placeholder}"`), `Standard-Platzhalter fehlt: ${placeholder}`);
 });
 assert((stylesText.match(/grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/g) || []).length >= 2, 'Projektfelder müssen in großen und mittleren Ansichten drei gleichmäßige Spalten verwenden');
-assert(stylesText.includes('grid-template-columns: repeat(4, minmax(0, 1fr));'), 'Standortfelder müssen vier gleichmäßige Desktop-Spalten verwenden');
+assert(stylesText.includes('grid-template-columns: minmax(0, 1.6fr) minmax(7rem, 0.8fr) minmax(0, 1fr);'), 'Standortfelder müssen Straße/Hausnummer, PLZ und Ort ausgewogen anordnen');
 assert(stylesText.includes('min-height: 2.25rem') && stylesText.includes('input::placeholder'), 'Eingabehöhe und Platzhalter-Stil müssen standardisiert sein');
 const normalizedRequirements = requirementsText.toLowerCase();
 assert(normalizedRequirements.includes('sichtbare feldbezeichnungen') && normalizedRequirements.includes('mobile bedienung'), 'Anforderungen für die Projektfelder fehlen');

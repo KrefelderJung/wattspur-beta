@@ -13,6 +13,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const annotations = fs.readFileSync(path.join(ROOT, 'js/messkonzept/annotations.js'), 'utf8');
 const requirements = fs.readFileSync(path.join(ROOT, 'docs/object-annotation-visibility-anforderungen.md'), 'utf8');
+const positionRequirements = fs.readFileSync(path.join(ROOT, 'docs/meter-annotation-blocks-anforderungen.md'), 'utf8');
 const failures = [];
 const assert = (condition, message) => {
     if (!condition) failures.push(message);
@@ -40,6 +41,19 @@ assert(annotations.includes("connector.style.setProperty('left'")
     'Die Bezugslinien müssen bei negativem Infobox-Arbeitsraum am gleichen Koordinatensystem ausgerichtet bleiben');
 assert(/nicht\s+wachsen/.test(requirements) && requirements.includes('höhenstabil'),
     'Akzeptanzkriterien für stabiles Infobox-Layout fehlen');
+assert(annotations.includes('const gap = 48')
+    && annotations.includes('targetPoint.x - cardWidth - gap')
+    && annotations.includes('targetPoint.y + gap'),
+    'Automatische Infoboxen müssen mit vergrößertem Abstand unten links starten');
+assert(annotations.includes('getAutomaticCandidates')
+    && annotations.includes('getPreferredAutomaticCandidate')
+    && annotations.includes('candidate.x >= 6')
+    && annotations.includes('workspaceRequirements = getWorkspaceRequirements')
+    && annotations.includes('const initialMetrics = getStageMetrics(stage)'),
+    'Der Arbeitsraum muss die automatische Startposition vor dem Begrenzen berücksichtigen');
+assert(positionRequirements.includes('unterhalb und links')
+    && /deutlich\s+vergrößertem\s+Abstand/.test(positionRequirements),
+    'Die neue Initialposition unten links muss dokumentiert sein');
 
 if (failures.length) {
     console.error('Infobox-Layout-Regressionstest: FEHLER (' + failures.length + ')');

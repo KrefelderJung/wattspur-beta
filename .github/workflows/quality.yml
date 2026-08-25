@@ -1,0 +1,32 @@
+name: Wattspur quality gate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Browserfreie Gesamttests
+        run: npm test
+
+      - name: Syntaxprüfung
+        run: npm run test:syntax
+
+      - name: Lokale Links prüfen
+        run: npm run test:links
+
+      - name: Release-Gate prüfen
+        run: npm run test:release

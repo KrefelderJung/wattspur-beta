@@ -31,7 +31,7 @@ assert(renderer.includes("? (call('getHakVoltageLevel', 'low') === 'medium' ? 'T
 assert(!renderer.includes('<span class="landing-kicker">Objektangaben</span>'), 'Die wiederholte Objekt-Kickerzeile darf nicht gerendert werden');
 assert(renderer.includes('${isMediumVoltage ? `<p class="mk-hak-editor-hint">'), 'Der HAK-Hinweis darf nur bei Mittelspannung erscheinen');
 
-assert(model.includes("{ key: 'meterNumber', label: 'Zählernummer', type: 'text', maxLength: 11, inputmode: 'numeric'"), 'Zählernummer muss auf elf Stellen begrenzt und für die Zahlen-Tastatur vorbereitet sein');
+assert(model.includes("{ key: 'meterNumber', label: 'Zählernummer', type: 'text', maxLength: 32, inputmode: 'text', autocomplete: 'off'"), 'Zählernummer muss alphanumerisch bis 32 Zeichen erfassbar sein');
 assert(styles.includes('input[data-mk-meter-field="meterNumber"]') && styles.includes('max-width: 16rem'), 'Die Zählernummer soll im Dialog kompakt dargestellt werden');
 assert(renderer.includes('mk-meter-form-row--market') && renderer.includes('mk-meter-form-row--identity')
     && renderer.includes('mk-meter-form-row--remark'), 'Zählerfelder müssen in fachlich sinnvolle Reihen gruppiert werden');

@@ -8,11 +8,11 @@ als kurze Beispiele und ersetzen kein Label.
 
 ## Festlegung
 
-- Projektname, Referenz, Messkonzept und Standort behalten sichtbare Labels. Die Gruppierung heißt „Projekt & Messkonzept“.
+- Projektname, Referenz, Messkonzept und Standort behalten sichtbare Labels. Straße und Hausnummer werden als gemeinsame Eingabe geführt. Die Gruppierung heißt „Projekt & Messkonzept“.
 - Das ungenutzte Auswahlfeld „Stand der Skizze“ wird nicht angeboten. Stattdessen gibt es ein freies Feld „Messkonzept“ mit dem Beispiel-Platzhalter „z. B. MK D1“.
 - Projekt- und Standortfelder verwenden ein konsistentes Eingaberaster.
 - Projektfelder teilen sich auf großen Ansichten gleichmäßig in drei Spalten.
-- Standortfelder teilen sich auf großen Ansichten gleichmäßig in vier Spalten.
+- Standortfelder teilen sich auf großen Ansichten in drei ausgewogene Spalten: Straße/Hausnummer, PLZ und Ort.
 - Eingaben besitzen dieselbe Mindesthöhe, Innenabstände und Schriftgröße.
 - Auf kleinen Bildschirmen bleibt das Raster zweispaltig und touchfreundlich.
 - Platzhalter verwenden einheitlich kurze Beispiele mit „z. B.“.
@@ -26,7 +26,7 @@ als kurze Beispiele und ersetzen kein Label.
 ## Akzeptanzkriterien
 
 1. Labels bleiben auch nach der Eingabe sichtbar.
-2. Alle sieben Textfelder haben standardisierte Abstände und Eingabehöhen.
+2. Alle sichtbaren Textfelder haben standardisierte Abstände und Eingabehöhen.
 3. Die Standort-Platzhalter unterscheiden sich verständlich voneinander.
 4. Tastaturfokus und mobile Bedienung bleiben erhalten.
 5. PDF-Export und gespeicherte Projektwerte werden nicht verändert.

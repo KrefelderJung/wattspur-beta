@@ -43,8 +43,11 @@ for (const key of ['storageCapacity', 'storageChargePower', 'storageDischargePow
 }
 
 const renderer = read('js/messkonzept/canvas-renderer.js');
+const modelSource = read('js/messkonzept/model.js');
 const editor = read('js/messkonzept/editor.js');
 assert(renderer.includes('data-mk-field="inverterPower"'), 'Editor rendert Wechselrichterleistung nicht');
+assert(!modelSource.includes("{ key: 'installationDate', label: 'Einbaudatum'"), 'Zähler sollen kein Einbaudatum mehr abfragen');
+assert(renderer.includes("renderRow(['meterNumber'], 'mk-meter-form-row--identity')") && modelSource.includes("placeholder: 'z. B. Ausbau / Einbau, Datum'"), 'Zählerdialog muss Zählernummer kompakt und Bemerkung mit Beispiel-Platzhalter darstellen');
 assert(renderer.includes('data-mk-field="storageCapacity"') && renderer.includes('data-mk-field="storageChargePower"') && renderer.includes('data-mk-field="storageDischargePower"') && renderer.includes('data-mk-field="storageInverterPower"'), 'Editor rendert Speicher-Leistungsfelder nicht vollständig');
 assert(renderer.includes('data-mk-storage-module-fields') && renderer.includes('renderSteuveModuleFields'), 'Speichereditor muss die §14a-Modulabfrage dynamisch anbinden');
 assert(!renderer.includes('Bei PV und Wind kann hier die zugeordnete Wechselrichterleistung dokumentiert werden'), 'Der allgemeine Wechselrichter-Hinweis für PV und Wind soll nicht mehr im Editor erscheinen');

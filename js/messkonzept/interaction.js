@@ -127,6 +127,7 @@
                 call('notify', 'Messkonzept-Skizze zurückgesetzt.', 'info');
             });
             bindClick('btn-mk-export-pdf', () => call('downloadPdf'));
+            bindClick('btn-mk-export-image', () => call('downloadImage'));
 
             documentRef.querySelectorAll('[data-mk-preset]').forEach(button => {
                 button.addEventListener('click', () => call('loadPreset', button.dataset.mkPreset));

@@ -31,8 +31,7 @@
             'Marktlokation Bezug',
             'Marktlokation Lieferung',
             'Messlokation',
-            'Zählernummer',
-            'Einbaudatum'
+            'Zählernummer'
         ]);
 
         function getExportStand(now = new Date()) {
@@ -80,8 +79,7 @@
                     ['Messkonzept', project.measurementConcept]
                 ])}
                 ${renderRow([
-                    ['Straße', project.street],
-                    ['Hausnummer', project.houseNumber],
+                    ['Straße / Hausnummer', [project.street, project.houseNumber].filter(Boolean).join(' ')],
                     ['PLZ', project.postalCode],
                     ['Ort', project.city],
                 ])}
@@ -259,11 +257,12 @@
             return extendVisualBounds(bounds, x, y, width, height);
         }
 
-        function extendSvgBounds(bounds, svg) {
+        function extendSvgBounds(bounds, svg, shapeFilter = null) {
             const shapes = svg?.querySelectorAll?.('path,circle,ellipse,line,polyline,polygon,rect');
             if (!shapes?.length) return false;
             let found = false;
-            shapes.forEach(shape => {
+            shapes.forEach((shape, index) => {
+                if (typeof shapeFilter === 'function' && !shapeFilter(shape, index)) return;
                 try {
                     const box = shape.getBBox?.();
                     if (box) found = extendVisualBounds(bounds, box.x, box.y, box.width, box.height) || found;
@@ -274,7 +273,13 @@
             return found;
         }
 
-        function collectVisualBounds(stage, topologyWidth, topologyHeight) {
+
+        function hasAnnotationContent(card) {
+            return [...(card?.querySelectorAll?.('.mk-meter-annotation-value') || [])]
+                .some(value => String(value.textContent || '').trim().length > 0);
+        }
+
+        function collectVisualBounds(stage, topologyWidth, topologyHeight, options = {}) {
             const topology = createVisualBounds();
             const annotations = createVisualBounds();
             let measured = false;
@@ -306,12 +311,83 @@
             }
 
             const annotationLayer = stage?.querySelector?.('.mk-meter-annotation-layer');
+
+            const includeAnnotationCard = options.includeAnnotationCard || (() => true);
             annotationLayer?.querySelectorAll?.('.mk-meter-annotation-card')?.forEach(card => {
+                if (!includeAnnotationCard(card)) return;
                 measured = extendDomBounds(annotations, card, stage, scale, stageRect) || measured;
             });
             const annotationConnector = annotationLayer?.querySelector?.('.mk-meter-annotation-connectors');
-            measured = extendSvgBounds(annotations, annotationConnector) || measured;
+            measured = extendSvgBounds(annotations, annotationConnector, options.annotationShapeFilter) || measured;
             return { topology, annotations, measured };
+        }
+
+        function escapeSvgText(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&apos;');
+        }
+
+        function wrapAnnotationText(value, maxCharacters) {
+            const text = String(value ?? '').split(String.fromCharCode(13)).join('').trim();
+            if (!text) return [];
+            const limit = Math.max(8, Number(maxCharacters) || 24);
+            return text.split(String.fromCharCode(10)).flatMap(paragraph => {
+                const words = paragraph.split(' ').filter(Boolean);
+                if (!words.length) return [''];
+                const lines = [];
+                let line = '';
+                words.forEach(word => {
+                    if (!line) {
+                        line = word;
+                        return;
+                    }
+                    const candidate = line + ' ' + word;
+                    if (candidate.length <= limit) {
+                        line = candidate;
+                        return;
+                    }
+                    lines.push(line);
+                    line = word;
+                });
+                if (line) lines.push(line);
+                return lines;
+            });
+        }
+        function renderNativeAnnotationText(stage, cards, contentFlags, minX, minY) {
+            const stageRect = stage?.getBoundingClientRect?.();
+            const scale = getStageCoordinateScale(stage);
+            if (!stageRect || !cards?.length) return '';
+            const textParts = [];
+            cards.forEach((card, index) => {
+                if (contentFlags[index] === false) return;
+                const rect = card.getBoundingClientRect?.();
+                if (!rect || rect.width <= 0 || rect.height <= 0) return;
+                const x = (rect.left - stageRect.left) / Math.max(0.01, scale.x) - minX;
+                const y = (rect.top - stageRect.top) / Math.max(0.01, scale.y) - minY;
+                const cardWidth = rect.width / Math.max(0.01, scale.x);
+                const padding = 6;
+                const fontSize = 11;
+                const maxCharacters = Math.max(10, Math.floor((cardWidth - padding * 2) / (fontSize * 0.56)));
+                const values = [...(card.querySelectorAll?.('.mk-meter-annotation-value') || [])]
+                    .flatMap(valueNode => wrapAnnotationText(valueNode.textContent, maxCharacters));
+                if (!values.length) return;
+                const xPosition = Math.max(0, x + padding);
+                const firstBaseline = Math.max(12, y + 15);
+                const tspans = values.map((line, lineIndex) =>
+                    '<tspan x="' + xPosition.toFixed(2) + '" dy="' + (lineIndex ? fontSize * 1.28 : 0) + '">' + escapeSvgText(line) + '</tspan>'
+                ).join('');
+                textParts.push(
+                    '<text class="mk-export-annotation-text" x="' + xPosition.toFixed(2)
+                    + '" y="' + firstBaseline.toFixed(2)
+                    + '" fill="#0f172a" font-family="Arial, sans-serif" font-size="' + fontSize
+                    + 'px" font-weight="400" dominant-baseline="alphabetic">' + tspans + '</text>'
+                );
+            });
+            return textParts.join('');
         }
 
         function getTopologyMarkup() {
@@ -320,6 +396,7 @@
             if (!stage) return '<p class="mk-print-muted">Keine Skizze vorhanden.</p>';
 
             const clone = stage.cloneNode(true);
+
             const connectorLayer = clone.querySelector('.mk-connector-layer');
             const annotationConnector = clone.querySelector('.mk-meter-annotation-connectors');
             const parseViewBox = element => {
@@ -464,17 +541,283 @@
                     <span class="mk-print-brand-copy"><strong>Wattspur</strong><span>Messkonzept-Konfigurator</span></span>
                 </div>
             </header>
-            ${renderExportNotice()}
             <section class="mk-print-topology"><h2>Messskizze</h2>${topology}</section>
             ${renderProjectDetails()}
             ${renderNotes()}
-            <footer class="mk-print-footer">Wattspur Beta · Messkonzept-Skizze · lokal im Browser erstellt</footer>
+            <footer class="mk-print-footer">
+                <span>Wattspur Beta · Messkonzept-Skizze · lokal im Browser erstellt</span>
+                ${renderExportNotice()}
+            </footer>
         </section>
     `;
         }
 
+        function getInlineStyles(documentRef) {
+            return [...(documentRef?.styleSheets || [])].map(sheet => {
+                try {
+                    return [...(sheet.cssRules || [])].map(rule => rule.cssText).join('\n');
+                } catch (error) {
+                    return '';
+                }
+            }).filter(Boolean).join('\n');
+        }
+
+        function inlineComputedStyles(root, win) {
+            if (!root || !win?.getComputedStyle) return;
+            const documentRef = root.ownerDocument;
+            const host = documentRef?.createElement?.("div");
+            if (!host || !documentRef.body) return;
+            host.style.cssText = "position:absolute;left:-100000px;top:0;pointer-events:none;opacity:0;";
+            host.appendChild(root);
+            documentRef.body.appendChild(host);
+            try {
+                const elements = [root, ...(root.querySelectorAll?.("*") || [])];
+                elements.forEach(element => {
+                    const computed = win.getComputedStyle(element);
+                    for (let index = 0; index < computed.length; index += 1) {
+                        const property = computed.item(index);
+                        if (!property || property === "cursor" || property === "transition" || property === "animation") continue;
+                        element.style.setProperty(property, computed.getPropertyValue(property));
+                    }
+                });
+            } finally {
+                host.remove();
+            }
+        }
+
+        async function downloadImage(options = {}) {
+            const doc = getDocument();
+            const canvas = getElements().canvas;
+            const stage = canvas?.querySelector?.('.mk-canvas-stage');
+            if (!stage) {
+                notify('Keine Messskizze zum Herunterladen vorhanden.', 'warning');
+                return false;
+            }
+
+            const connectorLayer = stage.querySelector('.mk-connector-layer');
+            const viewBox = String(connectorLayer?.getAttribute?.('viewBox') || '')
+                .trim().split(/\s+/).map(Number);
+            const topologyWidth = Number.parseFloat(connectorLayer?.getAttribute?.('width') || '')
+                || (viewBox.length === 4 && Number.isFinite(viewBox[2]) ? viewBox[2] : stage.scrollWidth || stage.offsetWidth || 1);
+            const topologyHeight = Number.parseFloat(connectorLayer?.getAttribute?.('height') || '')
+                || (viewBox.length === 4 && Number.isFinite(viewBox[3]) ? viewBox[3] : stage.scrollHeight || stage.offsetHeight || 1);
+            // Leere, nur aktivierte Infoboxen sind kein sichtbarer Exportinhalt.
+            // Sie bleiben im Editor verfügbar, dürfen aber weder den Ausschnitt
+            // vergrößern noch eine leere Karte in die PNG-Datei bringen.
+            const liveAnnotationCards = [...(stage.querySelectorAll?.('.mk-meter-annotation-card') || [])];
+            const annotationContentFlags = liveAnnotationCards.map(hasAnnotationContent);
+            const measured = collectVisualBounds(stage, topologyWidth, topologyHeight, {
+                includeAnnotationCard: hasAnnotationContent,
+                annotationShapeFilter: (_shape, index) => annotationContentFlags[index] !== false
+            });
+            const bounds = [measured.topology, measured.annotations].filter(item => item?.hasContent);
+            const hasContent = bounds.length > 0;
+            const padding = 24;
+            const minX = hasContent ? Math.min(...bounds.map(item => item.minX)) - padding : 0;
+            const minY = hasContent ? Math.min(...bounds.map(item => item.minY)) - padding : 0;
+            const maxX = hasContent ? Math.max(...bounds.map(item => item.maxX)) + padding : topologyWidth;
+            const maxY = hasContent ? Math.max(...bounds.map(item => item.maxY)) + padding : topologyHeight;
+            const width = Math.max(1, Math.ceil(maxX - minX));
+            const height = Math.max(1, Math.ceil(maxY - minY));
+            const annotationTextMarkup = renderNativeAnnotationText(
+                stage,
+                liveAnnotationCards,
+                annotationContentFlags,
+                minX,
+                minY
+            );
+
+            const clone = stage.cloneNode(true);
+            const clonedAnnotationCards = [...(clone.querySelectorAll?.('.mk-meter-annotation-card') || [])];
+            const clonedAnnotationFlags = clonedAnnotationCards.map(hasAnnotationContent);
+            clonedAnnotationCards.forEach((card, index) => {
+                if (clonedAnnotationFlags[index] === false) card.remove();
+            });
+            // Die Pfade werden von annotations.js in derselben Reihenfolge wie
+            // die Karten erzeugt. Leere Karten und ihre Bezugslinien werden
+            // deshalb gemeinsam aus der Exportkopie entfernt.
+            const clonedAnnotationPaths = [...(clone.querySelectorAll?.('.mk-meter-annotation-connectors .mk-meter-annotation-connector') || [])];
+            if (clonedAnnotationPaths.length === clonedAnnotationFlags.length) {
+                clonedAnnotationPaths.forEach((path, index) => {
+                    if (clonedAnnotationFlags[index] === false) path.remove();
+                });
+            }
+            // Alte HTML/CSS-Anker sind für die Bedienung nötig, würden im PNG
+            // aber zusätzlich zu den nativen SVG-Leitungen gezeichnet. Das
+            // erzeugt die sichtbaren Doppel- und Versatzlinien.
+            clone.querySelectorAll?.([
+                '.mk-connection-line',
+                '.mk-rail-meter-link',
+                '.mk-zone-wrap-strand',
+                '.mk-rail-junction-anchor'
+            ].join(',')).forEach(element => element.remove());
+            const win = getWindow();
+            const prepareSvgMarkup = (element, fallbackWidth, fallbackHeight) => {
+                if (!element) return '';
+                element.style.setProperty('position', 'static');
+                element.style.setProperty('display', 'block');
+                element.style.setProperty('width', `${Math.ceil(fallbackWidth)}px`);
+                element.style.setProperty('height', `${Math.ceil(fallbackHeight)}px`);
+                element.style.setProperty('overflow', 'visible');
+                inlineComputedStyles(element, win);
+                return element.innerHTML;
+            };
+            const connectorClone = clone.querySelector('.mk-connector-layer');
+            const connectorMarkup = prepareSvgMarkup(connectorClone, topologyWidth, topologyHeight);
+            connectorClone?.remove();
+            const annotationConnectorClone = clone.querySelector('.mk-meter-annotation-connectors');
+            const annotationConnectorMarkup = prepareSvgMarkup(annotationConnectorClone, width, height);
+            annotationConnectorClone?.remove();
+
+            // SVG-Icons müssen auch innerhalb der XHTML-Fremdebene ihre
+            // ursprüngliche Namespace-Zuordnung behalten. Das ist besonders
+            // wichtig für das Wallbox-Symbol mit Kabel und Stecker.
+            clone.querySelectorAll?.('svg').forEach(svg => {
+                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            });
+
+
+            // Infoboxen mit Inhalt bleiben im Bildexport erhalten. Leere,
+            // nur aktivierte Karten wurden zuvor aus der Kopie entfernt. Die
+            // Bezugslinien werden separat als native SVG-Ebene gerendert.
+            clone.classList.add('mk-image-export-stage');
+            clone.style.setProperty('width', `${width}px`);
+            clone.style.setProperty('height', `${height}px`);
+            clone.style.setProperty('min-width', `${width}px`);
+            clone.style.setProperty('min-height', `${height}px`);
+            clone.style.setProperty('overflow', 'visible');
+            clone.style.setProperty('transform', `translate(${-minX}px, ${-minY}px)`);
+            clone.style.setProperty('transform-origin', 'top left');
+            clone.style.setProperty('zoom', '1');
+            // Editor-Gutters gehören nur zur Bedienfläche. In der Exportkopie
+            // würden sie die HTML-Objekte gegenüber den nativen Leitungen
+            // verschieben und genau die sichtbaren Lücken erzeugen.
+            clone.style.setProperty('margin', '0');
+            clone.style.setProperty('padding', '0');
+            clone.style.setProperty('--mk-annotation-gutter-left', '0px');
+            clone.style.setProperty('--mk-annotation-gutter-right', '0px');
+            clone.style.setProperty('--mk-annotation-gutter-top', '0px');
+            clone.style.setProperty('--mk-annotation-gutter-bottom', '0px');
+            clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+            inlineComputedStyles(clone, win);
+            // Bedienknöpfe gehören zur Editorsteuerung, nicht zur Skizze.
+            clone.querySelectorAll?.('.mk-annotation-dismiss, .mk-annotation-resize-handle, .mk-remove-asset, .mk-remove-meter, [data-mk-remove-asset], [data-mk-remove-meter]').forEach(element => element.remove());
+            // Eine manuell vergrößerte Editor-Infobox soll im PNG nicht als
+            // leerer Raum erscheinen. Die Breite bleibt erhalten, die Höhe
+            // richtet sich im Bildexport wieder nach dem tatsächlichen Inhalt.
+            clone.querySelectorAll?.('.mk-meter-annotation-card').forEach(card => {
+                card.style.setProperty('height', 'auto', 'important');
+                card.style.setProperty('min-height', '0', 'important');
+                card.style.setProperty('max-height', 'none', 'important');
+            });
+            // Die Stilkopie kann die Editorfarbe erneut setzen. Die finalen
+            // Exportfarben werden deshalb erst danach mit !important gesetzt.
+            clone.querySelectorAll?.('.mk-meter-annotation-card, .mk-meter-annotation-value').forEach(element => {
+                element.style.setProperty('color', '#0f172a', 'important');
+                element.style.setProperty('opacity', '1', 'important');
+            });
+            // Browser unterscheiden sich bei Text in SVG-foreignObject. Die
+            // Karten bleiben als Rahmen in der HTML-Ebene, der eigentliche
+            // Inhalt wird zusätzlich als native SVG-Schrift ausgegeben. Die
+            // HTML-Texte werden nur ausgeblendet, damit kein Doppeltext
+            // entsteht und die Kartenhöhe für die Geometrie erhalten bleibt.
+            clone.querySelectorAll?.('.mk-meter-annotation-values').forEach(element => {
+                // Die Textzeile wird bereits als natives SVG gerendert. Auch in
+                // foreignObject-fähigen Browsern darf die HTML-Kopie nicht
+                // ein zweites, leicht versetztes Schriftbild erzeugen.
+                element.style.setProperty('visibility', 'hidden', 'important');
+                element.style.setProperty('opacity', '0', 'important');
+                element.style.setProperty('color', 'transparent', 'important');
+                element.style.setProperty('text-shadow', 'none', 'important');
+            });
+            clone.querySelectorAll?.('.mk-ownership-label').forEach(label => {
+                label.style.setProperty('background', 'transparent', 'important');
+                label.style.setProperty('color', '#0f172a', 'important');
+                label.style.setProperty('box-shadow', 'none', 'important');
+                label.style.setProperty('text-shadow', '0 1px 0 #f8fafc', 'important');
+            });
+
+            // Styles werden aus dem bereits geladenen Dokument übernommen.
+            // Es gibt keinen zusätzlichen Netzwerkzugriff und damit keine
+            // externe Datenübertragung beim lokalen Bildexport.
+            const css = getInlineStyles(doc);
+            const safeCss = css.replace(/<\/style/gi, '<\\/style');
+            const background = '<rect class="mk-export-background" x="0" y="0" width="100%" height="100%" fill="#f8fafc" />';
+            const connectorStyle = '<style>.mk-export-connectors .mk-dynamic-wire{fill:none;stroke:#0f6f97;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.mk-export-connectors .mk-dynamic-node{stroke:#f8fafc;stroke-width:2}.mk-export-annotation-connectors .mk-meter-annotation-connector{fill:none;stroke:#64748b;stroke-width:1.4;stroke-linecap:round;stroke-dasharray:4 4}.mk-export-annotation-text{fill:#0f172a;font-family:Arial,sans-serif;font-size:11px}</style>';
+            const nativeConnectors = connectorMarkup
+                ? `<g class="mk-export-connectors" transform="translate(${-minX} ${-minY})">${connectorMarkup}</g>`
+                : '';
+            const nativeAnnotationConnectors = annotationConnectorMarkup
+                ? `<g class="mk-export-annotation-connectors" transform="translate(${-minX} ${-minY})">${annotationConnectorMarkup}</g>`
+                : '';
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+                <style>${safeCss}</style>
+                ${background}
+                ${connectorStyle}
+                ${nativeConnectors}
+                ${nativeAnnotationConnectors}
+                ${annotationTextMarkup}
+                <foreignObject x="0" y="0" width="${width}" height="${height}">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:visible;background:transparent;">${clone.outerHTML}</div>
+                </foreignObject>
+                <text x="${Math.max(8, width - 8)}" y="${Math.max(12, height - 8)}" text-anchor="end" font-family="Arial, sans-serif" font-size="8" fill="#64748b">Wattspur.de</text>
+            </svg>`;
+            const urlApi = win?.URL || URL;
+            const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+            const svgUrl = urlApi.createObjectURL(svgBlob);
+            try {
+                const image = doc.createElement('img');
+                image.decoding = 'async';
+                await new Promise((resolve, reject) => {
+                    image.onload = resolve;
+                    image.onerror = () => reject(new Error('Die Skizze konnte nicht als Bild gerendert werden.'));
+                    image.src = svgUrl;
+                });
+                const pixelRatio = Math.min(2, Math.max(1, Number(options.pixelRatio) || 2));
+                const imageCanvas = doc.createElement('canvas');
+                imageCanvas.width = Math.max(1, Math.round(width * pixelRatio));
+                imageCanvas.height = Math.max(1, Math.round(height * pixelRatio));
+                const context = imageCanvas.getContext('2d');
+                if (!context) throw new Error('Der Browser stellt keine Canvas-Ausgabe bereit.');
+                context.scale(pixelRatio, pixelRatio);
+                context.drawImage(image, 0, 0, width, height);
+                const pngBlob = await new Promise((resolve, reject) => {
+                    imageCanvas.toBlob(blob => {
+                        if (blob) resolve(blob);
+                        else reject(new Error('Die PNG-Datei konnte nicht erzeugt werden.'));
+                    }, 'image/png');
+                });
+                const fileName = `${getSuggestedFileName()}-skizze.png`;
+                const link = doc.createElement('a');
+                const pngUrl = urlApi.createObjectURL(pngBlob);
+                link.href = pngUrl;
+                link.download = fileName;
+                link.style.display = 'none';
+                doc.body.appendChild(link);
+                link.click();
+                link.remove();
+                win.setTimeout(() => urlApi.revokeObjectURL(pngUrl), 1000);
+                notify('Messskizze als PNG heruntergeladen.', 'info');
+                return true;
+            } catch (error) {
+                console.error('PNG-Export fehlgeschlagen', error);
+                notify('Die Messskizze konnte in diesem Browser nicht als PNG erzeugt werden.', 'error');
+                return false;
+            } finally {
+                urlApi.revokeObjectURL(svgUrl);
+            }
+        }
         function downloadPdf(options = {}) {
             const doc = getDocument();
+            // Alte HTML/CSS-Anker sind für die Bedienung nötig, würden im PNG
+            // aber zusätzlich zu den nativen SVG-Leitungen gezeichnet. Das
+            // erzeugt die sichtbaren Doppel- und Versatzlinien.
+            clone.querySelectorAll?.([
+                '.mk-connection-line',
+                '.mk-rail-meter-link',
+                '.mk-zone-wrap-strand',
+                '.mk-rail-junction-anchor'
+            ].join(',')).forEach(element => element.remove());
             const win = getWindow();
             const stand = getExportStand();
             const wrapper = doc.createElement('div');
@@ -510,7 +853,8 @@
             renderExportDetails,
             getTopologyMarkup,
             renderPrintSheet,
-            downloadPdf
+            downloadPdf,
+            downloadImage
         });
     }
 

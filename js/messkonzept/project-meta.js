@@ -19,6 +19,11 @@
 
             elements.projectFields?.forEach(field => {
                 const key = field.dataset.mkProjectField;
+                if (key === "streetAddress") {
+                    const address = [project.street, project.houseNumber].filter(Boolean).join(" ");
+                    if (field.value !== address) field.value = address;
+                    return;
+                }
                 if (Object.prototype.hasOwnProperty.call(project, key) && field.value !== project[key]) {
                     field.value = project[key];
                 }
@@ -30,7 +35,15 @@
 
         function updateProjectField(key, value) {
             const project = getState().project;
-            if (project && Object.prototype.hasOwnProperty.call(project, key)) project[key] = value;
+            if (!project) return;
+            if (key === "streetAddress") {
+                const normalized = String(value || "").trim();
+                const match = normalized.match(/^(.*?)(?:\s+)(\d+[A-Za-z]?(?:[-/]\d+[A-Za-z]?)?)$/);
+                project.street = match ? match[1].trim() : normalized;
+                project.houseNumber = match ? match[2].trim() : "";
+                return;
+            }
+            if (Object.prototype.hasOwnProperty.call(project, key)) project[key] = value;
         }
 
         function updateNotes(value) {

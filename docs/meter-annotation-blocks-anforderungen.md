@@ -14,8 +14,8 @@ gestrichelte Bezugslinie dem jeweiligen Zähler zugeordnet.
   Infobox wird mindestens eine kurze Zählerinformation angezeigt; ausgefüllte
   Zählerfelder werden ergänzt.
 - Sichtbar sind nur die eingegebenen Werte in einer festen Reihenfolge:
-  Marktlokation Bezug, Marktlokation Lieferung, Messlokation, Zählernummer,
-  Einbaudatum und optional die Bemerkung.
+  Marktlokation Bezug, Marktlokation Lieferung, Messlokation, Zählernummer
+  und optional die Bemerkung.
 - Die Karten erhalten keine sichtbaren Feldüberschriften und wiederholen den
   Zählernamen nicht. Die Verbindungslinie liefert den Kontext; der Name bleibt
   für Barrierefreiheit im ARIA-Label erhalten.
@@ -46,10 +46,13 @@ gestrichelte Bezugslinie dem jeweiligen Zähler zugeordnet.
 - Der Arbeitsraum ist in alle vier Richtungen scrollbar. Wird eine Karte nach
   links oder oben verschoben, entsteht ebenfalls eine echte Scrollfläche und
   die aktuelle Ansicht bleibt beim Erweitern stabil.
-- Beim ersten Erscheinen startet eine Infokarte mit Abstand bevorzugt leicht
-  oberhalb und rechts vom Zähler. Wenn am oberen Rand kein Platz ist, wird sie
-  unterhalb platziert. Nach einer manuellen Verschiebung bleibt die Position
-  des Nutzers maßgeblich.
+- Beim ersten Erscheinen startet eine Infokarte mit deutlich vergrößertem
+  Abstand bevorzugt unterhalb und links vom zugehörigen Objekt. Wenn dort kein
+  Platz ist, werden linke, rechte und obere Ausweichpositionen geprüft. Nach
+  einer manuellen Verschiebung bleibt die Position des Nutzers maßgeblich.
+- Auf schmalen Bildschirmen wird eine teilweise außerhalb liegende Startkarte
+  vermieden. Wenn links unten nicht ausreichend sichtbarer Platz vorhanden ist,
+  weicht die Karte innerhalb der sichtbaren Bühne nach rechts unten aus.
 - Eine gestrichelte, flexible SVG-Linie verbindet die Karte mit dem
   Mittelpunkt des zugehörigen Zählers.
 - Die Karten werden im PDF-Export mit ausgegeben. Der Export berücksichtigt

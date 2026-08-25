@@ -23,6 +23,9 @@
         const captureHistoryState = options.captureHistoryState || (() => null);
         const recordHistory = options.recordHistory || (() => {});
         const refreshInlineStatus = options.refreshInlineStatus || (() => {});
+        const updateAssetField = options.updateAssetField || (() => {});
+        const updateHakField = options.updateHakField || (() => {});
+        const render = options.render || (() => {});
 
         let activeDrag = null;
         let activeResize = null;
@@ -93,7 +96,10 @@
 
         function getEntries(record) {
             if (record.kind === 'asset') {
-                return getAssetAnnotationEntries(record.asset) || [];
+                return (getAssetAnnotationEntries(record.asset) || []).map(entry => ({
+                    ...entry,
+                    key: entry.key || getAssetEntryFieldKey(record.asset, entry)
+                }));
             }
             if (record.kind === 'hak') {
                 const entries = [];
@@ -117,6 +123,19 @@
             return entries;
         }
 
+        function getAssetEntryFieldKey(asset, entry) {
+            const label = String(entry?.label || '').trim();
+            if (label === 'Bemerkung') return 'remark';
+            if (label === 'Nennleistung' || label === 'Leistung' || label === 'Elektrische Gesamtleistung inkl. Heizstab') return 'power';
+            if (label === 'Inbetriebnahme' || label === 'Bestand / Inbetriebnahme') return 'commissioningDate';
+            if (label === 'Wechselrichterleistung') return asset?.type === 'storage' ? 'storageInverterPower' : 'inverterPower';
+            if (label === '§14a-Modul') return 'steuveModule';
+            if (label === 'Speicherkapazität') return 'storageCapacity';
+            if (label === 'Max. Ladeleistung') return 'storageChargePower';
+            if (label === 'Netzeinspeisung') return 'storageGridFeedIn';
+            if (label === 'Netzbezug zum Laden') return 'storageGridImport';
+            return '';
+        }
         function getVisibleRecords() {
             return getRecords()
                 .map(record => ({ ...record, entries: getEntries(record) }))
@@ -287,6 +306,25 @@
             };
         }
 
+        function getTargetEdgePoint(stage, target, metrics, toward) {
+            const center = getTargetPoint(stage, target, metrics);
+            if (!center || !toward) return center;
+            const rect = target.getBoundingClientRect?.();
+            if (!rect) return center;
+            const dx = Number(toward.x) - center.x;
+            const dy = Number(toward.y) - center.y;
+            if (!dx && !dy) return center;
+            const halfWidth = rect.width / (2 * metrics.scale);
+            const halfHeight = rect.height / (2 * metrics.scale);
+            const scaleX = dx ? halfWidth / Math.abs(dx) : Infinity;
+            const scaleY = dy ? halfHeight / Math.abs(dy) : Infinity;
+            const edgeScale = Math.min(scaleX, scaleY);
+            return {
+                x: center.x + dx * edgeScale,
+                y: center.y + dy * edgeScale
+            };
+        }
+
         function clampPosition(stage, card, x, y, metrics) {
             const cardWidth = Math.max(1, card.offsetWidth || 160);
             const cardHeight = Math.max(1, card.offsetHeight || 60);
@@ -330,24 +368,40 @@
             };
         }
 
-        function getAutomaticPosition(record, target, card, metrics) {
+        function getAutomaticCandidates(record, target, card, metrics) {
             const targetPoint = getTargetPoint(null, target, metrics);
-            if (!targetPoint) return { x: 8, y: 8 };
+            if (!targetPoint) return [{ x: 8, y: 8 }];
             const cardWidth = Math.max(1, card.offsetWidth || 160);
             const cardHeight = Math.max(1, card.offsetHeight || 60);
-            const gap = 24;
-            const right = targetPoint.x + gap;
-            const left = targetPoint.x - cardWidth - gap;
-            const x = right + cardWidth <= metrics.width - 6 ? right : Math.max(6, left);
-            // Neue Infokarten starten bevorzugt oben rechts. Die Skizze baut
-            // weitere Objekte typischerweise nach unten rechts aus, sodass
-            // dieser Anker den häufigsten Überlappungsfall vermeidet. An den
-            // oberen Rand wird nur dann nach unten ausgewichen, wenn dort kein
-            // ausreichender Platz vorhanden ist.
-            const above = targetPoint.y - cardHeight - 18;
-            const below = targetPoint.y + 18;
-            const y = above >= 6 ? above : Math.min(metrics.height - cardHeight - 6, below);
-            return clampPosition(null, card, x, y, metrics);
+            // Infoboxen starten bewusst mit doppeltem Abstand unten links.
+            // Dort bleiben die Hauptschienen und die neu angelegten Objekte
+            // in der Regel frei zugänglich. Der Benutzer kann die Karte
+            // anschließend weiterhin beliebig verschieben.
+            const gap = 48;
+            return [
+                { x: targetPoint.x - cardWidth - gap, y: targetPoint.y + gap },
+                { x: targetPoint.x - cardWidth - gap, y: targetPoint.y - cardHeight - gap },
+                { x: targetPoint.x + gap, y: targetPoint.y + gap },
+                { x: targetPoint.x + gap, y: targetPoint.y - cardHeight - gap }
+            ];
+        }
+
+        function getPreferredAutomaticCandidate(record, target, card, metrics) {
+            const candidates = getAutomaticCandidates(record, target, card, metrics);
+            const cardWidth = Math.max(1, card.offsetWidth || 160);
+            const cardHeight = Math.max(1, card.offsetHeight || 60);
+            const visible = candidate => candidate.x >= 6
+                && candidate.y >= 6
+                && candidate.x + cardWidth <= metrics.width - 6
+                && candidate.y + cardHeight <= metrics.height - 6;
+            return candidates.find(visible)
+                || candidates.find(candidate => candidate.x >= 6 && candidate.y >= 6)
+                || { x: 6, y: 6 };
+        }
+
+        function getAutomaticPosition(record, target, card, metrics) {
+            const position = getPreferredAutomaticCandidate(record, target, card, metrics);
+            return clampPosition(null, card, position.x, position.y, metrics);
         }
 
         function applyCardPosition(card, position) {
@@ -383,26 +437,83 @@
             return getRecords().find(item => item.key === key) || null;
         }
 
+        function getInlineField(record, valueNode) {
+            const fieldKey = valueNode?.dataset?.mkMeterAnnotationField;
+            if (!fieldKey) return null;
+            if (record?.kind === 'meter') {
+                return meterDetailFields.find(item => item.key === fieldKey) || null;
+            }
+            if (record?.kind === 'asset') {
+                return {
+                    key: fieldKey,
+                    label: valueNode.textContent.trim() || fieldKey,
+                    type: fieldKey === 'remark' ? 'textarea' : fieldKey === 'commissioningDate' ? 'date' : 'text',
+                    maxLength: fieldKey === 'remark' ? 240 : 120,
+                    rows: fieldKey === 'remark' ? 3 : undefined
+                };
+            }
+            if (record?.kind === 'hak') {
+                return fieldKey === 'voltageLevel'
+                    ? { key: fieldKey, label: 'Spannungsebene', type: 'select' }
+                    : { key: fieldKey, label: 'Bemerkung', type: 'textarea', maxLength: 240, rows: 3 };
+            }
+            return null;
+        }
+
+        function getInlineValue(record, field) {
+            if (record?.kind === 'meter') return String((getMeterDetails(record.index) || {})[field.key] || '');
+            if (record?.kind === 'asset') return String(record.asset?.[field.key] || '');
+            if (record?.kind === 'hak') return String(record.hak?.[field.key] || '');
+            return '';
+        }
+
         function beginInlineEdit(card, valueNode) {
             if (!card || !valueNode || card.querySelector('.mk-meter-annotation-inline-editor')) return;
             const record = getRecordForCard(card);
-            if (record?.kind !== 'meter') return;
-            const fieldKey = valueNode.dataset.mkMeterAnnotationField;
-            const field = meterDetailFields.find(item => item.key === fieldKey);
+            const field = getInlineField(record, valueNode);
             if (!record || !field) return;
-            const details = getMeterDetails(record.index) || {};
             const before = captureHistoryState();
-            const control = getDocument().createElement(field.type === 'textarea' ? 'textarea' : 'input');
+            const previousCardStyle = {
+                width: card.style.width,
+                height: card.style.height,
+                maxHeight: card.style.maxHeight,
+                overflow: card.style.overflow
+            };
+            const wasInlineEditing = card.classList.contains('is-inline-editing');
+            const control = getDocument().createElement(field.type === 'textarea' ? 'textarea' : field.type === 'select' ? 'select' : 'input');
             control.className = 'mk-meter-annotation-inline-editor';
-            control.value = String(details[field.key] || '');
+            control.value = getInlineValue(record, field);
             control.setAttribute('aria-label', field.label);
             if (field.maxLength) control.maxLength = field.maxLength;
             if (field.rows) control.rows = field.rows;
-            if (field.type !== 'textarea') control.type = field.type;
-            if (field.inputmode) control.setAttribute('inputmode', field.inputmode);
-            if (field.pattern) control.setAttribute('pattern', field.pattern);
+            if (field.type === 'select') {
+                control.innerHTML = '<option value="low">Niederspannung</option><option value="medium">Mittelspannung</option>';
+            } else if (field.type !== 'textarea') {
+                control.type = field.type;
+            }
             valueNode.replaceWith(control);
+            card.classList.add('is-inline-editing');
+            // Die gespeicherte Größe bleibt unverändert. Nur für die Bearbeitung
+            // wird die Karte geöffnet, damit mehrzeilige Bemerkungen vollständig
+            // sichtbar sind und nicht in einem kleinen Textfeld scrollen müssen.
+            card.style.width = 'max-content';
+            card.style.height = 'auto';
+            card.style.maxHeight = 'none';
+            card.style.overflow = 'visible';
             let finished = false;
+            const restoreCardStyle = () => {
+                card.classList.toggle('is-inline-editing', wasInlineEditing);
+                card.style.width = previousCardStyle.width;
+                card.style.height = previousCardStyle.height;
+                card.style.maxHeight = previousCardStyle.maxHeight;
+                card.style.overflow = previousCardStyle.overflow;
+            };
+            const expandTextarea = () => {
+                if (finished || field.type !== 'textarea' || !control.isConnected) return;
+                control.style.height = 'auto';
+                control.style.overflowY = 'hidden';
+                control.style.height = `${Math.max(control.scrollHeight, 64)}px`;
+            };
             const cleanup = () => {
                 getDocument().removeEventListener('pointerdown', finishOnOutsidePointerDown, true);
             };
@@ -414,14 +525,24 @@
                 if (finished) return;
                 finished = true;
                 cleanup();
+                restoreCardStyle();
                 sync();
             };
             const commit = () => {
                 if (finished) return;
                 finished = true;
-                details[field.key] = control.value;
+                if (record.kind === 'meter') {
+                    const details = getMeterDetails(record.index) || {};
+                    details[field.key] = control.value;
+                } else if (record.kind === 'asset') {
+                    updateAssetField(record.asset, field.key, control.value);
+                } else if (record.kind === 'hak') {
+                    updateHakField(field.key, control.value);
+                }
                 cleanup();
+                restoreCardStyle();
                 if (before) recordHistory(before);
+                render();
                 refreshInlineStatus();
                 sync();
             };
@@ -441,7 +562,10 @@
             control.addEventListener('dblclick', event => event.stopPropagation());
             getDocument().addEventListener('pointerdown', finishOnOutsidePointerDown, true);
             control.focus();
-            if (control.select) control.select();
+            if (control.select && field.type !== 'select') control.select();
+            const requestFrame = getDocument()?.defaultView?.requestAnimationFrame || global.requestAnimationFrame;
+            if (typeof requestFrame === 'function') requestFrame(expandTextarea);
+            else expandTextarea();
         }
 
         function getCardMap(cards) {
@@ -486,14 +610,14 @@
                 const card = cardMap.get(record.key);
                 const target = getTargetElement(stage, record);
                 if (!card || !target) return;
-                const targetPoint = getTargetPoint(stage, target, metrics);
-                if (!targetPoint) return;
                 const cardX = Number.parseFloat(card.style.left) || 0;
                 const cardY = Number.parseFloat(card.style.top) || 0;
                 const cardWidth = card.offsetWidth || 160;
                 const cardHeight = card.offsetHeight || 60;
                 const cardCenterX = cardX + cardWidth / 2;
                 const cardCenterY = cardY + cardHeight / 2;
+                const targetPoint = getTargetEdgePoint(stage, target, metrics, { x: cardCenterX, y: cardCenterY });
+                if (!targetPoint) return;
                 const endX = cardCenterX >= targetPoint.x ? cardX : cardX + cardWidth;
                 const endY = Math.max(cardY + 10, Math.min(cardY + cardHeight - 10, targetPoint.y));
                 const controlX = targetPoint.x + (endX - targetPoint.x) * 0.45;
@@ -529,7 +653,29 @@
                 if (savedSize) applyCardSize(card, savedSize);
             });
             const renderedCards = getCardMap(parts.cards);
-            ensureAnnotationWorkspace(stage, getWorkspaceRequirements(stage, records, renderedCards));
+            let workspaceRequirements = getWorkspaceRequirements(stage, records, renderedCards);
+            const initialMetrics = getStageMetrics(stage);
+            records.forEach(record => {
+                if (getSavedPosition(record.key)?.manual) return;
+                const card = renderedCards.get(record.key);
+                const target = getTargetElement(stage, record);
+                if (!card || !target) return;
+                const candidate = getPreferredAutomaticCandidate(record, target, card, initialMetrics);
+                if (!candidate) return;
+                const next = getWorkspaceRequirements(stage, records, renderedCards, {
+                    x: candidate.x,
+                    y: candidate.y,
+                    width: card.offsetWidth || 160,
+                    height: card.offsetHeight || 60
+                });
+                workspaceRequirements = {
+                    left: Math.max(workspaceRequirements.left, next.left),
+                    right: Math.max(workspaceRequirements.right, next.right),
+                    top: Math.max(workspaceRequirements.top, next.top),
+                    bottom: Math.max(workspaceRequirements.bottom, next.bottom)
+                };
+            });
+            ensureAnnotationWorkspace(stage, workspaceRequirements);
             const metrics = getStageMetrics(stage);
             records.forEach(record => {
                 const card = findCard(parts.cards, record.key);
@@ -619,7 +765,49 @@
             event.preventDefault();
         }
 
+        function schedulePointerUpdate(kind, event) {
+            const active = kind === 'drag' ? activeDrag : activeResize;
+            if (!active || event.pointerId !== active.pointerId) return;
+            active.pending = {
+                pointerId: event.pointerId,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                preventDefault() {}
+            };
+            event.preventDefault();
+            if (active.frame !== null) return;
+            const view = getDocument().defaultView || global;
+            const run = () => {
+                active.frame = null;
+                const pending = active.pending;
+                active.pending = null;
+                if (!pending) return;
+                if (kind === 'drag') updatePositionFromPointer(pending);
+                else updateSizeFromPointer(pending);
+            };
+            active.frame = typeof view.requestAnimationFrame === 'function'
+                ? view.requestAnimationFrame(run)
+                : view.setTimeout(run, 16);
+            active.frameView = view;
+        }
+
+        function flushPointerUpdate(kind) {
+            const active = kind === 'drag' ? activeDrag : activeResize;
+            if (!active) return;
+            if (active.frame !== null) {
+                const view = active.frameView || getDocument().defaultView || global;
+                view.cancelAnimationFrame?.(active.frame);
+                view.clearTimeout?.(active.frame);
+                active.frame = null;
+            }
+            const pending = active.pending;
+            active.pending = null;
+            if (!pending) return;
+            if (kind === 'drag') updatePositionFromPointer(pending);
+            else updateSizeFromPointer(pending);
+        }
         function endPointerDrag(event) {
+            flushPointerUpdate('drag');
             if (!activeDrag || (event?.pointerId !== undefined && event.pointerId !== activeDrag.pointerId)) return;
             const card = activeDrag.card;
             if (card?.hasPointerCapture?.(activeDrag.pointerId)) card.releasePointerCapture(activeDrag.pointerId);
@@ -629,6 +817,7 @@
         }
 
         function endPointerResize(event) {
+            flushPointerUpdate('resize');
             if (!activeResize || (event?.pointerId !== undefined && event.pointerId !== activeResize.pointerId)) return;
             const card = activeResize.card;
             if (card?.hasPointerCapture?.(activeResize.pointerId)) card.releasePointerCapture(activeResize.pointerId);
@@ -716,7 +905,9 @@
                         startY: event.clientY,
                         startSize: saved,
                         history: captureHistoryState(),
-                        moved: false
+                        moved: false,
+                    pending: null,
+                    frame: null
                     };
                     card.classList.add('is-resizing');
                     card.setPointerCapture?.(event.pointerId);
@@ -743,15 +934,17 @@
                     startY: event.clientY,
                     startPosition: current,
                     history: captureHistoryState(),
-                    moved: false
+                    moved: false,
+                    pending: null,
+                    frame: null
                 };
                 card.classList.add('is-dragging');
                 card.setPointerCapture?.(event.pointerId);
                 event.preventDefault();
                 event.stopPropagation();
             });
-            layer.addEventListener('pointermove', updatePositionFromPointer, { passive: false });
-            layer.addEventListener('pointermove', updateSizeFromPointer, { passive: false });
+            layer.addEventListener('pointermove', event => schedulePointerUpdate('drag', event), { passive: false });
+            layer.addEventListener('pointermove', event => schedulePointerUpdate('resize', event), { passive: false });
             layer.addEventListener('pointerup', endPointerDrag);
             layer.addEventListener('pointerup', endPointerResize);
             layer.addEventListener('pointercancel', endPointerDrag);

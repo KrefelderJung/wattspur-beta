@@ -2668,6 +2668,21 @@ body.mk-printing .mk-canvas-stage {
     box-shadow: 0 5px 14px color-mix(in srgb, #000 30%, transparent);
 }
 
+/* Beim Bearbeiten darf eine mehrzeilige Bemerkung vorübergehend ausklappen.
+   Die gespeicherte Infobox-Größe wird nach dem Bearbeiten wiederhergestellt. */
+.mk-meter-annotation-card.is-inline-editing {
+    min-width: min(14rem, calc(100vw - 2rem));
+    max-width: min(30rem, calc(100vw - 2rem));
+    max-height: none;
+    overflow: visible;
+    z-index: 80;
+}
+
+.mk-meter-annotation-card.is-inline-editing .mk-meter-annotation-values {
+    max-height: none;
+    overflow: visible;
+}
+
 .mk-meter-annotation-values span {
     display: block;
     max-width: 100%;
@@ -2693,6 +2708,11 @@ body.mk-printing .mk-canvas-stage {
     font: inherit;
     line-height: 1.28;
     resize: vertical;
+}
+
+.mk-meter-annotation-card.is-inline-editing .mk-meter-annotation-inline-editor {
+    max-height: none;
+    overflow-y: hidden;
 }
 
 .mk-meter-annotation-inline-editor:focus {
@@ -7190,7 +7210,7 @@ html.mk-dragging .mk-meter-drop-hitbox {
 }
 
 .mk-project-meta-group--location .mk-project-meta-group-fields {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.6fr) minmax(7rem, 0.8fr) minmax(0, 1fr);
 }
 
 .mk-project-meta-group-fields > label {
@@ -7470,7 +7490,7 @@ html.mk-dragging .mk-meter-drop-hitbox {
     }
 
     .mk-project-meta-group--location .mk-project-meta-group-fields {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1.6fr) minmax(7rem, 0.8fr) minmax(0, 1fr);
     }
 }
 
@@ -7536,7 +7556,7 @@ html.mk-dragging .mk-meter-drop-hitbox {
     }
 
     body.mk-printing .mk-print-project-row:last-child {
-        grid-template-columns: 1.45fr 0.65fr 0.8fr 1fr;
+        grid-template-columns: 1.8fr 0.8fr 1fr;
     }
 
     body.mk-printing .mk-print-project-field {
@@ -7728,7 +7748,7 @@ body.mk-printing .mk-print-sheet {
 
     body.mk-printing .mk-meter-annotation-card {
         width: fit-content;
-        min-width: 0;
+        min-width: min-content !important;
         max-width: 260px;
         padding: 3px 5px;
         border: 1px dashed #64748b;
@@ -7738,6 +7758,13 @@ body.mk-printing .mk-print-sheet {
         font-size: 7pt;
         line-height: 1.2;
         box-shadow: none;
+    }
+
+    /* PDF-Infoboxen halten einzelne Wörter zusammen. Umbrüche erfolgen nur an Leerzeichen oder expliziten Zeilenwechseln. */
+    body.mk-printing .mk-meter-annotation-values span {
+        overflow-wrap: normal;
+        word-break: normal;
+        hyphens: none;
     }
 
     body.mk-printing .mk-annotation-dismiss {
@@ -7889,11 +7916,25 @@ body.mk-printing .mk-print-sheet {
     body.mk-printing .mk-meter-detail-value b { color: #0f172a; }
 
     body.mk-printing .mk-print-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
         margin-top: 0.55rem;
         padding-top: 0.45rem;
         border-top: 1px solid #cbd5e1;
         color: #64748b;
         font-size: 8pt;
+    }
+
+    body.mk-printing .mk-print-footer .mk-print-notice {
+        margin: 0.15rem 0 0;
+        padding: 0.25rem 0 0;
+        border: 0;
+        border-top: 1px solid #e2e8f0;
+        background: transparent;
+        color: #64748b;
+        font-size: 7pt;
+        line-height: 1.25;
     }
 }
 
@@ -8426,4 +8467,10 @@ body.mk-printing .mk-print-sheet {
         padding: 0.45rem 0.65rem;
         font-size: 0.7rem;
     }
+}
+
+
+/* Bildexport: gleicher Download-Anker wie beim PDF, ohne die Skizze zu verdecken. */
+.mk-export-image-button {
+    min-width: 4.5rem;
 }

@@ -2,20 +2,20 @@
 
 ## Ziel
 
-Der PDF-Export soll als kompakter One-Pager funktionieren. Er enthält nur den
-einheitlichen Hinweis, die Messskizze, die Projektangaben und einen optionalen
-Freitext-Kommentar. Prüfstatus, zusätzliche Hinweise und Objektdetails bleiben
+Der PDF-Export soll als kompakter One-Pager funktionieren. Er enthält die
+Messskizze, die Projektangaben und einen optionalen Freitext-Kommentar. Der
+einheitliche Hinweis steht platzsparend in der Fußzeile. Prüfstatus, zusätzliche Hinweise und Objektdetails bleiben
 außerhalb des reduzierten Exports. Ein sehr langer Kommentar darf auf eine
 zweite Druckseite umbrechen.
 
 ## Struktur
 
 1. Schlanke Kopfzeile mit Wattspur und Werkzeugbezeichnung
-2. Ein einheitlicher wichtiger Hinweis
-3. Messskizze
-4. Projektangaben in zwei kompakten Zeilen
-5. Optionaler Kommentar/Freitext
-6. Kleiner Exportvermerk
+2. Messskizze
+3. Projektangaben in zwei kompakten Zeilen
+4. Optionaler Kommentar/Freitext
+5. Kleiner Exportvermerk mit Orientierungshinweis
+
 
 ## Akzeptanzkriterien
 
@@ -23,7 +23,7 @@ zweite Druckseite umbrechen.
 - Warnhinweis, Messskizze und Projektangaben sind enthalten.
 - Ein eingegebener Kommentar/Freitext wird nach den Projektangaben ausgegeben.
 - Prüfstatus, zusätzliche Hinweise und Objektdetails sind im reduzierten Export nicht enthalten.
-- Die Projektangaben werden in zwei Zeilen dargestellt. Projektname, Referenz und Messkonzept stehen in der ersten Zeile. Straße, Hausnummer, PLZ und Ort stehen in der zweiten Zeile.
+- Die Projektangaben werden in zwei Zeilen dargestellt. Projektname, Referenz und Messkonzept stehen in der ersten Zeile. Straße und Hausnummer stehen gemeinsam mit PLZ und Ort in der zweiten Zeile.
 - Die Kopfzeile bleibt im normalen Dokumentfluss. Sie darf die Projektangaben oder die Skizze nicht überdecken.
 - Eine zu breite oder zu hohe Messskizze wird in der isolierten PDF-Kopie proportional auf eine sichere Druckbreite und Druckhöhe verkleinert. Die Editor-Bühne und ihre Leitungsgeometrie bleiben unverändert.
 - Die technische CSS-Klasse `mk-print-status` bleibt für die UI-Kompatibilität erhalten, wird im One-Pager aber ausgeblendet.

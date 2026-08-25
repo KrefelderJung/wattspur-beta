@@ -45,7 +45,9 @@ assert(styles.includes('.mk-meter-annotation-card') && styles.includes('.mk-mete
 assert(styles.includes('body.mk-printing .mk-meter-annotation-card'), 'PDF-Darstellung der Annotationskarten fehlt');
 assert(styles.includes('background: transparent;') && styles.includes('width: fit-content;'), 'Infokarten müssen transparent und in ihrer Breite inhaltsabhängig sein');
 assert(styles.includes('overflow-wrap: anywhere;'), 'Lange Zählerwerte müssen innerhalb der Infokarte umbrechen können');
-assert(annotation.includes('const above = targetPoint.y - cardHeight - 18;') && annotation.includes('const y = above >= 6 ? above'), 'Infokarten starten nicht bevorzugt oberhalb des Zählers');
+assert(annotation.includes('const gap = 48')
+    && annotation.includes('targetPoint.x - cardWidth - gap')
+    && annotation.includes('targetPoint.y + gap'), 'Infokarten starten nicht bevorzugt mit Abstand unten links');
 assert(exportModule.includes('mk-print-canvas-stage'), 'PDF-Export nutzt die Zeichenflächenkopie');
 assert(exportModule.includes('mk-meter-annotation-connectors')
     && exportModule.includes('contentMinX')
