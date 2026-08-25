@@ -13,6 +13,10 @@ assert(exportSource.includes("data:image/svg+xml;charset=utf-8,' + encodeURIComp
     'PNG-Export muss neben der Blob-Quelle eine lokale SVG-Data-URL als Edge-Fallback anbieten');
 assert(exportSource.includes('inlineOnlySvg') && exportSource.includes('safeCss'),
     'Der PNG-Export muss für file:// einen CSS-freien SVG-Fallback anbieten');
+assert(exportSource.includes('function renderNativeCards') && exportSource.includes('const nativeSvg'),
+    'Der PNG-Export muss für lokale Edge-Seiten einen reinen SVG-Fallback ohne foreignObject besitzen');
+assert(exportSource.includes("String(win?.location?.protocol || '') === 'file:'") && exportSource.includes('nativeSource'),
+    'Der native SVG-Fallback muss bei file:// zuerst versucht werden');
 assert(exportSource.includes("typeof canvasElement.toBlob === 'function'"),
     'PNG-Export muss toBlob sicher prüfen');
 assert(exportSource.includes("canvasElement.toDataURL('image/png')"),
@@ -21,9 +25,9 @@ assert(exportSource.includes('else fallback()'),
     'Ein fehlendes toBlob-Ergebnis muss ebenfalls auf den Data-URL-Fallback wechseln');
 assert(exportSource.includes('context.setTransform?.(1, 0, 0, 1, 0, 0)'),
     'PNG-Export muss beim zweiten Render-Versuch die Canvas-Transformation zurücksetzen');
-assert(/export\.js\?v=18/.test(indexSource),
+assert(/export\.js\?v=19/.test(indexSource),
     'Der PNG-Export muss mit dem aktualisierten Cache-Buster geladen werden');
-assert(/APP_VERSION\s*=\s*['"]2026\.08.25-beta\.375['"]/.test(workerSource),
+assert(workerSource.includes('2026.08.25-beta.376'),
     'Der Service Worker muss den Edge-kompatiblen Exportstand cachen');
 
 console.log('PNG-Edge-Fallback-Test: OK');

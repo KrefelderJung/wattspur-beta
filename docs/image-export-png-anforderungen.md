@@ -28,8 +28,10 @@ Infoboxen mit eingetragenen Werten werden zusammen mit den Objekten exportiert. 
 SVG-Icons werden mit ihrem Namespace exportiert. Infobox-Texte werden zusätzlich als native SVG-Schrift ausgegeben, damit sie auch in Browsern sichtbar bleiben, die Text in foreignObject unzuverlässig rendern. Sie erhalten im hellen PNG-Hintergrund einen eigenen dunklen Kontrast, ohne die Editorfarben zu verändern. Die native SVG-Schrift ist dabei die einzige sichtbare Textquelle; die HTML-Textkopie bleibt für die Kartenhöhe erhalten, wird aber vollständig transparent dargestellt. Die Beschriftung der Eigentumsgrenze wird im hellen Export transparent mit dunkler Schrift dargestellt, während die gestrichelte Grenze erhalten bleibt.
 ## Browser-Kompatibilität
 
-Der Bildexport verwendet zuerst eine lokale SVG-Blob-URL. Wenn Edge diese Quelle wegen
-foreignObject nicht rendert, wird automatisch eine lokale SVG-Data-URL versucht.
-Für die PNG-Erzeugung steht zusätzlich ein canvas.toDataURL("image/png")-Fallback
-bereit, falls canvas.toBlob fehlt oder keine Datei zurückliefert. Beide Wege bleiben
+Der Bildexport verwendet auf normalen Webseiten eine lokale SVG-Blob-URL. Wenn Edge
+diese Quelle wegen `foreignObject` nicht rendert, wird eine lokale SVG-Data-URL versucht.
+Auf `file://`-Seiten wird zuerst eine reine native SVG-Kopie ohne `foreignObject`
+verwendet. Dadurch bleibt der Export auch bei lokal geöffneten Dateien möglich.
+Für die PNG-Erzeugung steht zusätzlich ein `canvas.toDataURL("image/png")`-Fallback
+bereit, falls `canvas.toBlob` fehlt oder keine Datei zurückliefert. Alle Wege bleiben
 lokal im Browser und übertragen keine Skizzen- oder Projektdaten.

@@ -390,6 +390,147 @@
             return textParts.join('');
         }
 
+        /*
+         * Edge kann SVG-Fremdebenen (foreignObject) bei einer lokalen
+         * file://-Seite ablehnen. Für diesen Fall bauen wir die sichtbaren
+         * Karten zusätzlich als native SVG-Elemente auf. Das ist kein zweiter
+         * Fachrenderer: Leitungen und Positionen stammen weiterhin aus dem
+         * bestehenden DOM und der bestehenden Geometrie.
+         */
+        function escapeSvgAttribute(value) {
+            return escapeSvgText(value).replace(/`/g, '&#96;');
+        }
+
+        function getNativeElementBox(element, stage, scale, stageRect, minX, minY) {
+            const rect = element?.getBoundingClientRect?.();
+            if (!rect || !stageRect || rect.width <= 0 || rect.height <= 0) return null;
+            return {
+                x: (rect.left - stageRect.left) / Math.max(0.01, scale.x) - minX,
+                y: (rect.top - stageRect.top) / Math.max(0.01, scale.y) - minY,
+                width: rect.width / Math.max(0.01, scale.x),
+                height: rect.height / Math.max(0.01, scale.y)
+            };
+        }
+
+        function getNativePaint(element, win) {
+            const computed = win?.getComputedStyle?.(element);
+            const background = String(computed?.backgroundColor || '').trim();
+            const color = String(computed?.color || '#0f172a').trim();
+            const borderColor = String(computed?.borderTopColor || computed?.borderColor || color).trim();
+            const borderWidth = Number.parseFloat(computed?.borderTopWidth || computed?.borderWidth || '0') || 0;
+            const radius = Number.parseFloat(computed?.borderTopLeftRadius || computed?.borderRadius || '0') || 0;
+            return {
+                fill: background && background !== 'rgba(0, 0, 0, 0)' ? background : 'transparent',
+                color,
+                borderColor,
+                borderWidth,
+                radius
+            };
+        }
+
+        function renderNativeCardIcon(element, box, win) {
+            const icon = element?.querySelector?.('.mk-asset-icon');
+            if (!icon || !box) return '';
+            const iconRect = icon.getBoundingClientRect?.();
+            const cardRect = element.getBoundingClientRect?.();
+            if (!iconRect || !cardRect || !iconRect.width || !iconRect.height) return '';
+            const stage = element.closest?.('.mk-canvas-stage');
+            const scale = getStageCoordinateScale(stage);
+            const x = box.x + (iconRect.left - cardRect.left) / Math.max(0.01, scale.x);
+            const y = box.y + (iconRect.top - cardRect.top) / Math.max(0.01, scale.y);
+            const iconWidth = iconRect.width / Math.max(0.01, scale.x);
+            const iconHeight = iconRect.height / Math.max(0.01, scale.y);
+            const iconPaint = getNativePaint(icon, win);
+            if (icon.querySelector?.('.mk-battery-symbol')) {
+                const bodyX = x + iconWidth * 0.29;
+                const bodyY = y + iconHeight * 0.16;
+                const bodyWidth = iconWidth * 0.42;
+                const bodyHeight = iconHeight * 0.62;
+                return `<g stroke="${escapeSvgAttribute(iconPaint.color)}" fill="none" stroke-width="2"><rect x="${bodyX.toFixed(2)}" y="${bodyY.toFixed(2)}" width="${bodyWidth.toFixed(2)}" height="${bodyHeight.toFixed(2)}" rx="2"/><path d="M${(bodyX + bodyWidth * 0.28).toFixed(2)} ${(bodyY - 2).toFixed(2)}h${(bodyWidth * 0.44).toFixed(2)}"/><path d="M${(bodyX + bodyWidth * 0.2).toFixed(2)} ${(bodyY + bodyHeight * 0.72).toFixed(2)}h${(bodyWidth * 0.6).toFixed(2)}"/></g>`;
+            }
+            if (icon.querySelector?.('.mk-fan-symbol')) {
+                const cx = x + iconWidth / 2;
+                const cy = y + iconHeight / 2;
+                const blade = `M${cx.toFixed(2)} ${(cy - 1).toFixed(2)} C${(cx + 7).toFixed(2)} ${(cy - 9).toFixed(2)} ${(cx + 9).toFixed(2)} ${(cy - 2).toFixed(2)} ${(cx + 2).toFixed(2)} ${(cy + 2).toFixed(2)}Z`;
+                return `<g fill="${escapeSvgAttribute(iconPaint.color)}" opacity="0.9"><path d="${blade}"/><path d="${blade}" transform="rotate(120 ${cx.toFixed(2)} ${cy.toFixed(2)})"/><path d="${blade}" transform="rotate(240 ${cx.toFixed(2)} ${cy.toFixed(2)})"/><circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="2.2"/></g>`;
+            }
+            const svg = icon.querySelector?.('svg');
+            if (svg) {
+                const copy = svg.cloneNode(true);
+                copy.setAttribute('x', x.toFixed(2));
+                copy.setAttribute('y', y.toFixed(2));
+                copy.setAttribute('width', iconWidth.toFixed(2));
+                copy.setAttribute('height', iconHeight.toFixed(2));
+                copy.setAttribute('overflow', 'visible');
+                // Inline styles make the nested icon independent from the
+                // stylesheet context of the data URL.
+                copy.querySelectorAll?.('*').forEach(child => {
+                    const style = win?.getComputedStyle?.(child);
+                    if (!style) return;
+                    ['fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'opacity'].forEach(property => {
+                        const value = style.getPropertyValue(property);
+                        if (value) child.setAttribute(property, value);
+                    });
+                });
+                return copy.outerHTML;
+            }
+            const text = String(icon.textContent || '').trim();
+            if (!text) {
+                const cx = x + iconWidth / 2;
+                const cy = y + iconHeight / 2;
+                return `<text x="${cx.toFixed(2)}" y="${(cy + 5).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="${escapeSvgAttribute(iconPaint.color)}">•</text>`;
+            }
+            return `<text x="${(x + iconWidth / 2).toFixed(2)}" y="${(y + iconHeight / 2 + 5).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="${escapeSvgAttribute(iconPaint.color)}">${escapeSvgText(text)}</text>`;
+        }
+
+        function renderNativeCards(stage, width, height, minX, minY, win) {
+            const stageRect = stage?.getBoundingClientRect?.();
+            const scale = getStageCoordinateScale(stage);
+            if (!stageRect) return '';
+            const parts = [];
+            const cardSelector = '.mk-hak-node,.mk-meter-node,.mk-generation-meter,.mk-asset-card,.mk-ownership-label,.mk-meter-annotation-card';
+            stage.querySelectorAll?.(cardSelector).forEach(element => {
+                if (element.closest?.('.mk-annotation-dismiss, .mk-annotation-resize-handle')) return;
+                if (element.matches?.('.mk-meter-annotation-card') && !hasAnnotationContent(element)) return;
+                const box = getNativeElementBox(element, stage, scale, stageRect, minX, minY);
+                if (!box) return;
+                const paint = getNativePaint(element, win);
+                const isLabel = element.matches?.('.mk-ownership-label');
+                const isAnnotation = element.matches?.('.mk-meter-annotation-card');
+                const isMeter = element.matches?.('.mk-meter-node,.mk-generation-meter');
+                const isHak = element.matches?.('.mk-hak-node');
+                const fill = isLabel ? 'transparent' : paint.fill;
+                const stroke = isAnnotation ? '#0f8bd0' : (paint.borderWidth > 0 ? paint.borderColor : 'none');
+                const strokeWidth = isAnnotation ? 1.2 : Math.max(0, paint.borderWidth);
+                const dash = isAnnotation ? ' stroke-dasharray="4 4"' : '';
+                const radius = isAnnotation ? 8 : Math.max(0, paint.radius);
+                parts.push(`<rect x="${box.x.toFixed(2)}" y="${box.y.toFixed(2)}" width="${box.width.toFixed(2)}" height="${box.height.toFixed(2)}" rx="${radius.toFixed(2)}" fill="${escapeSvgAttribute(fill)}" stroke="${escapeSvgAttribute(stroke)}" stroke-width="${strokeWidth}"${dash} />`);
+                if (element.matches?.('.mk-asset-card')) {
+                    parts.push(renderNativeCardIcon(element, box, win));
+                    const badge = element.querySelector?.('.mk-icon-object-sequence');
+                    const badgeRect = badge?.getBoundingClientRect?.();
+                    if (badgeRect) {
+                        const bx = (badgeRect.left - stageRect.left) / Math.max(0.01, scale.x) - minX;
+                        const by = (badgeRect.top - stageRect.top) / Math.max(0.01, scale.y) - minY;
+                        const bp = getNativePaint(badge, win);
+                        parts.push(`<circle cx="${(bx + badgeRect.width / 2 / scale.x).toFixed(2)}" cy="${(by + badgeRect.height / 2 / scale.y).toFixed(2)}" r="${Math.max(7, badgeRect.width / scale.x / 2).toFixed(2)}" fill="${escapeSvgAttribute(bp.fill)}" stroke="${escapeSvgAttribute(bp.borderColor)}" stroke-width="1" />`);
+                        parts.push(`<text x="${(bx + badgeRect.width / scale.x / 2).toFixed(2)}" y="${(by + badgeRect.height / scale.y / 2 + 4).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="${escapeSvgAttribute(bp.color)}">${escapeSvgText(badge.textContent)}</text>`);
+                    }
+                }
+                const text = isLabel
+                    ? String(element.textContent || '').trim()
+                    : isMeter || isHak
+                        ? String(element.textContent || '').trim()
+                        : '';
+                if (text) {
+                    const fontSize = isLabel ? 10 : isHak ? 15 : 12;
+                    const fontWeight = isLabel ? 500 : 700;
+                    parts.push(`<text x="${(box.x + box.width / 2).toFixed(2)}" y="${(box.y + box.height / 2 + fontSize * 0.35).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="${fontSize}" font-weight="${fontWeight}" fill="${escapeSvgAttribute(paint.color)}">${escapeSvgText(text)}</text>`);
+                }
+            });
+            return parts.join('');
+        }
+
         function getTopologyMarkup() {
             const canvas = getElements().canvas;
             const stage = canvas?.querySelector?.('.mk-canvas-stage');
@@ -750,6 +891,7 @@
             const nativeAnnotationConnectors = annotationConnectorMarkup
                 ? `<g class="mk-export-annotation-connectors" transform="translate(${-minX} ${-minY})">${annotationConnectorMarkup}</g>`
                 : '';
+            const nativeCards = renderNativeCards(stage, width, height, minX, minY, win);
             const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
                 <style>${safeCss}</style>
                 ${background}
@@ -760,6 +902,18 @@
                 <foreignObject x="0" y="0" width="${width}" height="${height}">
                     <div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:visible;background:transparent;">${clone.outerHTML}</div>
                 </foreignObject>
+                <text x="${Math.max(8, width - 8)}" y="${Math.max(12, height - 8)}" text-anchor="end" font-family="Arial, sans-serif" font-size="8" fill="#64748b">Wattspur.de</text>
+            </svg>`;
+            // Reiner SVG-Fallback für lokale Edge-Seiten. Er enthält keine
+            // Fremdobjekte und kann deshalb auch dann in Canvas gezeichnet
+            // werden, wenn Edge foreignObject im file://-Modus blockiert.
+            const nativeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+                ${background}
+                ${connectorStyle}
+                ${nativeConnectors}
+                ${nativeAnnotationConnectors}
+                ${nativeCards}
+                ${annotationTextMarkup}
                 <text x="${Math.max(8, width - 8)}" y="${Math.max(12, height - 8)}" text-anchor="end" font-family="Arial, sans-serif" font-size="8" fill="#64748b">Wattspur.de</text>
             </svg>`;
             // Edge kann SVG-Blobs mit foreignObject je nach Dokumentmodus ablehnen.
@@ -773,10 +927,14 @@
             // foreignObject. Die Inline-Stile der Klone bleiben erhalten, daher
             // versuchen wir zusätzlich eine CSS-freie lokale SVG-Data-URL.
             const inlineOnlySvg = svg.replace('<style>' + safeCss + '</style>', '');
+            const nativeSource = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(nativeSvg);
+            const isLocalFile = String(win?.location?.protocol || '') === 'file:';
             const svgSources = [
+                ...(isLocalFile ? [nativeSource] : []),
                 svgUrl,
                 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
-                'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(inlineOnlySvg)
+                'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(inlineOnlySvg),
+                ...(!isLocalFile ? [nativeSource] : [])
             ];
             const loadImage = source => new Promise((resolve, reject) => {
                 const image = doc.createElement('img');
