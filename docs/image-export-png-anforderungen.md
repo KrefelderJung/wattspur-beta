@@ -26,3 +26,10 @@ Der PNG-Export verwendet einen hellen, undurchsichtigen Hintergrund. Sammelschie
 Infoboxen mit eingetragenen Werten werden zusammen mit den Objekten exportiert. Leere, nur aktivierte Infoboxen werden aus der Exportkopie entfernt. Ihr sichtbarer Rahmen und ihre Verbindungslinien erweitern den Bildausschnitt nur dort, wo tatsächlich Inhalt vorhanden ist. Eine im Editor manuell vergrößerte Infobox wird im PNG auf die tatsächlich benötigte Texthöhe zurückgeführt, damit kein leerer Raum entsteht. Die Editor-Steuerknöpfe zum Ausblenden und Vergrößern der Infoboxen sowie die Löschschaltflächen der Objekte werden nicht mit ausgegeben.
 
 SVG-Icons werden mit ihrem Namespace exportiert. Infobox-Texte werden zusätzlich als native SVG-Schrift ausgegeben, damit sie auch in Browsern sichtbar bleiben, die Text in foreignObject unzuverlässig rendern. Sie erhalten im hellen PNG-Hintergrund einen eigenen dunklen Kontrast, ohne die Editorfarben zu verändern. Die native SVG-Schrift ist dabei die einzige sichtbare Textquelle; die HTML-Textkopie bleibt für die Kartenhöhe erhalten, wird aber vollständig transparent dargestellt. Die Beschriftung der Eigentumsgrenze wird im hellen Export transparent mit dunkler Schrift dargestellt, während die gestrichelte Grenze erhalten bleibt.
+## Browser-Kompatibilität
+
+Der Bildexport verwendet zuerst eine lokale SVG-Blob-URL. Wenn Edge diese Quelle wegen
+foreignObject nicht rendert, wird automatisch eine lokale SVG-Data-URL versucht.
+Für die PNG-Erzeugung steht zusätzlich ein canvas.toDataURL("image/png")-Fallback
+bereit, falls canvas.toBlob fehlt oder keine Datei zurückliefert. Beide Wege bleiben
+lokal im Browser und übertragen keine Skizzen- oder Projektdaten.

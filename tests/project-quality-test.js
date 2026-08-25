@@ -203,7 +203,7 @@ localCoreFiles.forEach(relativePath => {
     assert(!networkApiPattern.test(source), `${relativePath}: Netzwerk-API gehört nicht in den lokalen Messkonzept-Kern`);
 });
 assert(serviceWorkerText.includes('event.request.mode === \'navigate\''), 'service-worker.js: Offline-/Navigationsstrategie fehlt');
-assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && serviceWorkerText.includes("'lizenz.html'") && /beta\.373/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
+assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && serviceWorkerText.includes("'lizenz.html'") && /beta\.374/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
 
 // Der Netzanschluss ist ein eigenes, bearbeitbares Objekt. Diese Prüfungen
 // verhindern, dass ein späteres Refactoring den HAK nur visuell anklickbar

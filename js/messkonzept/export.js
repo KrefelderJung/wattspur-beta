@@ -762,32 +762,78 @@
                 </foreignObject>
                 <text x="${Math.max(8, width - 8)}" y="${Math.max(12, height - 8)}" text-anchor="end" font-family="Arial, sans-serif" font-size="8" fill="#64748b">Wattspur.de</text>
             </svg>`;
-            const urlApi = win?.URL || URL;
+            // Edge kann SVG-Blobs mit foreignObject je nach Dokumentmodus ablehnen.
+            // Deshalb stehen zwei lokale Bildquellen bereit: Blob-URL und Data-URL.
+            // Beide bleiben vollständig lokal und senden keine Daten an einen Server.
+            const urlApi = win?.URL || global.URL;
+            if (!urlApi?.createObjectURL) throw new Error('Der Browser stellt keine lokale Bild-URL bereit.');
             const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
             const svgUrl = urlApi.createObjectURL(svgBlob);
-            try {
+            const svgSources = [
+                svgUrl,
+                'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
+            ];
+            const loadImage = source => new Promise((resolve, reject) => {
                 const image = doc.createElement('img');
                 image.decoding = 'async';
-                await new Promise((resolve, reject) => {
-                    image.onload = resolve;
-                    image.onerror = () => reject(new Error('Die Skizze konnte nicht als Bild gerendert werden.'));
-                    image.src = svgUrl;
-                });
+                image.onload = () => resolve(image);
+                image.onerror = () => reject(new Error('Die Skizze konnte nicht als Bild gerendert werden.'));
+                image.src = source;
+            });
+            const canvasToDataUrlBlob = canvasElement => {
+                const dataUrl = canvasElement.toDataURL('image/png');
+                const encoded = dataUrl.split(',')[1] || '';
+                const decode = global.atob || win?.atob;
+                if (!decode) throw new Error('Base64-Dekodierung ist nicht verfügbar.');
+                const binary = decode(encoded);
+                const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+                return new Blob([bytes], { type: 'image/png' });
+            };
+            const canvasToPngBlob = canvasElement => new Promise((resolve, reject) => {
+                const fallback = () => {
+                    try {
+                        resolve(canvasToDataUrlBlob(canvasElement));
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                if (typeof canvasElement.toBlob === 'function') {
+                    try {
+                        canvasElement.toBlob(blob => {
+                            if (blob) resolve(blob);
+                            else fallback();
+                        }, 'image/png');
+                        return;
+                    } catch (error) {
+                        console.warn('Canvas.toBlob nicht verfügbar, verwende Data-URL-Fallback.', error);
+                    }
+                }
+                fallback();
+            });
+            try {
                 const pixelRatio = Math.min(2, Math.max(1, Number(options.pixelRatio) || 2));
                 const imageCanvas = doc.createElement('canvas');
                 imageCanvas.width = Math.max(1, Math.round(width * pixelRatio));
                 imageCanvas.height = Math.max(1, Math.round(height * pixelRatio));
                 const context = imageCanvas.getContext('2d');
                 if (!context) throw new Error('Der Browser stellt keine Canvas-Ausgabe bereit.');
-                context.scale(pixelRatio, pixelRatio);
-                context.drawImage(image, 0, 0, width, height);
-                const pngBlob = await new Promise((resolve, reject) => {
-                    imageCanvas.toBlob(blob => {
-                        if (blob) resolve(blob);
-                        else reject(new Error('Die PNG-Datei konnte nicht erzeugt werden.'));
-                    }, 'image/png');
-                });
-                const fileName = `${getSuggestedFileName()}-skizze.png`;
+                let pngBlob = null;
+                let lastError = null;
+                for (const source of svgSources) {
+                    try {
+                        const image = await loadImage(source);
+                        context.setTransform?.(1, 0, 0, 1, 0, 0);
+                        context.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+                        context.scale(pixelRatio, pixelRatio);
+                        context.drawImage(image, 0, 0, width, height);
+                        pngBlob = await canvasToPngBlob(imageCanvas);
+                        if (pngBlob) break;
+                    } catch (error) {
+                        lastError = error;
+                    }
+                }
+                if (!pngBlob) throw lastError || new Error('Die PNG-Datei konnte nicht erzeugt werden.');
+                const fileName = getSuggestedFileName() + '-skizze.png';
                 const link = doc.createElement('a');
                 const pngUrl = urlApi.createObjectURL(pngBlob);
                 link.href = pngUrl;
@@ -807,6 +853,7 @@
                 urlApi.revokeObjectURL(svgUrl);
             }
         }
+
         function downloadPdf(options = {}) {
             const doc = getDocument();
             const win = getWindow();

@@ -198,6 +198,7 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`tests/pdf-object-tables-test.js`** | Prüft gemeinsame Zähler- und Anlagentabellen, leere Zellen und den Verzicht auf wiederholte Einzelkarten im PDF. |
 | **`docs/pdf-objektbezeichnung-anforderungen.md`** | Legt fest, dass feste Anlagenarten vor der frei vergebenen Objektbezeichnung stehen. |
 | **`tests/pdf-wire-geometry-test.js`** | Prüft die maßstabsgetreue PDF-Bühne und verhindert doppelte Leitungen aus HTML/CSS und SVG. |
+| **	ests/png-edge-fallback-test.js** | Prüft lokale SVG- und Canvas-Fallbacks für den PNG-Export in Edge. |
 | **`tests/project-meta-toggle-test.js`** | Prüft den sichtbaren, barrierearmen Aufklappbereich für Projektangaben. |
 | **`tests/drop-target-hitbox-test.js`** | Prüft einheitliche, nur beim Ziehen aktive Drop-Trefferflächen für Zähler und Anlagen. |
 | **`tests/toolbar-responsive-test.js`** | Prüft das kontrollierte Umbrechen der Messkonzept-Bediengruppen bei schmalen Spalten. |
@@ -212,6 +213,7 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`docs/pdf-status-layout-anforderungen.md`** | Dokumentiert die Akzeptanzkriterien für PDF-Hinweis, Messskizze, Projektangaben und optionalen Kommentar. |
 | **`docs/pdf-dateiname-anforderungen.md`** | Dokumentiert den vorgeschlagenen PDF-Dateinamen aus Straße und Hausnummer. |
 | **`docs/pdf-wire-single-source-anforderungen.md`** | Dokumentiert die eindeutige SVG-Leitungsquelle und den Schutz vor doppelten PDF-Leitungen. |
+| **docs/image-export-png-anforderungen.md** | Anforderungen für einen lokalen PNG-Bildexport mit sichtbaren Leitungen, Infoboxen und Edge-Fallbacks. |
 | **`docs/palette-border-anforderungen.md`** | Anforderungen für den einheitlichen blauen Rand aller Bausteine in der Auswahlleiste. |
 | **`docs/tablet-pointer-dnd-anforderungen.md`** | Anforderungen für Finger- und Stift-Drag-and-Drop auf Android- und iOS-Tablets. |
 | **`docs/startkarten-ueberschriften-anforderungen.md`** | Anforderungen für eine einmalige Messkonzeptüberschrift ohne doppelte Objektzeile auf Vorlagekarten. |
