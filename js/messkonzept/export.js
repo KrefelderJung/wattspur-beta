@@ -634,6 +634,36 @@
             return parts.join('');
         }
 
+        function renderNativeHakMeterWire(stage, minX, minY) {
+            const stageRect = stage?.getBoundingClientRect?.();
+            const scale = getStageCoordinateScale(stage);
+            const supplyColumn = stage?.querySelector?.('.mk-supply-column');
+            const hak = supplyColumn?.querySelector?.(':scope > .mk-hak-node');
+            const meter = supplyColumn?.querySelector?.(':scope > .mk-meter-layout .mk-meter-node, :scope > .mk-meter-layout .mk-meter-detail-card');
+            if (!stageRect || !hak || !meter) return '';
+
+            // Die HTML/CSS-Leitung zwischen HAK und dem ersten Zähler liegt
+            // nicht in .mk-connector-layer. Im nativen Edge-Fallback wird sie
+            // deshalb als derselbe fachliche Leitungsabschnitt gezeichnet.
+            const hakAnchor = hak.querySelector?.('.mk-hak-editor-icon, .mk-transformer-symbol, b') || hak;
+            const hakRect = hakAnchor.getBoundingClientRect?.();
+            const meterRect = meter.getBoundingClientRect?.();
+            if (!hakRect || !meterRect || hakRect.width <= 0 || meterRect.width <= 0) return '';
+
+            const x1 = (hakRect.left + hakRect.width / 2 - stageRect.left) / Math.max(0.01, scale.x) - minX;
+            const y1 = (hakRect.bottom - stageRect.top) / Math.max(0.01, scale.y) - minY;
+            const x2 = (meterRect.left + meterRect.width / 2 - stageRect.left) / Math.max(0.01, scale.x) - minX;
+            const y2 = (meterRect.top - stageRect.top) / Math.max(0.01, scale.y) - minY;
+            if (![x1, y1, x2, y2].every(Number.isFinite) || y2 <= y1) return '';
+
+            const stroke = '#38bdf8';
+            if (Math.abs(x2 - x1) < 0.5) {
+                return `<line class="mk-export-hak-meter-wire" x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${stroke}" stroke-width="2" stroke-linecap="round" />`;
+            }
+            const bendY = y1 + Math.max(0, (y2 - y1) / 2);
+            return `<path class="mk-export-hak-meter-wire" d="M ${x1.toFixed(2)} ${y1.toFixed(2)} V ${bendY.toFixed(2)} H ${x2.toFixed(2)} V ${y2.toFixed(2)}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />`;
+        }
+
         function getTopologyMarkup() {
             const canvas = getElements().canvas;
             const stage = canvas?.querySelector?.('.mk-canvas-stage');
@@ -994,6 +1024,7 @@
             const nativeAnnotationConnectors = annotationConnectorMarkup
                 ? `<g class="mk-export-annotation-connectors" transform="translate(${-minX} ${-minY})">${annotationConnectorMarkup}</g>`
                 : '';
+            const nativeHakMeterWire = renderNativeHakMeterWire(stage, minX, minY);
             const nativeCards = renderNativeCards(stage, width, height, minX, minY, win);
             const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
                 <style>${safeCss}</style>
@@ -1015,6 +1046,7 @@
                 ${connectorStyle}
                 ${nativeConnectors}
                 ${nativeAnnotationConnectors}
+                ${nativeHakMeterWire}
                 ${nativeCards}
                 ${annotationTextMarkup}
                 <text x="${Math.max(8, width - 8)}" y="${Math.max(12, height - 8)}" text-anchor="end" font-family="Arial, sans-serif" font-size="8" fill="#64748b">Wattspur.de</text>

@@ -20,7 +20,7 @@ Datei enthält ausschließlich die Messskizze mit einem kleinen Hinweis auf `Wat
 Der PNG-Export muss die sichtbaren HTML-Objekte, ihre Positionen und Farben lokal in die Exportkopie übernehmen. Eine SVG-Zwischenstufe darf nicht dazu führen, dass die Skizze im fertigen PNG fast leer bleibt.
 
 ## Leitungs- und Hintergrunddarstellung
-Der PNG-Export verwendet einen hellen, undurchsichtigen Hintergrund. Sammelschienen, Leitungswege und Knoten werden als eigene native SVG-Ebene in die PNG-Zwischenstufe übernommen, damit die Verbindungen auch außerhalb der HTML-Darstellung sichtbar bleiben.
+Der PNG-Export verwendet einen hellen, undurchsichtigen Hintergrund. Sammelschienen, Leitungswege und Knoten werden als eigene native SVG-Ebene in die PNG-Zwischenstufe übernommen, damit die Verbindungen auch außerhalb der HTML-Darstellung sichtbar bleiben. Die Zuleitung vom Hausanschlusskasten zum ersten Zähler wird im nativen Fallback ebenfalls ausdrücklich gezeichnet, weil sie im Editor als CSS-Leitung außerhalb der dynamischen SVG-Leitungsebene liegt.
 
 ## Infoboxen und sichtbarer Rahmen
 Infoboxen mit eingetragenen Werten werden zusammen mit den Objekten exportiert. Leere, nur aktivierte Infoboxen werden aus der Exportkopie entfernt. Ihr sichtbarer Rahmen und ihre Verbindungslinien erweitern den Bildausschnitt nur dort, wo tatsächlich Inhalt vorhanden ist. Eine im Editor manuell vergrößerte Infobox wird im PNG auf die tatsächlich benötigte Texthöhe zurückgeführt, damit kein leerer Raum entsteht. Die Editor-Steuerknöpfe zum Ausblenden und Vergrößern der Infoboxen sowie die Löschschaltflächen der Objekte werden nicht mit ausgegeben.
