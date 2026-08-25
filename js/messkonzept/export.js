@@ -416,19 +416,63 @@
             const computed = win?.getComputedStyle?.(element);
             const background = String(computed?.backgroundColor || '').trim();
             const color = String(computed?.color || '#0f172a').trim();
-            const borderColor = String(computed?.borderTopColor || computed?.borderColor || color).trim();
+            const objectBorder = String(computed?.getPropertyValue?.('--mk-object-border') || '').trim();
+            const borderColor = String(computed?.borderColor || computed?.borderTopColor || objectBorder || color).trim();
             const borderWidth = Number.parseFloat(computed?.borderTopWidth || computed?.borderWidth || '0') || 0;
             const radius = Number.parseFloat(computed?.borderTopLeftRadius || computed?.borderRadius || '0') || 0;
+            const className = String(element?.className?.baseVal || element?.className || '');
+            const semanticFill = className.includes('mk-hak-node') || className.includes('mk-hak-editor-icon')
+                ? '#334155'
+                : className.includes('mk-meter') || className.includes('mk-generation-meter')
+                    ? '#7dd3fc'
+                    : className.includes('mk-device-wallbox')
+                        ? '#f3b2c2'
+                        : className.includes('mk-device-heatpump')
+                            ? '#86efac'
+                            : className.includes('mk-device-climate')
+                                ? '#bfdbfe'
+                                : className.includes('storage')
+                                    ? '#c4b5fd'
+                                    : className.includes('generation')
+                                        ? '#fde68a'
+                                        : className.includes('nsh')
+                                            ? '#fed7aa'
+                                            : className.includes('consumer')
+                                                ? '#94a3b8'
+                                                : '';
+            const isTransparent = !background || /^rgba?\(0,\s*0,\s*0,\s*0\)$/.test(background) || background === 'transparent';
             return {
-                fill: background && background !== 'rgba(0, 0, 0, 0)' ? background : 'transparent',
+                // Simple mode keeps the article itself transparent and puts
+                // the visible colour on .mk-asset-icon. The native renderer
+                // therefore needs a semantic fallback for transparent
+                // containers, otherwise only the icon glyph survives.
+                fill: !isTransparent ? background : semanticFill || 'transparent',
                 color,
                 borderColor,
                 borderWidth,
-                radius
+                radius,
+                objectBorder: objectBorder || ''
             };
         }
 
-        function renderNativeCardIcon(element, box, win) {
+        function renderNativeChildCard(child, stage, scale, stageRect, minX, minY, win) {
+            const box = getNativeElementBox(child, stage, scale, stageRect, minX, minY);
+            if (!box) return { markup: '', box: null, paint: null };
+            const paint = getNativePaint(child, win);
+            const stroke = paint.borderWidth > 0
+                ? paint.borderColor
+                : paint.objectBorder && paint.objectBorder !== 'none'
+                    ? paint.objectBorder
+                    : 'none';
+            const strokeWidth = paint.borderWidth > 0 || stroke !== 'none' ? 1 : 0;
+            return {
+                box,
+                paint,
+                markup: `<rect x="${box.x.toFixed(2)}" y="${box.y.toFixed(2)}" width="${box.width.toFixed(2)}" height="${box.height.toFixed(2)}" rx="${Math.max(0, paint.radius).toFixed(2)}" fill="${escapeSvgAttribute(paint.fill)}" stroke="${escapeSvgAttribute(stroke)}" stroke-width="${strokeWidth}" />`
+            };
+        }
+
+        function renderNativeCardIcon(element, box, win, context = {}) {
             const icon = element?.querySelector?.('.mk-asset-icon');
             if (!icon || !box) return '';
             const iconRect = icon.getBoundingClientRect?.();
@@ -436,51 +480,84 @@
             if (!iconRect || !cardRect || !iconRect.width || !iconRect.height) return '';
             const stage = element.closest?.('.mk-canvas-stage');
             const scale = getStageCoordinateScale(stage);
-            const x = box.x + (iconRect.left - cardRect.left) / Math.max(0.01, scale.x);
-            const y = box.y + (iconRect.top - cardRect.top) / Math.max(0.01, scale.y);
+            const stageRect = context.stageRect || stage?.getBoundingClientRect?.();
+            const iconX = box.x + (iconRect.left - cardRect.left) / Math.max(0.01, scale.x);
+            const iconY = box.y + (iconRect.top - cardRect.top) / Math.max(0.01, scale.y);
             const iconWidth = iconRect.width / Math.max(0.01, scale.x);
             const iconHeight = iconRect.height / Math.max(0.01, scale.y);
+            // The coloured .mk-asset-icon is the card. Glyphs such as the
+            // battery, fan and Wallbox SVG are smaller children inside it.
+            // Using the outer card dimensions for the glyph made these icons
+            // fill the complete card in the native fallback.
+            const glyph = icon.querySelector?.('svg,.mk-battery-symbol,.mk-fan-symbol');
+            const glyphRect = glyph?.getBoundingClientRect?.() || iconRect;
+            const x = box.x + (glyphRect.left - cardRect.left) / Math.max(0.01, scale.x);
+            const y = box.y + (glyphRect.top - cardRect.top) / Math.max(0.01, scale.y);
+            const glyphWidth = glyphRect.width / Math.max(0.01, scale.x);
+            const glyphHeight = glyphRect.height / Math.max(0.01, scale.y);
             const iconPaint = getNativePaint(icon, win);
+            const iconStroke = iconPaint.borderWidth > 0
+                ? iconPaint.borderColor
+                : iconPaint.objectBorder && iconPaint.objectBorder !== 'none'
+                    ? iconPaint.objectBorder
+                    : 'none';
+            const iconStrokeWidth = iconStroke === 'none' ? 0 : 1;
+            const parts = [`<rect x="${iconX.toFixed(2)}" y="${iconY.toFixed(2)}" width="${iconWidth.toFixed(2)}" height="${iconHeight.toFixed(2)}" rx="${Math.max(0, iconPaint.radius).toFixed(2)}" fill="${escapeSvgAttribute(iconPaint.fill)}" stroke="${escapeSvgAttribute(iconStroke)}" stroke-width="${iconStrokeWidth}" />`];
             if (icon.querySelector?.('.mk-battery-symbol')) {
-                const bodyX = x + iconWidth * 0.29;
-                const bodyY = y + iconHeight * 0.16;
-                const bodyWidth = iconWidth * 0.42;
-                const bodyHeight = iconHeight * 0.62;
-                return `<g stroke="${escapeSvgAttribute(iconPaint.color)}" fill="none" stroke-width="2"><rect x="${bodyX.toFixed(2)}" y="${bodyY.toFixed(2)}" width="${bodyWidth.toFixed(2)}" height="${bodyHeight.toFixed(2)}" rx="2"/><path d="M${(bodyX + bodyWidth * 0.28).toFixed(2)} ${(bodyY - 2).toFixed(2)}h${(bodyWidth * 0.44).toFixed(2)}"/><path d="M${(bodyX + bodyWidth * 0.2).toFixed(2)} ${(bodyY + bodyHeight * 0.72).toFixed(2)}h${(bodyWidth * 0.6).toFixed(2)}"/></g>`;
+                const bodyX = x + glyphWidth * 0.08;
+                const bodyY = y + glyphHeight * 0.08;
+                const bodyWidth = glyphWidth * 0.84;
+                const bodyHeight = glyphHeight * 0.84;
+                parts.push(`<g stroke="${escapeSvgAttribute(iconPaint.color)}" fill="none" stroke-width="2"><rect x="${bodyX.toFixed(2)}" y="${bodyY.toFixed(2)}" width="${bodyWidth.toFixed(2)}" height="${bodyHeight.toFixed(2)}" rx="2"/><path d="M${(bodyX + bodyWidth * 0.28).toFixed(2)} ${(bodyY - 2).toFixed(2)}h${(bodyWidth * 0.44).toFixed(2)}"/><path d="M${(bodyX + bodyWidth * 0.2).toFixed(2)} ${(bodyY + bodyHeight * 0.72).toFixed(2)}h${(bodyWidth * 0.6).toFixed(2)}"/></g>`);
+                return parts.join('');
             }
             if (icon.querySelector?.('.mk-fan-symbol')) {
-                const cx = x + iconWidth / 2;
-                const cy = y + iconHeight / 2;
+                const cx = x + glyphWidth / 2;
+                const cy = y + glyphHeight / 2;
                 const blade = `M${cx.toFixed(2)} ${(cy - 1).toFixed(2)} C${(cx + 7).toFixed(2)} ${(cy - 9).toFixed(2)} ${(cx + 9).toFixed(2)} ${(cy - 2).toFixed(2)} ${(cx + 2).toFixed(2)} ${(cy + 2).toFixed(2)}Z`;
-                return `<g fill="${escapeSvgAttribute(iconPaint.color)}" opacity="0.9"><path d="${blade}"/><path d="${blade}" transform="rotate(120 ${cx.toFixed(2)} ${cy.toFixed(2)})"/><path d="${blade}" transform="rotate(240 ${cx.toFixed(2)} ${cy.toFixed(2)})"/><circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="2.2"/></g>`;
+                const fanRadius = Math.max(5, Math.min(glyphWidth, glyphHeight) / 2 - 2);
+                parts.push(`<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${fanRadius.toFixed(2)}" fill="none" stroke="${escapeSvgAttribute(iconPaint.color)}" stroke-width="1.5"/><g fill="${escapeSvgAttribute(iconPaint.color)}" opacity="0.9"><path d="${blade}"/><path d="${blade}" transform="rotate(120 ${cx.toFixed(2)} ${cy.toFixed(2)})"/><path d="${blade}" transform="rotate(240 ${cx.toFixed(2)} ${cy.toFixed(2)})"/><circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="2.2"/></g>`);
+                return parts.join('');
             }
             const svg = icon.querySelector?.('svg');
             if (svg) {
                 const copy = svg.cloneNode(true);
                 copy.setAttribute('x', x.toFixed(2));
                 copy.setAttribute('y', y.toFixed(2));
-                copy.setAttribute('width', iconWidth.toFixed(2));
-                copy.setAttribute('height', iconHeight.toFixed(2));
+                copy.setAttribute('width', glyphWidth.toFixed(2));
+                copy.setAttribute('height', glyphHeight.toFixed(2));
                 copy.setAttribute('overflow', 'visible');
+                copy.setAttribute('color', iconPaint.color);
+                copy.setAttribute('fill', 'none');
+                copy.setAttribute('stroke', iconPaint.color);
                 // Inline styles make the nested icon independent from the
                 // stylesheet context of the data URL.
                 copy.querySelectorAll?.('*').forEach(child => {
                     const style = win?.getComputedStyle?.(child);
                     if (!style) return;
                     ['fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'opacity'].forEach(property => {
-                        const value = style.getPropertyValue(property);
+                        let value = style.getPropertyValue(property);
+                        if (value === 'currentColor') value = iconPaint.color;
+                        if (child.classList?.contains('mk-charge-body') || child.classList?.contains('mk-charge-cable') || child.classList?.contains('mk-charge-pin')) {
+                            if (property === 'stroke') value = iconPaint.color;
+                            if (property === 'fill') value = 'none';
+                        }
+                        if (child.classList?.contains('mk-charge-bolt') && (property === 'fill' || property === 'stroke')) value = '#facc15';
                         if (value) child.setAttribute(property, value);
                     });
                 });
-                return copy.outerHTML;
+                parts.push(copy.outerHTML);
+                return parts.join('');
             }
             const text = String(icon.textContent || '').trim();
             if (!text) {
-                const cx = x + iconWidth / 2;
-                const cy = y + iconHeight / 2;
-                return `<text x="${cx.toFixed(2)}" y="${(cy + 5).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="${escapeSvgAttribute(iconPaint.color)}">•</text>`;
+                const cx = x + glyphWidth / 2;
+                const cy = y + glyphHeight / 2;
+                parts.push(`<text x="${cx.toFixed(2)}" y="${(cy + 5).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="${escapeSvgAttribute(iconPaint.color)}">•</text>`);
+                return parts.join('');
             }
-            return `<text x="${(x + iconWidth / 2).toFixed(2)}" y="${(y + iconHeight / 2 + 5).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="${escapeSvgAttribute(iconPaint.color)}">${escapeSvgText(text)}</text>`;
+            parts.push(`<text x="${(iconX + iconWidth / 2).toFixed(2)}" y="${(iconY + iconHeight / 2 + 5).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="${escapeSvgAttribute(iconPaint.color)}">${escapeSvgText(text)}</text>`);
+            return parts.join('');
         }
 
         function renderNativeCards(stage, width, height, minX, minY, win) {
@@ -504,9 +581,15 @@
                 const strokeWidth = isAnnotation ? 1.2 : Math.max(0, paint.borderWidth);
                 const dash = isAnnotation ? ' stroke-dasharray="4 4"' : '';
                 const radius = isAnnotation ? 8 : Math.max(0, paint.radius);
-                parts.push(`<rect x="${box.x.toFixed(2)}" y="${box.y.toFixed(2)}" width="${box.width.toFixed(2)}" height="${box.height.toFixed(2)}" rx="${radius.toFixed(2)}" fill="${escapeSvgAttribute(fill)}" stroke="${escapeSvgAttribute(stroke)}" stroke-width="${strokeWidth}"${dash} />`);
+                // HAK and the compact meter node keep their visible card on
+                // a child element. Drawing the transparent parent as well
+                // would create a square halo behind the rounded card.
+                const drawOuterCard = !isHak && !element.matches?.('.mk-meter-node');
+                if (drawOuterCard) {
+                    parts.push(`<rect x="${box.x.toFixed(2)}" y="${box.y.toFixed(2)}" width="${box.width.toFixed(2)}" height="${box.height.toFixed(2)}" rx="${radius.toFixed(2)}" fill="${escapeSvgAttribute(fill)}" stroke="${escapeSvgAttribute(stroke)}" stroke-width="${strokeWidth}"${dash} />`);
+                }
                 if (element.matches?.('.mk-asset-card')) {
-                    parts.push(renderNativeCardIcon(element, box, win));
+                    parts.push(renderNativeCardIcon(element, box, win, { stageRect }));
                     const badge = element.querySelector?.('.mk-icon-object-sequence');
                     const badgeRect = badge?.getBoundingClientRect?.();
                     if (badgeRect) {
@@ -519,9 +602,27 @@
                 }
                 const text = isLabel
                     ? String(element.textContent || '').trim()
-                    : isMeter || isHak
+                    : (isMeter && !element.querySelector?.('.mk-meter-symbol'))
                         ? String(element.textContent || '').trim()
                         : '';
+                if (isHak) {
+                    const visibleHak = element.querySelector?.('.mk-hak-editor-icon, b');
+                    const child = visibleHak ? renderNativeChildCard(visibleHak, stage, scale, stageRect, minX, minY, win) : null;
+                    if (child?.markup) {
+                        parts.push(child.markup);
+                        const label = String(visibleHak.textContent || '').trim();
+                        if (label) parts.push(`<text x="${(child.box.x + child.box.width / 2).toFixed(2)}" y="${(child.box.y + child.box.height / 2 + 5).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="${escapeSvgAttribute(child.paint.color)}">${escapeSvgText(label)}</text>`);
+                    }
+                }
+                if (element.matches?.('.mk-meter-node')) {
+                    const visibleMeter = element.querySelector?.('.mk-meter-symbol');
+                    const child = visibleMeter ? renderNativeChildCard(visibleMeter, stage, scale, stageRect, minX, minY, win) : null;
+                    if (child?.markup) {
+                        parts.push(child.markup);
+                        const label = String(visibleMeter.textContent || '').trim();
+                        if (label) parts.push(`<text x="${(child.box.x + child.box.width / 2).toFixed(2)}" y="${(child.box.y + child.box.height / 2 + 4).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="${escapeSvgAttribute(child.paint.color)}">${escapeSvgText(label)}</text>`);
+                    }
+                }
                 if (text) {
                     const fontSize = isLabel ? 10 : isHak ? 15 : 12;
                     const fontWeight = isLabel ? 500 : 700;

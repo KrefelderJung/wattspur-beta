@@ -32,6 +32,12 @@ Der Bildexport verwendet auf normalen Webseiten eine lokale SVG-Blob-URL. Wenn E
 diese Quelle wegen `foreignObject` nicht rendert, wird eine lokale SVG-Data-URL versucht.
 Auf `file://`-Seiten wird zuerst eine reine native SVG-Kopie ohne `foreignObject`
 verwendet. Dadurch bleibt der Export auch bei lokal geöffneten Dateien möglich.
+In dieser nativen Kopie werden die sichtbaren inneren Karten von HAK, Zählern und
+Objekten ausdrücklich mitgezeichnet. Das ist im einfachen Editor-Modus notwendig,
+weil dort die äußere Karte transparent ist und die semantische Farbe am inneren
+Symbol sitzt. Kleine Glyphen wie Wallbox, Speicher und Wärmepumpe werden aus ihrer
+tatsächlichen Symbolgröße positioniert, damit sie nicht auf die ganze Karte
+aufgezogen werden.
 Für die PNG-Erzeugung steht zusätzlich ein `canvas.toDataURL("image/png")`-Fallback
 bereit, falls `canvas.toBlob` fehlt oder keine Datei zurückliefert. Alle Wege bleiben
 lokal im Browser und übertragen keine Skizzen- oder Projektdaten.
