@@ -1067,17 +1067,28 @@
             const nativeSvgUrl = urlApi.createObjectURL(nativeSvgBlob);
             const isLocalFile = String(win?.location?.protocol || '') === 'file:';
             const svgSources = [
-                ...(isLocalFile ? [nativeSvgUrl, nativeSource] : []),
+                nativeSvgUrl,
+                nativeSource,
                 svgUrl,
                 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
-                'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(inlineOnlySvg),
-                ...(!isLocalFile ? [nativeSvgUrl, nativeSource] : [])
+                'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(inlineOnlySvg)
             ];
             const loadImage = source => new Promise((resolve, reject) => {
                 const image = doc.createElement('img');
                 image.decoding = 'async';
-                image.onload = () => resolve(image);
-                image.onerror = () => reject(new Error('Die Skizze konnte nicht als Bild gerendert werden.'));
+                let settled = false;
+                const finish = (callback, value) => {
+                    if (settled) return;
+                    settled = true;
+                    win.clearTimeout?.(timeout);
+                    callback(value);
+                };
+                const timeout = win.setTimeout?.(
+                    () => finish(reject, new Error('Die Bildquelle hat nicht rechtzeitig geladen.')),
+                    4000
+                );
+                image.onload = () => finish(resolve, image);
+                image.onerror = () => finish(reject, new Error('Die Skizze konnte nicht als Bild gerendert werden.'));
                 image.src = source;
             });
             const canvasToDataUrlBlob = canvasElement => {

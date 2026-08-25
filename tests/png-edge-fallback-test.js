@@ -29,6 +29,10 @@ assert(exportSource.includes('urlApi.revokeObjectURL(nativeSvgUrl)'),
     'Die native SVG-Blob-URL muss nach dem Export freigegeben werden');
 assert(exportSource.includes('Eine Canvas bleibt nach einem SecurityError dauerhaft') && exportSource.includes("const imageCanvas = doc.createElement('canvas');"),
     'Jede PNG-Quelle muss eine frische Canvas erhalten, damit ein tainted-canvas-Fehler den Fallback nicht blockiert');
+assert(exportSource.includes('Die Bildquelle hat nicht rechtzeitig geladen') && exportSource.includes('win.setTimeout'),
+    'PNG-Quellen müssen ein Ladezeitlimit besitzen, damit ein Browser ohne load/error-Ereignis den Export nicht aufhängt');
+assert(/const svgSources = \[[\s\S]*?nativeSvgUrl,[\s\S]*?nativeSource,/.test(exportSource),
+    'Der fremdobjektfreie native SVG-Fallback muss vor der foreignObject-Quelle versucht werden');
 assert(exportSource.includes("typeof canvasElement.toBlob === 'function'"),
     'PNG-Export muss toBlob sicher prüfen');
 assert(exportSource.includes("canvasElement.toDataURL('image/png')"),
@@ -37,9 +41,9 @@ assert(exportSource.includes('else fallback()'),
     'Ein fehlendes toBlob-Ergebnis muss ebenfalls auf den Data-URL-Fallback wechseln');
 assert(exportSource.includes('context.setTransform?.(1, 0, 0, 1, 0, 0)'),
     'PNG-Export muss beim zweiten Render-Versuch die Canvas-Transformation zurücksetzen');
-assert(/export\.js\?v=24/.test(indexSource),
+assert(/export\.js\?v=25/.test(indexSource),
     'Der PNG-Export muss mit dem aktualisierten Cache-Buster geladen werden');
-assert(workerSource.includes('2026.08.25-beta.381'),
+assert(workerSource.includes('2026.08.25-beta.382'),
     'Der Service Worker muss den Edge-kompatiblen Exportstand cachen');
 
 console.log('PNG-Edge-Fallback-Test: OK');
