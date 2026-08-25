@@ -115,10 +115,9 @@
             if (!documentRef || !elements.canvas) return;
             initialized = true;
 
-            bindClick('btn-open-messkonzept-card', event => {
-                event.preventDefault();
-                call('showScreen');
-            });
+            // The landing card is a real link to the clean configurator route.
+            // Do not intercept it here: replacing the screen in-place leaves the
+            // browser at index.html#top and makes direct sharing/bookmarking fail.
             bindClick('btn-mk-back', () => call('hideScreen'));
             bindClick('btn-mk-start-free', () => call('startFree'));
             bindClick('btn-mk-change-start', () => call('showStartPanel'));

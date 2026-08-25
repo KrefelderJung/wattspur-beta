@@ -1168,23 +1168,6 @@ html[data-tool="lastgang"] .landing-main {
     padding: 2.3rem 0 4rem;
 }
 
-.mk-intro {
-    margin-bottom: 1.6rem;
-}
-
-.mk-intro h1 {
-    margin: 0;
-    font-size: clamp(2rem, 4vw, 3.2rem);
-    letter-spacing: -0.045em;
-    line-height: 1.05;
-}
-
-.mk-intro p {
-    max-width: 980px;
-    margin-top: 0.8rem;
-    color: var(--text-muted);
-}
-
 .mk-fachhinweis {
     display: flex;
     align-items: flex-start;

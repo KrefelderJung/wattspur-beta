@@ -1063,13 +1063,15 @@
             // versuchen wir zusätzlich eine CSS-freie lokale SVG-Data-URL.
             const inlineOnlySvg = svg.replace('<style>' + safeCss + '</style>', '');
             const nativeSource = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(nativeSvg);
+            const nativeSvgBlob = new Blob([nativeSvg], { type: 'image/svg+xml;charset=utf-8' });
+            const nativeSvgUrl = urlApi.createObjectURL(nativeSvgBlob);
             const isLocalFile = String(win?.location?.protocol || '') === 'file:';
             const svgSources = [
-                ...(isLocalFile ? [nativeSource] : []),
+                ...(isLocalFile ? [nativeSvgUrl, nativeSource] : []),
                 svgUrl,
                 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
                 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(inlineOnlySvg),
-                ...(!isLocalFile ? [nativeSource] : [])
+                ...(!isLocalFile ? [nativeSvgUrl, nativeSource] : [])
             ];
             const loadImage = source => new Promise((resolve, reject) => {
                 const image = doc.createElement('img');
@@ -1149,6 +1151,7 @@
                 return false;
             } finally {
                 urlApi.revokeObjectURL(svgUrl);
+                urlApi.revokeObjectURL(nativeSvgUrl);
             }
         }
 
