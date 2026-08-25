@@ -1112,16 +1112,22 @@
             });
             try {
                 const pixelRatio = Math.min(2, Math.max(1, Number(options.pixelRatio) || 2));
-                const imageCanvas = doc.createElement('canvas');
-                imageCanvas.width = Math.max(1, Math.round(width * pixelRatio));
-                imageCanvas.height = Math.max(1, Math.round(height * pixelRatio));
-                const context = imageCanvas.getContext('2d');
-                if (!context) throw new Error('Der Browser stellt keine Canvas-Ausgabe bereit.');
+                const canvasWidth = Math.max(1, Math.round(width * pixelRatio));
+                const canvasHeight = Math.max(1, Math.round(height * pixelRatio));
                 let pngBlob = null;
                 let lastError = null;
                 for (const source of svgSources) {
                     try {
                         const image = await loadImage(source);
+                        // Eine Canvas bleibt nach einem SecurityError dauerhaft
+                        // verunreinigt. Jeder SVG-Versuch bekommt deshalb eine
+                        // frische Canvas, damit ein foreignObject-Fehlschlag
+                        // den nativen Fallback nicht ebenfalls blockiert.
+                        const imageCanvas = doc.createElement('canvas');
+                        imageCanvas.width = canvasWidth;
+                        imageCanvas.height = canvasHeight;
+                        const context = imageCanvas.getContext('2d');
+                        if (!context) throw new Error('Der Browser stellt keine Canvas-Ausgabe bereit.');
                         context.setTransform?.(1, 0, 0, 1, 0, 0);
                         context.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
                         context.scale(pixelRatio, pixelRatio);

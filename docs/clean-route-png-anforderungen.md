@@ -16,6 +16,8 @@ funktionieren, wenn ein Browser eingebettete SVG-Fremdinhalte einschränkt.
 - Der PNG-Export versucht neben der normalen SVG-Darstellung eine native,
   fremdobjektfreie SVG-Quelle über Blob-URL und Data-URL.
 - Alle temporären Objekt-URLs werden nach dem Export wieder freigegeben.
+- Jeder SVG-Versuch verwendet eine eigene Canvas, damit ein blockierter
+  `foreignObject`-Versuch den nativen Fallback nicht unbrauchbar macht.
 - Das Verhalten bleibt lokal (`file:`), online (`https:`), in Edge und in
   Chromium-basierten Browsern testbar.
 
