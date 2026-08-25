@@ -33,6 +33,21 @@ dürfen bei Kopien oder Weitergaben nicht entfernt werden.
 KI-unterstützte Grafiken und Logos sind als solche nicht als exklusiv oder in
 einem bestimmten Umfang urheberrechtlich geschützt zugesichert.
 
+## Sicher veröffentlichen
+
+Vor einem Push wird der Remote-Stand geprüft und der vollständige Testbestand
+muss grün sein. Der sichere Ablauf verändert keine Dateien automatisch:
+
+```text
+npm run release:check   # nur prüfen
+npm run release:push    # prüfen und bewusst pushen
+```
+
+Wenn GitHub inzwischen neuer ist, beendet Wattspur den Ablauf kontrolliert.
+Dann zuerst die Änderungen mit `git pull --rebase origin main` zusammenführen,
+Konflikte prüfen, die Tests erneut ausführen und den Ablauf wiederholen. Ein
+Force-Push ist absichtlich nicht vorgesehen.
+
 ## Lokaler Start
 
 Für Service Worker, Web Worker und Offline-Cache sollte Wattspur über einen
