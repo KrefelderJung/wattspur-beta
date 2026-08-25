@@ -421,7 +421,9 @@
             const borderWidth = Number.parseFloat(computed?.borderTopWidth || computed?.borderWidth || '0') || 0;
             const radius = Number.parseFloat(computed?.borderTopLeftRadius || computed?.borderRadius || '0') || 0;
             const className = String(element?.className?.baseVal || element?.className || '');
-            const semanticFill = className.includes('mk-hak-node') || className.includes('mk-hak-editor-icon')
+            const semanticFill = className.includes('mk-meter-annotation-card') || className.includes('mk-ownership-label')
+                ? ''
+                : className.includes('mk-hak-node') || className.includes('mk-hak-editor-icon')
                 ? '#334155'
                 : className.includes('mk-meter') || className.includes('mk-generation-meter')
                     ? '#7dd3fc'
@@ -576,7 +578,7 @@
                 const isAnnotation = element.matches?.('.mk-meter-annotation-card');
                 const isMeter = element.matches?.('.mk-meter-node,.mk-generation-meter');
                 const isHak = element.matches?.('.mk-hak-node');
-                const fill = isLabel ? 'transparent' : paint.fill;
+                const fill = isLabel || isAnnotation ? 'transparent' : paint.fill;
                 const stroke = isAnnotation ? '#0f8bd0' : (paint.borderWidth > 0 ? paint.borderColor : 'none');
                 const strokeWidth = isAnnotation ? 1.2 : Math.max(0, paint.borderWidth);
                 const dash = isAnnotation ? ' stroke-dasharray="4 4"' : '';
