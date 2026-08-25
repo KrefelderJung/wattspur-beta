@@ -809,15 +809,6 @@
         }
         function downloadPdf(options = {}) {
             const doc = getDocument();
-            // Alte HTML/CSS-Anker sind für die Bedienung nötig, würden im PNG
-            // aber zusätzlich zu den nativen SVG-Leitungen gezeichnet. Das
-            // erzeugt die sichtbaren Doppel- und Versatzlinien.
-            clone.querySelectorAll?.([
-                '.mk-connection-line',
-                '.mk-rail-meter-link',
-                '.mk-zone-wrap-strand',
-                '.mk-rail-junction-anchor'
-            ].join(',')).forEach(element => element.remove());
             const win = getWindow();
             const stand = getExportStand();
             const wrapper = doc.createElement('div');
