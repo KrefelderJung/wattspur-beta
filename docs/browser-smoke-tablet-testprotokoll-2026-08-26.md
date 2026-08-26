@@ -20,6 +20,7 @@ Stand ausgeführt.
 | Freier Messkonzept-Konfigurator | Bestanden |
 | HAK-Objektfenster öffnet | Bestanden |
 | PNG-Download meldet Erfolg | Bestanden |
+| PNG-Export im lokalen Browserlauf nach langer Infobox-Zeile | Bestanden |
 | Fußzeilenlinks in den Werkzeugen vorhanden | Bestanden |
 | Responsive Prüfung 1024 x 768 | Bestanden |
 | Responsive Prüfung 768 x 1024 | Bestanden |
@@ -31,10 +32,14 @@ meldete den erfolgreichen Download auch in der schmalen Ansicht. Die Prüfung
 belegt damit die Erreichbarkeit und die grundlegende Bedienbarkeit, aber noch
 nicht die vollständige Touch-Güte auf echter Hardware.
 
+Die Export-Paritätsprüfung ergänzt außerdem eine Absicherung für sehr lange,
+zusammenhängende Wörter. Solche Wörter werden in der nativen PNG-Schriftquelle
+jetzt in lesbare Zeilen geteilt, damit sie nicht zeichenweise untereinander
+erscheinen.
+
 ## Offen vor einer endgültigen Tablet-Freigabe
 
 - manueller Pointer- und Drag-Test im aktuellen Microsoft Edge
 - manueller Drag-Test auf einem Android-Tablet
 - manueller Drag-Test auf einem iPad
 - PDF-Druckdialog einmal auf Edge und Mozilla bestätigen
-

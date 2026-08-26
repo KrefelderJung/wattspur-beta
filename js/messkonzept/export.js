@@ -331,6 +331,17 @@
                 .replace(/'/g, '&apos;');
         }
 
+        function splitLongAnnotationToken(token, maxCharacters) {
+            const text = String(token ?? '');
+            const limit = Math.max(1, Number(maxCharacters) || 1);
+            if (text.length <= limit) return [text];
+            const parts = [];
+            for (let index = 0; index < text.length; index += limit) {
+                parts.push(text.slice(index, index + limit));
+            }
+            return parts;
+        }
+
         function wrapAnnotationText(value, maxCharacters) {
             const text = String(value ?? '').split(String.fromCharCode(13)).join('').trim();
             if (!text) return [];
@@ -341,17 +352,19 @@
                 const lines = [];
                 let line = '';
                 words.forEach(word => {
-                    if (!line) {
-                        line = word;
-                        return;
-                    }
-                    const candidate = line + ' ' + word;
-                    if (candidate.length <= limit) {
-                        line = candidate;
-                        return;
-                    }
-                    lines.push(line);
-                    line = word;
+                    splitLongAnnotationToken(word, limit).forEach(part => {
+                        if (!line) {
+                            line = part;
+                            return;
+                        }
+                        const candidate = line + ' ' + part;
+                        if (candidate.length <= limit) {
+                            line = candidate;
+                            return;
+                        }
+                        lines.push(line);
+                        line = part;
+                    });
                 });
                 if (line) lines.push(line);
                 return lines;
