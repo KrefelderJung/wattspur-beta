@@ -53,5 +53,14 @@ notwendig, aber die CI-Prüfung nach dem Push bleibt ebenfalls verbindlich.
 - [x] Veröffentlichungs-Skript mit Preflight und Post-Push-Verifikation ergänzt.
 - [x] Automatischen Schutztest ergänzt.
 - [x] Anforderungen und Wiederherstellungsablauf dokumentiert.
-- [ ] Nach einer weiteren Änderung den Ablauf einmal absichtlich mit einem
+- [x] Nach einer weiteren Änderung den Ablauf einmal absichtlich mit einem
       veralteten Remote-Stand testen.
+
+## Testnachweis: veralteter Remote-Stand (26.08.2026)
+
+Der Schutz wurde in einem temporären lokalen Bare-Repository geprüft. Dabei
+enthielt der Remote-Branch einen zusätzlichen Commit und der lokale Branch
+gleichzeitig einen eigenen neuen Commit. `scripts/publish.ps1` hat nach dem
+Fetch mit Exit-Code 1 abgebrochen und ausdrücklich zum Rebase aufgefordert.
+Es wurde kein Push und kein Force-Push ausgeführt. Der echte Wattspur-Remote
+wurde bei dieser Simulation nicht verändert.
