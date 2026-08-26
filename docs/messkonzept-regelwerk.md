@@ -92,7 +92,7 @@ damit keine Aussage über die Einhaltung der übrigen technischen
 Anschlussbedingungen.
 
 **Quellen und Grenzen für `MK-KWK-001` und `MK-KWK-002`:** Das [BAFA-Merkblatt
-zu KWK-Anlagen](https://www.bafa.de/SharedDocs/Downloads/DE/Energie/kwk_anlagen_mb_zulassung.pdf?__blob=publicationFile&v=3)
+zu KWK-Anlagen](https://www.bafa.de/SharedDocs/Downloads/DE/Energie/kwk_anlagen_mb_zulassung.pdf?__blob=publicationFile&v=4)
 beschreibt die Zulassung als Voraussetzung für einen KWK-Zuschlag und verweist
 auf das elektronische Anzeigeverfahren für neue Anlagen bis 50 kWel. Das
 [KWKG 2025](https://www.gesetze-im-internet.de/kwkg_2016/BJNR249810015.html)

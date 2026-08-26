@@ -38,11 +38,11 @@
     const KWK_BAFA_LINKS = Object.freeze([
         Object.freeze({
             label: 'BAFA: KWK-Zulassung und Merkblatt',
-            href: 'https://www.bafa.de/SharedDocs/Downloads/DE/Energie/kwk_anlagen_mb_zulassung.pdf?__blob=publicationFile&v=3'
+            href: 'https://www.bafa.de/SharedDocs/Downloads/DE/Energie/kwk_anlagen_mb_zulassung.pdf?__blob=publicationFile&v=4'
         }),
         Object.freeze({
             label: 'BAFA: Anzeigeverfahren bis 50 kWel',
-            href: 'https://www.bafa.de/SharedDocs/Downloads/DE/Energie/kwk_anlagen_50kw_mb_elektronisches_anzeigeverfahren.html?nn=1465576'
+            href: 'https://www.bafa.de/SharedDocs/Downloads/DE/Energie/kwk_anlagen_50kw_mb_elektronisches_anzeigeverfahren.pdf?__blob=publicationFile&v=2'
         })
     ]);
 
