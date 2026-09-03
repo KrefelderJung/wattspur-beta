@@ -112,6 +112,7 @@ const requiredFiles = [
     'tests/empty-data-editor-test.js',
     'tests/xlsx-import-test.js',
     'tests/xlsx-import-runtime-test.js',
+    'tests/png-parallel-hak-wire-test.js',
     'docs/architecture-smoke-test.md',
     'docs/messkonzept-regelwerk.md',
     'docs/messkonzept-startvorlagen.md',
@@ -147,7 +148,8 @@ const requiredFiles = [
     'docs/lastgang-start-info-anforderungen.md',
     'docs/lastgang-importformat-footer-anforderungen.md',
     'docs/empty-data-editor-anforderungen.md',
-    'docs/logo-navigation-anforderungen.md'
+    'docs/logo-navigation-anforderungen.md',
+    'docs/png-parallel-hak-wire-anforderungen.md'
 ];
 requiredFiles.forEach(relativePath => assert(fs.existsSync(absolute(relativePath)), `${relativePath}: erwartete Qualitätsdatei fehlt`));
 
@@ -203,7 +205,7 @@ localCoreFiles.forEach(relativePath => {
     assert(!networkApiPattern.test(source), `${relativePath}: Netzwerk-API gehört nicht in den lokalen Messkonzept-Kern`);
 });
 assert(serviceWorkerText.includes('event.request.mode === \'navigate\''), 'service-worker.js: Offline-/Navigationsstrategie fehlt');
-assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && serviceWorkerText.includes("'lizenz.html'") && /beta\.384/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
+assert(serviceWorkerText.includes('js/messkonzept/model.js') && !serviceWorkerText.includes('js/messkonzept/mieterstrom.js') && serviceWorkerText.includes("'lizenz.html'") && /beta\.385/.test(serviceWorkerText), 'service-worker.js: vereinfachter Modellstand muss im neuen Offline-Cache enthalten sein');
 
 // Der Netzanschluss ist ein eigenes, bearbeitbares Objekt. Diese Prüfungen
 // verhindern, dass ein späteres Refactoring den HAK nur visuell anklickbar

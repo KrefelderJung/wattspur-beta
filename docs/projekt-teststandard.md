@@ -74,6 +74,7 @@ Dieses Dokument ist der Spickzettel für die technische Qualitätssicherung. Ein
    node tests/pruefstatus-collapsible-test.js
    node tests/mieterstrom-objects-test.js
    node tests/icon-object-number-badges-test.js
+   node tests/png-parallel-hak-wire-test.js
    ```
 
    Der SEO-Test prüft zusätzlich, dass alle öffentlichen Seiten und die beiden

@@ -19,6 +19,18 @@ assert(exportSource.includes('function renderNativeChildCard') && exportSource.i
     'Der native SVG-Fallback muss sichtbare HAK-, Zähler- und Objektkarten auch im einfachen Modus zeichnen');
 assert(exportSource.includes('function renderNativeHakMeterWire') && exportSource.includes('mk-export-hak-meter-wire'),
     'Der native SVG-Fallback muss die Leitung zwischen HAK und erstem Zähler mitzeichnen');
+assert(exportSource.includes('function renderNativeParallelHakWires')
+    && exportSource.includes('mk-export-parallel-hak-feed')
+    && exportSource.includes('mk-export-parallel-bus')
+    && exportSource.includes('mk-export-parallel-branch-wire'),
+    'Der native SVG-Fallback muss HAK, Feed, Parallelbus und alle Parallelzweige verbinden');
+assert(/renderNativeParallelHakWires\(stage, minX, minY\)/.test(exportSource)
+    && /\$\{nativeParallelHakWires\}/.test(exportSource),
+    'Die Parallel-Zuleitung muss tatsächlich in die native SVG-Quelle eingesetzt werden');
+assert(exportSource.includes(".mk-parallel-hak-head")
+    && exportSource.includes(".mk-parallel-feed")
+    && exportSource.includes(".mk-parallel-branch-connector"),
+    'Die Parallel-Zuleitung muss ihre Geometrie aus den gerenderten DOM-Ankern ableiten');
 assert(exportSource.includes('function renderNativeOwnershipMarker') && exportSource.includes('mk-export-ownership-marker') && exportSource.includes('mk-ownership-marker'),
     'Der native SVG-Fallback muss die gestrichelte Eigentumsgrenze mitzeichnen');
 assert(exportSource.includes("querySelector?.('svg,.mk-battery-symbol,.mk-fan-symbol')"),
@@ -43,9 +55,9 @@ assert(exportSource.includes('else fallback()'),
     'Ein fehlendes toBlob-Ergebnis muss ebenfalls auf den Data-URL-Fallback wechseln');
 assert(exportSource.includes('context.setTransform?.(1, 0, 0, 1, 0, 0)'),
     'PNG-Export muss beim zweiten Render-Versuch die Canvas-Transformation zurücksetzen');
-assert(/export\.js\?v=27/.test(indexSource),
+assert(/export\.js\?v=28/.test(indexSource),
     'Der PNG-Export muss mit dem aktualisierten Cache-Buster geladen werden');
-assert(workerSource.includes('2026.08.25-beta.384'),
+assert(workerSource.includes('2026.09.03-beta.385'),
     'Der Service Worker muss den Edge-kompatiblen Exportstand cachen');
 
 console.log('PNG-Edge-Fallback-Test: OK');

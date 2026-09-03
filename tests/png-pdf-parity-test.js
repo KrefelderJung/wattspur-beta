@@ -16,6 +16,9 @@ assert(exportSource.includes('function renderPrintSheet') && exportSource.includ
     'PDF- und PNG-Export müssen weiterhin getrennte, aber vorhandene Ausgabepfade besitzen');
 assert(exportSource.includes('renderNativeHakMeterWire') && exportSource.includes('renderNativeOwnershipMarker'),
     'PNG-Export muss dieselben HAK-/Eigentumsgrenzen wie die PDF-Geometrie berücksichtigen');
+assert(exportSource.includes('renderNativeParallelHakWires')
+    && exportSource.includes('mk-export-parallel-bus'),
+    'PNG-Export muss die HAK-Zuleitung der Parallelmessung in der nativen SVG-Geometrie berücksichtigen');
 assert(exportSource.includes('mk-meter-annotation-connectors') && exportSource.includes('mk-print-canvas-stage'),
     'Infobox-Verbindungen müssen in PNG und PDF aus der gemeinsamen Exportbühne stammen');
 assert(requirements.includes('zeichenweise untereinander') && requirements.includes('Leitungsgeometrie'),

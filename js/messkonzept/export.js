@@ -647,6 +647,71 @@
             return parts.join('');
         }
 
+        function getNativeStagePoint(element, scale, stageRect, minX, minY, horizontal, vertical) {
+            const rect = element?.getBoundingClientRect?.();
+            if (!rect || !stageRect || rect.width <= 0 || rect.height <= 0) return null;
+            const x = horizontal === 'left'
+                ? rect.left
+                : horizontal === 'right'
+                    ? rect.right
+                    : rect.left + rect.width / 2;
+            const y = vertical === 'top'
+                ? rect.top
+                : vertical === 'bottom'
+                    ? rect.bottom
+                    : rect.top + rect.height / 2;
+            const point = {
+                x: (x - stageRect.left) / Math.max(0.01, scale.x) - minX,
+                y: (y - stageRect.top) / Math.max(0.01, scale.y) - minY
+            };
+            return Number.isFinite(point.x) && Number.isFinite(point.y) ? point : null;
+        }
+
+        function renderNativeParallelHakWires(stage, minX, minY) {
+            const stageRect = stage?.getBoundingClientRect?.();
+            const scale = getStageCoordinateScale(stage);
+            const stack = stage?.querySelector?.('.mk-parallel-stack');
+            const head = stack?.querySelector?.(':scope > .mk-parallel-hak-head');
+            const hak = head?.querySelector?.(':scope > .mk-hak-node');
+            const feed = stack?.querySelector?.(':scope > .mk-parallel-feed');
+            const branches = [...(stack?.querySelectorAll?.(':scope > .mk-parallel-branches > .mk-parallel-branch') || [])];
+            if (!stageRect || !stack || !hak || !feed || !branches.length) return '';
+
+            const hakAnchor = hak.querySelector?.('.mk-hak-editor-icon, .mk-transformer-symbol, b') || hak;
+            const hakPoint = getNativeStagePoint(hakAnchor, scale, stageRect, minX, minY, 'center', 'bottom');
+            const feedPoint = getNativeStagePoint(feed, scale, stageRect, minX, minY, 'center', 'center');
+            const branchPoints = branches.map(branch => {
+                const connector = branch.querySelector?.(':scope > .mk-parallel-branch-connector');
+                const meter = branch.querySelector?.(':scope > .mk-meter-layout > .mk-meter-node, :scope > .mk-meter-layout > .mk-meter-detail-card');
+                const topAnchor = connector || meter;
+                const top = getNativeStagePoint(topAnchor, scale, stageRect, minX, minY, 'center', 'top');
+                const bottom = getNativeStagePoint(meter || topAnchor, scale, stageRect, minX, minY, 'center', 'top');
+                return top && bottom ? { x: top.x, busY: top.y, meterY: bottom.y } : null;
+            }).filter(Boolean);
+            if (!hakPoint || !feedPoint || !branchPoints.length) return '';
+
+            // Der CSS-Fallback zeichnet den Feed als Senkrechte zum Bus und
+            // von dort je einen Abgang zu jedem Parallelzweig. Im nativen SVG
+            // wird exakt dieselbe orthogonale Geometrie nachgebaut, damit Edge
+            // keine CSS-Pseudoelemente voraussetzen muss.
+            const busY = branchPoints.reduce((sum, point) => sum + point.busY, 0) / branchPoints.length;
+            const firstX = Math.min(...branchPoints.map(point => point.x));
+            const lastX = Math.max(...branchPoints.map(point => point.x));
+            const parts = [];
+            const stroke = '#38bdf8';
+            const strokeAttributes = `fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+            const feedPath = `M ${hakPoint.x.toFixed(2)} ${hakPoint.y.toFixed(2)} V ${busY.toFixed(2)} H ${feedPoint.x.toFixed(2)}`;
+            parts.push(`<path class="mk-export-parallel-hak-feed" d="${feedPath}" ${strokeAttributes} />`);
+            if (lastX - firstX > 0.5) {
+                parts.push(`<line class="mk-export-parallel-bus" x1="${firstX.toFixed(2)}" y1="${busY.toFixed(2)}" x2="${lastX.toFixed(2)}" y2="${busY.toFixed(2)}" ${strokeAttributes} />`);
+            }
+            branchPoints.forEach(point => {
+                if (point.meterY - busY <= 0.5) return;
+                parts.push(`<line class="mk-export-parallel-branch-wire" x1="${point.x.toFixed(2)}" y1="${busY.toFixed(2)}" x2="${point.x.toFixed(2)}" y2="${point.meterY.toFixed(2)}" ${strokeAttributes} />`);
+            });
+            return parts.join('');
+        }
+
         function renderNativeHakMeterWire(stage, minX, minY) {
             const stageRect = stage?.getBoundingClientRect?.();
             const scale = getStageCoordinateScale(stage);
@@ -1058,6 +1123,7 @@
             const nativeAnnotationConnectors = annotationConnectorMarkup
                 ? `<g class="mk-export-annotation-connectors" transform="translate(${-minX} ${-minY})">${annotationConnectorMarkup}</g>`
                 : '';
+            const nativeParallelHakWires = renderNativeParallelHakWires(stage, minX, minY);
             const nativeHakMeterWire = renderNativeHakMeterWire(stage, minX, minY);
             const nativeOwnershipMarker = renderNativeOwnershipMarker(stage, minX, minY, win);
             const nativeCards = renderNativeCards(stage, width, height, minX, minY, win);
@@ -1081,6 +1147,7 @@
                 ${connectorStyle}
                 ${nativeConnectors}
                 ${nativeAnnotationConnectors}
+                ${nativeParallelHakWires}
                 ${nativeHakMeterWire}
                 ${nativeOwnershipMarker}
                 ${nativeCards}
