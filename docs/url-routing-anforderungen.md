@@ -29,6 +29,8 @@ Die bisher verwendeten Hash-Einstiege (`index.html#messkonzept` und
 8. Beim direkten Aufruf ohne vorhandene Daten startet der Lastgangbereich mit
    seiner Import-/Demo-Auswahl und der Messkonzeptbereich mit seiner Startauswahl.
 9. Offline-Fallback und Service-Worker-Cache berücksichtigen die neuen Pfade.
+10. Bei einem lokalen `file://`-Aufruf öffnet Edge/Firefox die Alias-Datei
+    direkt und zeigt nicht die Verzeichnisansicht des Werkzeugordners.
 
 ## Technische Leitplanken
 

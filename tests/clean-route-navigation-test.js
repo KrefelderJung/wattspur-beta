@@ -16,6 +16,11 @@ assert(!/bindClick\(['"]btn-open-messkonzept-card['"]/.test(interactionSource),
     'Die Startkarten-Navigation darf nicht durch einen In-Place-Klickhandler abgefangen werden');
 assert(routeSource.includes("window.location.replace(`${fallback}#${route}`)"),
     'Der Route-Loader braucht einen file://-Fallback');
+assert(indexSource.includes("window.location.protocol === 'file:'")
+    && indexSource.includes("messkonzeptkonfigurator/index.html"),
+    'Die Startseite muss lokale file://-Aufrufe auf die Alias-Datei statt auf die Ordneransicht umleiten');
+assert(fs.readFileSync(path.join(root, 'messkonzept-konfigurator.html'), 'utf8').includes("window.location.protocol === 'file:'"),
+    'Die erklärende Messkonzept-Seite braucht denselben lokalen Alias-Fallback');
 assert(/fetch\(fallback,\s*\{\s*cache:\s*['"]no-store['"]\s*\}\)/.test(routeSource),
     'Der Route-Loader muss die Hauptanwendung über eine aktuelle HTML-Anfrage laden');
 assert(cleanRouteSource.includes('data-route="messkonzept"') && cleanRouteSource.includes('/messkonzeptkonfigurator/'),

@@ -16,9 +16,12 @@ gestrichelte Bezugslinie dem jeweiligen Zähler zugeordnet.
 - Sichtbar sind nur die eingegebenen Werte in einer festen Reihenfolge:
   Marktlokation Bezug, Marktlokation Lieferung, Messlokation, Zählernummer
   und optional die Bemerkung.
-- Die Karten erhalten keine sichtbaren Feldüberschriften und wiederholen den
-  Zählernamen nicht. Die Verbindungslinie liefert den Kontext; der Name bleibt
-  für Barrierefreiheit im ARIA-Label erhalten.
+- Die Karten wiederholen den Zählernamen nicht. Die Verbindungslinie liefert
+  den Kontext; der Name bleibt für Barrierefreiheit im ARIA-Label erhalten.
+  Die beiden Marktlokationen werden zusätzlich automatisch kompakt beschriftet
+  (`MaLo Bezug` und `MaLo Lief`), damit die IDs ohne manuell ergänzten
+  Text eindeutig zugeordnet werden können. Die übrigen Zählerwerte bleiben
+  platzsparend ohne sichtbare Feldüberschrift.
 - Der Karteninhalt bleibt transparent, damit darunterliegende Objekte und
   Leitungen sichtbar bleiben.
 - Die Kartenbreite passt sich dem Inhalt an. Sehr lange Werte werden innerhalb
@@ -98,6 +101,10 @@ gestrichelte Bezugslinie dem jeweiligen Zähler zugeordnet.
    Strg/Cmd+Enter speichern und Escape verwirft die Änderung.
 11. Tastaturfokus und verständliche ARIA-Namen bleiben vorhanden. Der
     Größen-Griff kann mit den Pfeiltasten angepasst werden.
+12. Ist die Infokarte eines Zählers sichtbar und wird `Marktlokation Bezug`
+    oder `Marktlokation Lieferung` im Zählerdialog ausgefüllt, zeigt die Karte
+    die ID automatisch mit der passenden Bezeichnung an. Wird das Feld geleert,
+    verschwindet auch die entsprechende beschriftete Zeile.
 
 ## Bewusste Grenzen
 

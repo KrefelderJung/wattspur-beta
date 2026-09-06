@@ -274,6 +274,26 @@
             };
         }
 
+        // Die Bühnenkoordinaten dürfen während eines Drags nicht aus der
+        // ursprünglichen Mausposition hochgerechnet werden. Beim Erreichen
+        // eines Randes erweitert ensureAnnotationWorkspace die Arbeitsfläche
+        // und verschiebt dabei den Scrollursprung. Die aktuelle Bühnenkante
+        // plus der Griffpunkt innerhalb der Karte bleibt dagegen stabil –
+        // auch wenn der Browser während des Drags scrollt.
+        function getPointerStagePosition(event, active, metrics) {
+            const scale = Math.max(0.01, Number(metrics?.scale) || 1);
+            const stageRect = metrics?.stageRect || { left: 0, top: 0 };
+            const fallbackOffset = {
+                x: (event.clientX - stageRect.left) / scale - (active?.startPosition?.x || 0),
+                y: (event.clientY - stageRect.top) / scale - (active?.startPosition?.y || 0)
+            };
+            const offset = active?.pointerOffset || fallbackOffset;
+            return {
+                x: (event.clientX - stageRect.left) / scale - offset.x,
+                y: (event.clientY - stageRect.top) / scale - offset.y
+            };
+        }
+
         function ensureAnnotationWorkspace(stage, requirements = {}) {
             if (!stage) return;
             const topologyWidth = getTopologyContentWidth(stage);
@@ -428,8 +448,22 @@
             </article>`;
         }
 
+        function getCompactAnnotationLabel(entry) {
+            const labels = {
+                maloBezug: 'MaLo Bezug',
+                maloLieferung: 'MaLo Lief'
+            };
+            return labels[entry?.key] || '';
+        }
+
         function renderEntryValues(entries) {
-            return entries.map(entry => `<span class="mk-meter-annotation-value" data-mk-meter-annotation-field="${escapeHtml(entry.key)}" tabindex="0" title="${escapeHtml(entry.label)} · Doppelklicken zum Bearbeiten">${escapeHtml(entry.value)}</span>`).join('');
+            return entries.map(entry => {
+                const compactLabel = getCompactAnnotationLabel(entry);
+                const prefix = compactLabel
+                    ? `<strong class="mk-annotation-field-caption">${escapeHtml(compactLabel)}:</strong> `
+                    : '';
+                return `<span class="mk-meter-annotation-value" data-mk-meter-annotation-field="${escapeHtml(entry.key)}" tabindex="0" title="${escapeHtml(entry.label)} · Doppelklicken zum Bearbeiten">${prefix}${escapeHtml(entry.value)}</span>`;
+            }).join('');
         }
 
         function getRecordForCard(card) {
@@ -696,21 +730,25 @@
             const stage = getElements().canvas?.querySelector('.mk-canvas-stage');
             if (!stage) return;
             const metrics = getStageMetrics(stage);
-            const candidateX = activeDrag.startPosition.x + (event.clientX - activeDrag.startX) / metrics.scale;
-            const candidateY = activeDrag.startPosition.y + (event.clientY - activeDrag.startY) / metrics.scale;
+            const candidate = getPointerStagePosition(event, activeDrag, metrics);
             const records = getVisibleRecords();
             const parts = getLayerParts(stage);
             const cardMap = parts ? getCardMap(parts.cards) : new Map();
             ensureAnnotationWorkspace(stage, getWorkspaceRequirements(stage, records, cardMap, {
-                x: candidateX,
-                y: candidateY,
+                x: candidate.x,
+                y: candidate.y,
                 width: activeDrag.card.offsetWidth || 160,
                 height: activeDrag.card.offsetHeight || 60
             }));
             const nextMetrics = getStageMetrics(stage);
+            // Die Erweiterung kann den Scrollursprung erneut verändert haben.
+            // Deshalb wird der Kandidat nach der Erweiterung nochmals aus dem
+            // aktuellen stageRect berechnet, statt einen alten Delta-Wert zu
+            // verwenden.
+            const nextCandidate = getPointerStagePosition(event, activeDrag, nextMetrics);
             const next = clampPosition(stage, activeDrag.card,
-                candidateX,
-                candidateY,
+                nextCandidate.x,
+                nextCandidate.y,
                 nextMetrics);
             setSavedPosition(activeDrag.key, next, true);
             applyCardPosition(activeDrag.card, next);
@@ -933,6 +971,16 @@
                     startX: event.clientX,
                     startY: event.clientY,
                     startPosition: current,
+                    pointerOffset: (() => {
+                        const stage = getElements().canvas?.querySelector('.mk-canvas-stage');
+                        const metrics = stage ? getStageMetrics(stage) : null;
+                        const cardRect = card.getBoundingClientRect?.();
+                        if (!metrics?.stageRect || !cardRect) return null;
+                        return {
+                            x: (event.clientX - cardRect.left) / metrics.scale,
+                            y: (event.clientY - cardRect.top) / metrics.scale
+                        };
+                    })(),
                     history: captureHistoryState(),
                     moved: false,
                     pending: null,
@@ -949,6 +997,14 @@
             layer.addEventListener('pointerup', endPointerResize);
             layer.addEventListener('pointercancel', endPointerDrag);
             layer.addEventListener('pointercancel', endPointerResize);
+            layer.addEventListener('contextmenu', event => {
+                // Eine Infobox darf auch mit der rechten Maustaste verschoben
+                // werden. Das native Kontextmenü würde sonst den Pointer-Capture
+                // unterbrechen und den Drag genau am Rand unbrauchbar machen.
+                if (activeDrag && event.target.closest?.('.mk-meter-annotation-card')) {
+                    event.preventDefault();
+                }
+            });
             layer.addEventListener('click', event => {
                 const dismiss = event.target.closest?.('.mk-annotation-dismiss');
                 if (!dismiss) return;

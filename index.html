@@ -61,6 +61,17 @@
             document.querySelector('meta[property="og:description"]')?.setAttribute('content', meta.description);
             document.querySelector('meta[property="og:url"]')?.setAttribute('content', meta.canonical);
         }
+        // Unter file:// lädt ein Verzeichnis-Link in Edge/Firefox nur die
+        // Ordneransicht. Online bleibt die kurze Clean-Route erhalten; lokal
+        // zeigen die Werkzeugsprünge direkt auf die vorhandene Alias-Datei.
+        if (window.location.protocol === 'file:') {
+            const normalizeLocalToolLinks = () => {
+                document.querySelectorAll('a[href="messkonzeptkonfigurator/"]').forEach(link => {
+                    link.setAttribute('href', 'messkonzeptkonfigurator/index.html');
+                });
+            };
+            document.addEventListener('DOMContentLoaded', normalizeLocalToolLinks, { once: true });
+        }
     </script>
 </head>
 <body class="landing-home">
@@ -1773,7 +1784,7 @@
     <script src="js/messkonzept/zone-renderer.js?v=1"></script>
     <script src="js/messkonzept/connections.js?v=4"></script>
     <script src="js/messkonzept/geometry-runtime.js?v=1"></script>
-    <script src="js/messkonzept/export.js?v=28"></script>
+    <script src="js/messkonzept/export.js?v=29"></script>
     <script src="js/messkonzept/viewport.js?v=3"></script>
     <script src="js/messkonzept/history.js?v=1"></script>
     <script src="js/messkonzept/commands.js?v=1"></script>

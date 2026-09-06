@@ -18,6 +18,18 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <script>
+        // Siehe den entsprechenden Fallback auf der Startseite: Ein lokaler
+        // file://-Aufruf darf nicht in der Verzeichnisansicht des Alias-Ordners
+        // enden.
+        if (window.location.protocol === 'file:') {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('a[href="messkonzeptkonfigurator/"]').forEach(link => {
+                    link.setAttribute('href', 'messkonzeptkonfigurator/index.html');
+                });
+            }, { once: true });
+        }
+    </script>
 </head>
 <body class="landing-home analysis-page">
     <header class="landing-header" aria-label="Seitennavigation">

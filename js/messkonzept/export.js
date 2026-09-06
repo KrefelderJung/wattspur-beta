@@ -487,6 +487,23 @@
             };
         }
 
+        function renderNativeTransformerSymbol(element, stage, scale, stageRect, minX, minY, win) {
+            const symbol = element?.querySelector?.('.mk-transformer-symbol');
+            const box = getNativeElementBox(symbol || element, stage, scale, stageRect, minX, minY);
+            if (!box || box.width <= 0 || box.height <= 0) return '';
+            const paint = getNativePaint(symbol || element, win);
+            const color = paint.color && paint.color !== 'currentColor' ? paint.color : '#38bdf8';
+            const diameter = Math.max(8, Math.min(box.width * 0.74, box.height * 0.62));
+            const cx = box.x + box.width / 2;
+            const firstCy = box.y + diameter / 2;
+            const secondCy = box.y + box.height - diameter / 2;
+            const lead = Math.max(3, Math.min(6, box.height * 0.16));
+            // Die beiden Ringe und die Anschlussstifte sind im Editor CSS-
+            // Pseudoelemente. Im CSS-freien SVG-Fallback müssen sie explizit
+            // gezeichnet werden, sonst bleibt der Mittelspannungs-HAK leer.
+            return `<g class="mk-export-transformer-symbol" fill="none" stroke="${escapeSvgAttribute(color)}" stroke-width="2" stroke-linecap="round"><line x1="${cx.toFixed(2)}" y1="${(box.y - lead).toFixed(2)}" x2="${cx.toFixed(2)}" y2="${box.y.toFixed(2)}" /><circle cx="${cx.toFixed(2)}" cy="${firstCy.toFixed(2)}" r="${(diameter / 2).toFixed(2)}" /><circle cx="${cx.toFixed(2)}" cy="${secondCy.toFixed(2)}" r="${(diameter / 2).toFixed(2)}" /><line x1="${cx.toFixed(2)}" y1="${(box.y + box.height).toFixed(2)}" x2="${cx.toFixed(2)}" y2="${(box.y + box.height + lead).toFixed(2)}" /></g>`;
+        }
+
         function renderNativeCardIcon(element, box, win, context = {}) {
             const icon = element?.querySelector?.('.mk-asset-icon');
             if (!icon || !box) return '';
@@ -621,12 +638,17 @@
                         ? String(element.textContent || '').trim()
                         : '';
                 if (isHak) {
-                    const visibleHak = element.querySelector?.('.mk-hak-editor-icon, b');
-                    const child = visibleHak ? renderNativeChildCard(visibleHak, stage, scale, stageRect, minX, minY, win) : null;
-                    if (child?.markup) {
-                        parts.push(child.markup);
-                        const label = String(visibleHak.textContent || '').trim();
-                        if (label) parts.push(`<text x="${(child.box.x + child.box.width / 2).toFixed(2)}" y="${(child.box.y + child.box.height / 2 + 5).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="${escapeSvgAttribute(child.paint.color)}">${escapeSvgText(label)}</text>`);
+                    const transformer = element.querySelector?.('.mk-transformer-symbol');
+                    if (transformer) {
+                        parts.push(renderNativeTransformerSymbol(element, stage, scale, stageRect, minX, minY, win));
+                    } else {
+                        const visibleHak = element.querySelector?.('.mk-hak-editor-icon, b');
+                        const child = visibleHak ? renderNativeChildCard(visibleHak, stage, scale, stageRect, minX, minY, win) : null;
+                        if (child?.markup) {
+                            parts.push(child.markup);
+                            const label = String(visibleHak.textContent || '').trim();
+                            if (label) parts.push(`<text x="${(child.box.x + child.box.width / 2).toFixed(2)}" y="${(child.box.y + child.box.height / 2 + 5).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="${escapeSvgAttribute(child.paint.color)}">${escapeSvgText(label)}</text>`);
+                        }
                     }
                 }
                 if (element.matches?.('.mk-meter-node')) {

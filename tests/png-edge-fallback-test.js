@@ -17,6 +17,13 @@ assert(exportSource.includes('function renderNativeCards') && exportSource.inclu
     'Der PNG-Export muss für lokale Edge-Seiten einen reinen SVG-Fallback ohne foreignObject besitzen');
 assert(exportSource.includes('function renderNativeChildCard') && exportSource.includes('semanticFill'),
     'Der native SVG-Fallback muss sichtbare HAK-, Zähler- und Objektkarten auch im einfachen Modus zeichnen');
+assert(exportSource.includes('function renderNativeTransformerSymbol')
+    && exportSource.includes('mk-export-transformer-symbol')
+    && exportSource.includes(".mk-transformer-symbol"),
+    'Der native SVG-Fallback muss den Mittelspannungs-HAK als Transformator-Symbol zeichnen');
+assert(exportSource.includes("const transformer = element.querySelector?.('.mk-transformer-symbol');")
+    && /renderNativeTransformerSymbol\(element, stage, scale, stageRect, minX, minY, win\)/.test(exportSource),
+    'Der Transformator-Fallback muss beim HAK-Knoten tatsächlich verwendet werden');
 assert(exportSource.includes('function renderNativeHakMeterWire') && exportSource.includes('mk-export-hak-meter-wire'),
     'Der native SVG-Fallback muss die Leitung zwischen HAK und erstem Zähler mitzeichnen');
 assert(exportSource.includes('function renderNativeParallelHakWires')
@@ -55,9 +62,9 @@ assert(exportSource.includes('else fallback()'),
     'Ein fehlendes toBlob-Ergebnis muss ebenfalls auf den Data-URL-Fallback wechseln');
 assert(exportSource.includes('context.setTransform?.(1, 0, 0, 1, 0, 0)'),
     'PNG-Export muss beim zweiten Render-Versuch die Canvas-Transformation zurücksetzen');
-assert(/export\.js\?v=28/.test(indexSource),
+assert(/export\.js\?v=29/.test(indexSource),
     'Der PNG-Export muss mit dem aktualisierten Cache-Buster geladen werden');
-assert(workerSource.includes('2026.09.03-beta.385'),
+assert(workerSource.includes('2026.09.06-beta.386'),
     'Der Service Worker muss den Edge-kompatiblen Exportstand cachen');
 
 console.log('PNG-Edge-Fallback-Test: OK');

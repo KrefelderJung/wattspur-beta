@@ -150,7 +150,7 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`commands.js`** | Bündelt Zustandsänderungen wie Reset, Moduswechsel, Kaskadenstufen, Anlagenanlage und Verschieben. |
 | **`project-meta.js`** | Synchronisiert Projektname, Referenz, Messkonzept, Standort und den festen Kommentarabschnitt der Projektangaben mit dem Zustand. |
 | **`canvas-renderer.js`** | Komponiert Canvas, klickbaren HAK bzw. Trafo, Zählerstruktur und Objekt-Modal aus injizierten Render- und Zustandsfunktionen. |
-| **`annotations.js`** | Rendert eingeschaltete Objekt- und Zählerangaben als verschiebbare Karten mit gestrichelter Bezugslinie, bearbeitet Werte direkt per Doppelklick und übernimmt die Karten in die PDF-Kopie. |
+| **`annotations.js`** | Rendert eingeschaltete Objekt- und Zählerangaben als verschiebbare Karten mit gestrichelter Bezugslinie, beschriftet MaLo-Werte automatisch, bearbeitet Werte direkt per Doppelklick und übernimmt die Karten in die PDF-Kopie. |
 | **`editor.js`** | Verarbeitet Eingaben im Objekt-Dialog, hält Bemerkungen am Ende des Formulars und meldet Asset- sowie Zählerdetailänderungen über injizierte Callbacks. |
 | **`start-flow.js`** | Kapselt Werkzeugwechsel, Startauswahl, freie Skizze und Laden der Messkonzept-Vorlagen. |
 | **`render-cycle.js`** | Orchestriert einen vollständigen UI-Renderlauf über injizierte Adapter, ohne Messlogik oder DOM-Suche zu kennen. |
@@ -219,5 +219,6 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`docs/startkarten-ueberschriften-anforderungen.md`** | Anforderungen für eine einmalige Messkonzeptüberschrift ohne doppelte Objektzeile auf Vorlagekarten. |
 | **`docs/object-editor-fields-anforderungen.md`** | Anforderungen für Bemerkungen statt editierbarer Bezeichnungen und für den Infobox-Startzustand. |
 | **`tests/object-editor-fields-test.js`** | Regressionstest für Feldreihenfolge, entfernte Bezeichnungsfelder und automatisch befüllte Infoboxen. |
+| **`tests/malo-annotation-labels-test.js`** | Regressionstest für die automatisch erzeugten Bezeichnungen `MaLo Bezug` und `MaLo Lief` in sichtbaren Zähler-Infoboxen. |
 
 Der Einstiegspunkt [`messkonzept.js`](../messkonzept.js) orchestriert diese Module weiterhin. Zustandsänderungen werden über `commands.js` geführt; weitere Auslagerungen sollten diese Grenze beibehalten und nicht erneut DOM-, Geometrie- und Fachlogik vermischen.
