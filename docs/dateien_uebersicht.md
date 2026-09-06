@@ -170,6 +170,9 @@ Messkonzept- oder PDF-Logik. Der isolierte
 | **`js/messkonzept/preset-loader.js`** | Übersetzt eine Vorlage in normale, bearbeitbare Modellobjekte und Zählerbeziehungen. |
 | **`docs/messkonzept-startvorlagen.md`** | Spezifikation, Akzeptanzkriterien und technische Trennung der Startauswahl. |
 | **`tests/project-quality-test.js`** | Browserfreier projektweiter Qualitäts-Gate-Test für Pflichtdateien, Syntax, lokale Verarbeitung und Release-Schutz. |
+| **`.github/workflows/pages.yml`** | Expliziter GitHub-Pages-Workflow mit getrennten Build-/Deploy-Jobs und den erforderlichen `pages`-/OIDC-Berechtigungen. |
+| **`docs/github-pages-deployment-anforderungen.md`** | Anforderungen und einmalige GitHub-Einstellung für die reproduzierbare Pages-Veröffentlichung. |
+| **`tests/pages-workflow-test.js`** | Prüft Berechtigungen, Artefakt-Upload, Build-Abhängigkeit und manuellen Pages-Start. |
 | **`tests/mieterstrom-objects-test.js`** | Prüft die beiden optionalen Mieterstromobjekte, die eigenen `ZN…`-Kennungen und ihre neutralen technischen Statusfelder. |
 | **`tests/link-check-test.js`** | Prüft lokale `href`-/`src`-Verweise; externe Links können mit `--external` als separates Release-Gate geprüft werden. |
 | **`tests/storage-operation-test.js`** | Prüft die Speicher-Betriebsweisen für Netzeinspeisung, Netzbezug zum Laden und reinen PV-Überschussbetrieb. |
